@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android RunTime," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概要从android5.0版本开始，android应用程序默认的运行环境为ART。ART机制与Dalvik不同，在Dalvik下，应用每次运行时，字节码都需要通过即时编译器转换为机器码，这会拖慢应用的运行效率，而在ART环境下，应用在第一次安装时，字节码就会预先编译成机器码，使其成为真正的本地应用。这个过程叫做预编译（Ahead-Of-Time，AOT）。这样，应用的（首次）启动和执行就会变得更加">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ART机制架构详解">
+<meta property="og:url" content="sufushi.github.io/2017/10/27/ART机制架构详解/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="概要从android5.0版本开始，android应用程序默认的运行环境为ART。ART机制与Dalvik不同，在Dalvik下，应用每次运行时，字节码都需要通过即时编译器转换为机器码，这会拖慢应用的运行效率，而在ART环境下，应用在第一次安装时，字节码就会预先编译成机器码，使其成为真正的本地应用。这个过程叫做预编译（Ahead-Of-Time，AOT）。这样，应用的（首次）启动和执行就会变得更加">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/ART%E3%80%81Dalvik%E5%92%8CJVM%E7%9A%84%E5%85%B3%E7%B3%BB.png">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/%E5%90%AF%E5%8A%A8ART%E6%B6%89%E5%8F%8A%E7%9A%84%E7%B1%BB.png">
+<meta property="og:updated_time" content="2017-10-28T08:00:50.168Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ART机制架构详解">
+<meta name="twitter:description" content="概要从android5.0版本开始，android应用程序默认的运行环境为ART。ART机制与Dalvik不同，在Dalvik下，应用每次运行时，字节码都需要通过即时编译器转换为机器码，这会拖慢应用的运行效率，而在ART环境下，应用在第一次安装时，字节码就会预先编译成机器码，使其成为真正的本地应用。这个过程叫做预编译（Ahead-Of-Time，AOT）。这样，应用的（首次）启动和执行就会变得更加">
+<meta name="twitter:image" content="http://oxsxuoiqx.bkt.clouddn.com/ART%E3%80%81Dalvik%E5%92%8CJVM%E7%9A%84%E5%85%B3%E7%B3%BB.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2017/10/27/ART机制架构详解/"/>
+
+
+
+
+
+  <title>ART机制架构详解 | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2017/10/27/ART机制架构详解/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ART机制架构详解</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-27T21:22:48+08:00">
+                2017-10-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h4><p>从android5.0版本开始，android应用程序默认的运行环境为ART。ART机制与Dalvik不同，在Dalvik下，应用每次运行时，字节码都需要通过即时编译器转换为机器码，这会拖慢应用的运行效率，而在ART环境下，应用在第一次安装时，字节码就会预先编译成机器码，使其成为真正的本地应用。这个过程叫做预编译（Ahead-Of-Time，AOT）。这样，应用的（首次）启动和执行就会变得更加快速。</p>
+<h4 id="ART的启动过程"><a href="#ART的启动过程" class="headerlink" title="ART的启动过程"></a>ART的启动过程</h4><p>传统的Dalvik虚拟机其实是一个Java虚拟机，只不过它执行的不是CLASS文件，而是DEX文件。因此，ART运行时最理想的方式也是实现一个Java虚拟机的形式，这样就可以很容易地将Davik虚拟机替换掉。ART运行时就是真的和Dalvik虚拟机一样，实现了一套完全兼容Java虚拟机的接口。</p>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/ART%E3%80%81Dalvik%E5%92%8CJVM%E7%9A%84%E5%85%B3%E7%B3%BB.png" alt="ART、Dalvik和JVM的关系"></p>
+<p>Dalvik虚拟机和ART虚拟机都实现了如下3个用来抽象Java虚拟机的接口。</p>
+<ul>
+<li><p>JNI_GetDefaultJavaVMInitArgs：获取虚拟机的默认初始化参数。</p>
+</li>
+<li><p>JNI_CreateJavaVM：在进程中创建虚拟机实例。</p>
+</li>
+<li><p>JNI_GetCreatedJavaVMs：获取进程中创建的虚拟机实例。</p>
+<p>在android系统中，Dalvik虚拟机实现在libdvm.so文件中，ART虚拟机实现在libart.so文件中。此外，android系统还提供了一个系统属性persist.sys.dalvik.vm.lib，其值等于libdvm.so或libart.so，当等于libdvm.so时，表示当前用的是Dalvik虚拟机，当用的是libart.so时，表示当前用的是ART虚拟机。</p>
+</li>
+</ul>
+<p>Dalvik虚拟机执行的是DEX字节码，ART虚拟机执行的是本地机器码。这意味着Dalvik虚拟机包含有一个解释器，用来执行DEX字节码。当然，android从2.2开始，也包含有JIT（Just-In-Time），用来在运行动态地将执行频率更高的DEX字节码翻译成本地机器码，然后再执行。通过JIT，就可以有效地提高Dalvik虚拟机的执行效率。但是，将DEX字节码翻译成本地机器码是发生在应用程序的运行过程中的，并且应用程序每一重新运行时，都要重新做这个翻译工作。因此，即使采用了JIT，Dalvik虚拟机的总体性能还是不能与执行本地机器码的ART虚拟机相比。</p>
+<p>ART虚拟机在app_process进程中启动，因此，分析ART的启动过程，需要从app_process进程，也就是zygote进程入手。</p>
+<ul>
+<li><p>运行app_process进程</p>
+<p>当android系统启动后会创建一个zygote进程，作为应用程序的进程孵化器，并且在启动zygote进程的过程中会创建一个Dalvik虚拟机。zygote进程是通过复制自己来创建新的应用程序进程的，这意味着zygote进程会将自己的Dalvik虚拟机复制给应用程序进程。上述方式可以大大提高应用程序的启动速度，因为这种方式避免了每一个应用程序进程在启动时都要去创建一个Dalvik。事实上，zygote进程通过自我复制的方式来创建应用程序进程，省去的不仅仅是应用程序创建Dalvik虚拟机的时间，还能省去应用程序加载各种系统库和系统资源的时间，因为它们在zygote进程中已经加载过了，并且也会连同Dalvik虚拟机一起复制到应用程序中去。这也是ART优于Dalvik的原因。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* <span class="keyword">const</span> argv[])</span> </span>&#123;</div><div class="line">	...</div><div class="line">    <span class="keyword">if</span> (!niceName.isEmpty()) &#123;</div><div class="line">    	runtime.setArgv0(niceName.<span class="built_in">string</span>());</div><div class="line">    	<span class="comment">// 此处调用set_process_name()函数，通过Linux下的pctrl系统调用把名字“app_process”换成			   了“zygote”</span></div><div class="line">    	set_process_name(niceName.<span class="built_in">string</span>());  </div><div class="line">	&#125;</div><div class="line">    <span class="comment">// zygote为true代表的是zygote进程，也就是谁现在正在启动zygote进程。因为zygote进程是通过自己的资源	   复制一份来fork一个新的子进程的，也就是说子进程也会进入这个文件的main函数，所以通过这个zygote变量		 就可以来区分</span></div><div class="line">    <span class="keyword">if</span> (zygote) &#123;</div><div class="line">    	runtime.start(<span class="string">"com.android.internal.os.ZygoteInit"</span>, args, zygote);</div><div class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (className) &#123;</div><div class="line">    	runtime.start(<span class="string">"com.android.internal.os.RuntimeInit"</span>, args, zygote);</div><div class="line">	&#125; <span class="keyword">else</span> &#123;</div><div class="line">    	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">"Error: no class name or --zygote supplied.\n"</span>);</div><div class="line">    	app_usage();</div><div class="line">    	LOG_ALWAYS_FATAL(<span class="string">"app_process: no class name or --zygote supplied."</span>);</div><div class="line">    	<span class="keyword">return</span> <span class="number">10</span>;</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在上述代码中，runtime是AppRuntime的实例，AppRuntime继承自AndroidRuntime。类AndroidRuntime中的函数start()的具体实现如下。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> AndroidRuntime::start(<span class="keyword">const</span> <span class="keyword">char</span>* className, <span class="keyword">const</span> Vector&lt;String8&gt;&amp; options, <span class="keyword">bool</span> zygote)</div><div class="line">&#123;</div><div class="line">    ALOGD(<span class="string">"&gt;&gt;&gt;&gt;&gt;&gt; START %s uid %d &lt;&lt;&lt;&lt;&lt;&lt;\n"</span>,</div><div class="line">            className != <span class="literal">NULL</span> ? className : <span class="string">"(unknown)"</span>, getuid());</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">const</span> String8 <span class="title">startSystemServer</span><span class="params">(<span class="string">"start-system-server"</span>)</span></span>;</div><div class="line"></div><div class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; options.size(); ++i) &#123;</div><div class="line">        <span class="keyword">if</span> (options[i] == startSystemServer) &#123;</div><div class="line">           <span class="keyword">const</span> <span class="keyword">int</span> LOG_BOOT_PROGRESS_START = <span class="number">3000</span>;</div><div class="line">           LOG_EVENT_LONG(LOG_BOOT_PROGRESS_START,  ns2ms(systemTime(SYSTEM_TIME_MONOTONIC)));</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">const</span> <span class="keyword">char</span>* rootDir = getenv(<span class="string">"ANDROID_ROOT"</span>);</div><div class="line">    <span class="keyword">if</span> (rootDir == <span class="literal">NULL</span>) &#123;</div><div class="line">        rootDir = <span class="string">"/system"</span>;</div><div class="line">        <span class="keyword">if</span> (!hasDir(<span class="string">"/system"</span>)) &#123;</div><div class="line">            LOG_FATAL(<span class="string">"No root directory specified, and /android does not exist."</span>);</div><div class="line">            <span class="keyword">return</span>;</div><div class="line">        &#125;</div><div class="line">        setenv(<span class="string">"ANDROID_ROOT"</span>, rootDir, <span class="number">1</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    JniInvocation jni_invocation;</div><div class="line">    jni_invocation.Init(<span class="literal">NULL</span>);</div><div class="line">    JNIEnv* env;</div><div class="line">    <span class="keyword">if</span> (startVm(&amp;mJavaVM, &amp;env, zygote) != <span class="number">0</span>) &#123;</div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">    onVmCreated(env);</div><div class="line">  </div><div class="line">    <span class="keyword">if</span> (startReg(env) &lt; <span class="number">0</span>) &#123;</div><div class="line">        ALOGE(<span class="string">"Unable to register all android natives\n"</span>);</div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    jclass stringClass;</div><div class="line">    jobjectArray strArray;</div><div class="line">    jstring classNameStr;</div><div class="line"></div><div class="line">    stringClass = env-&gt;FindClass(<span class="string">"java/lang/String"</span>);</div><div class="line">    assert(stringClass != <span class="literal">NULL</span>);</div><div class="line">    strArray = env-&gt;NewObjectArray(options.size() + <span class="number">1</span>, stringClass, <span class="literal">NULL</span>);</div><div class="line">    assert(strArray != <span class="literal">NULL</span>);</div><div class="line">    classNameStr = env-&gt;NewStringUTF(className);</div><div class="line">    assert(classNameStr != <span class="literal">NULL</span>);</div><div class="line">    env-&gt;SetObjectArrayElement(strArray, <span class="number">0</span>, classNameStr);</div><div class="line"></div><div class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; options.size(); ++i) &#123;</div><div class="line">        jstring optionsStr = env-&gt;NewStringUTF(options.itemAt(i).<span class="built_in">string</span>());</div><div class="line">        assert(optionsStr != <span class="literal">NULL</span>);</div><div class="line">        env-&gt;SetObjectArrayElement(strArray, i + <span class="number">1</span>, optionsStr);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">char</span>* slashClassName = toSlashClassName(className);</div><div class="line">    jclass startClass = env-&gt;FindClass(slashClassName);</div><div class="line">    <span class="keyword">if</span> (startClass == <span class="literal">NULL</span>) &#123;</div><div class="line">        ALOGE(<span class="string">"JavaVM unable to locate class '%s'\n"</span>, slashClassName);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        jmethodID startMeth = env-&gt;GetStaticMethodID(startClass, <span class="string">"main"</span>,</div><div class="line">            <span class="string">"([Ljava/lang/String;)V"</span>);</div><div class="line">        <span class="keyword">if</span> (startMeth == <span class="literal">NULL</span>) &#123;</div><div class="line">            ALOGE(<span class="string">"JavaVM unable to find main() in '%s'\n"</span>, className);</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            env-&gt;CallStaticVoidMethod(startClass, startMeth, strArray);</div><div class="line"></div><div class="line"><span class="meta">#<span class="meta-keyword">if</span> 0</span></div><div class="line">            <span class="keyword">if</span> (env-&gt;ExceptionCheck())</div><div class="line">                threadExitUncaughtException(env);</div><div class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="built_in">free</span>(slashClassName);</div><div class="line"></div><div class="line">    ALOGD(<span class="string">"Shutting down VM\n"</span>);</div><div class="line">    <span class="keyword">if</span> (mJavaVM-&gt;DetachCurrentThread() != JNI_OK)</div><div class="line">        ALOGW(<span class="string">"Warning: unable to detach main thread\n"</span>);</div><div class="line">    <span class="keyword">if</span> (mJavaVM-&gt;DestroyJavaVM() != <span class="number">0</span>)</div><div class="line">        ALOGW(<span class="string">"Warning: VM did not shut down cleanly\n"</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>由此可见，类AndroidRuntime的成员函数start()最主要实现了如下3个功能。</p>
+<ul>
+<li><p>创建一个JniInvocation实例，并且调用其成员函数Init()来初始化JNI环境。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">JniInvocation jni_invocation;</div><div class="line">jni_invocation.Init(<span class="literal">NULL</span>);</div></pre></td></tr></table></figure>
+</li>
+<li><p>调用AndroidRuntime类的成员函数startVM()来创建一个虚拟机及其对应的JNI接口，即创建一个JavaVM接口和一个JNIEnv接口。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">JNIEnv* env;</div><div class="line"><span class="keyword">if</span> (startVm(&amp;mJavaVM, &amp;env, zygote) != <span class="number">0</span>) &#123;</div><div class="line">    <span class="keyword">return</span>;</div><div class="line">&#125;</div><div class="line">onVmCreated(env);</div></pre></td></tr></table></figure>
+</li>
+<li><p>通过上述JavaVM接口和JNIEnv接口在zygote进程中加载指定的class。</p>
+</li>
+</ul>
+<p>其中，上述前两个功能是最关键的。因此，接下来继续分析它们所对应的函数的实现。</p>
+<p>JniInvocation函数Init()的具体实现如下。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">bool</span> JniInvocation::Init(<span class="keyword">const</span> <span class="keyword">char</span>* library) &#123;</div><div class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> __ANDROID__</span></div><div class="line">  <span class="keyword">char</span> buffer[PROP_VALUE_MAX];</div><div class="line"><span class="meta">#<span class="meta-keyword">else</span></span></div><div class="line">  <span class="keyword">char</span>* buffer = <span class="literal">NULL</span>;</div><div class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></div><div class="line">  library = GetLibrary(library, buffer);</div><div class="line">  <span class="keyword">const</span> <span class="keyword">int</span> kDlopenFlags = RTLD_NOW | RTLD_NODELETE;</div><div class="line">  handle_ = dlopen(library, kDlopenFlags);</div><div class="line">  <span class="keyword">if</span> (handle_ == <span class="literal">NULL</span>) &#123;</div><div class="line">    <span class="keyword">if</span> (<span class="built_in">strcmp</span>(library, kLibraryFallback) == <span class="number">0</span>) &#123;</div><div class="line">      ALOGE(<span class="string">"Failed to dlopen %s: %s"</span>, library, dlerror());</div><div class="line">      <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">    &#125;</div><div class="line">    ALOGW(<span class="string">"Falling back from %s to %s after dlopen error: %s"</span>,</div><div class="line">          library, kLibraryFallback, dlerror());</div><div class="line">    library = kLibraryFallback;</div><div class="line">    handle_ = dlopen(library, kDlopenFlags);</div><div class="line">    <span class="keyword">if</span> (handle_ == <span class="literal">NULL</span>) &#123;</div><div class="line">      ALOGE(<span class="string">"Failed to dlopen %s: %s"</span>, library, dlerror());</div><div class="line">      <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">if</span> (!FindSymbol(<span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">void</span>**&gt;(&amp;JNI_GetDefaultJavaVMInitArgs_),</div><div class="line">                  <span class="string">"JNI_GetDefaultJavaVMInitArgs"</span>)) &#123;</div><div class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">if</span> (!FindSymbol(<span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">void</span>**&gt;(&amp;JNI_CreateJavaVM_),</div><div class="line">                  <span class="string">"JNI_CreateJavaVM"</span>)) &#123;</div><div class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">if</span> (!FindSymbol(<span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">void</span>**&gt;(&amp;JNI_GetCreatedJavaVMs_),</div><div class="line">                  <span class="string">"JNI_GetCreatedJavaVMs"</span>)) &#123;</div><div class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> <span class="literal">true</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在上述代码中，函数Init()首先读取系统属性persist.sys.dalvik.vm.lib的值。因为系统属性persist.sys.dalvik.vm.lib的值等于libdvm.so或ligart.so，所以接下来就通过函数dlopen()加载到进程的是libdvm.so或ligart.so。无论加载的是哪一个，都要求导出JNI_GetDefaultJavaVMInitArgs、JNI_CreateJavaVM、JNI_GetCreatedJavaVMs这三个接口，并且分别保存在JniInvocation类的3个成员变量JNI<em>GetDefaultJavaVMInitArgs</em>、JNI<em>CreateJavaVM</em>和JNI<em>GetCreatedJavaVMs</em>中。</p>
+</li>
+<li><p>准备启动</p>
+<p>回到函数AndroidRuntime::start()的第二个功能，其主要是调用startVm()函数来启动虚拟机。AndroidRuntime类的成员函数AndroidRuntime::startVm()的具体实现代码如下。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div><div class="line">143</div><div class="line">144</div><div class="line">145</div><div class="line">146</div><div class="line">147</div><div class="line">148</div><div class="line">149</div><div class="line">150</div><div class="line">151</div><div class="line">152</div><div class="line">153</div><div class="line">154</div><div class="line">155</div><div class="line">156</div><div class="line">157</div><div class="line">158</div><div class="line">159</div><div class="line">160</div><div class="line">161</div><div class="line">162</div><div class="line">163</div><div class="line">164</div><div class="line">165</div><div class="line">166</div><div class="line">167</div><div class="line">168</div><div class="line">169</div><div class="line">170</div><div class="line">171</div><div class="line">172</div><div class="line">173</div><div class="line">174</div><div class="line">175</div><div class="line">176</div><div class="line">177</div><div class="line">178</div><div class="line">179</div><div class="line">180</div><div class="line">181</div><div class="line">182</div><div class="line">183</div><div class="line">184</div><div class="line">185</div><div class="line">186</div><div class="line">187</div><div class="line">188</div><div class="line">189</div><div class="line">190</div><div class="line">191</div><div class="line">192</div><div class="line">193</div><div class="line">194</div><div class="line">195</div><div class="line">196</div><div class="line">197</div><div class="line">198</div><div class="line">199</div><div class="line">200</div><div class="line">201</div><div class="line">202</div><div class="line">203</div><div class="line">204</div><div class="line">205</div><div class="line">206</div><div class="line">207</div><div class="line">208</div><div class="line">209</div><div class="line">210</div><div class="line">211</div><div class="line">212</div><div class="line">213</div><div class="line">214</div><div class="line">215</div><div class="line">216</div><div class="line">217</div><div class="line">218</div><div class="line">219</div><div class="line">220</div><div class="line">221</div><div class="line">222</div><div class="line">223</div><div class="line">224</div><div class="line">225</div><div class="line">226</div><div class="line">227</div><div class="line">228</div><div class="line">229</div><div class="line">230</div><div class="line">231</div><div class="line">232</div><div class="line">233</div><div class="line">234</div><div class="line">235</div><div class="line">236</div><div class="line">237</div><div class="line">238</div><div class="line">239</div><div class="line">240</div><div class="line">241</div><div class="line">242</div><div class="line">243</div><div class="line">244</div><div class="line">245</div><div class="line">246</div><div class="line">247</div><div class="line">248</div><div class="line">249</div><div class="line">250</div><div class="line">251</div><div class="line">252</div><div class="line">253</div><div class="line">254</div><div class="line">255</div><div class="line">256</div><div class="line">257</div><div class="line">258</div><div class="line">259</div><div class="line">260</div><div class="line">261</div><div class="line">262</div><div class="line">263</div><div class="line">264</div><div class="line">265</div><div class="line">266</div><div class="line">267</div><div class="line">268</div><div class="line">269</div><div class="line">270</div><div class="line">271</div><div class="line">272</div><div class="line">273</div><div class="line">274</div><div class="line">275</div><div class="line">276</div><div class="line">277</div><div class="line">278</div><div class="line">279</div><div class="line">280</div><div class="line">281</div><div class="line">282</div><div class="line">283</div><div class="line">284</div><div class="line">285</div><div class="line">286</div><div class="line">287</div><div class="line">288</div><div class="line">289</div><div class="line">290</div><div class="line">291</div><div class="line">292</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> AndroidRuntime::startVm(JavaVM** pJavaVM, JNIEnv** pEnv, <span class="keyword">bool</span> zygote)</div><div class="line">&#123;</div><div class="line">    JavaVMInitArgs initArgs;</div><div class="line">    <span class="keyword">char</span> propBuf[PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> stackTraceFileBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xstacktracefile:"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> jniOptsBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xjniopts:"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> heapstartsizeOptsBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xms"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> heapsizeOptsBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xmx"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> heapgrowthlimitOptsBuf[<span class="keyword">sizeof</span>(<span class="string">"-XX:HeapGrowthLimit="</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> heapminfreeOptsBuf[<span class="keyword">sizeof</span>(<span class="string">"-XX:HeapMinFree="</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> heapmaxfreeOptsBuf[<span class="keyword">sizeof</span>(<span class="string">"-XX:HeapMaxFree="</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> usejitOptsBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xusejit:"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> jitmaxsizeOptsBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xjitmaxsize:"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> jitinitialsizeOptsBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xjitinitialsize:"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> jitthresholdOptsBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xjitthreshold:"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> useJitProfilesOptsBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xjitsaveprofilinginfo:"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> jitprithreadweightOptBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xjitprithreadweight:"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> jittransitionweightOptBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xjittransitionweight:"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> gctypeOptsBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xgc:"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> backgroundgcOptsBuf[<span class="keyword">sizeof</span>(<span class="string">"-XX:BackgroundGC="</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> heaptargetutilizationOptsBuf[<span class="keyword">sizeof</span>(<span class="string">"-XX:HeapTargetUtilization="</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> cachePruneBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xzygote-max-boot-retry="</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> dex2oatXmsImageFlagsBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xms"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> dex2oatXmxImageFlagsBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xmx"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> dex2oatXmsFlagsBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xms"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> dex2oatXmxFlagsBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xmx"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> dex2oatCompilerFilterBuf[<span class="keyword">sizeof</span>(<span class="string">"--compiler-filter="</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> dex2oatImageCompilerFilterBuf[<span class="keyword">sizeof</span>(<span class="string">"--compiler-filter="</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> dex2oatThreadsBuf[<span class="keyword">sizeof</span>(<span class="string">"-j"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> dex2oatThreadsImageBuf[<span class="keyword">sizeof</span>(<span class="string">"-j"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> dex2oat_isa_variant_key[PROPERTY_KEY_MAX];</div><div class="line">    <span class="keyword">char</span> dex2oat_isa_variant[<span class="keyword">sizeof</span>(<span class="string">"--instruction-set-variant="</span>) <span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> dex2oat_isa_features_key[PROPERTY_KEY_MAX];</div><div class="line">    <span class="keyword">char</span> dex2oat_isa_features[<span class="keyword">sizeof</span>(<span class="string">"--instruction-set-features="</span>) <span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> dex2oatFlagsBuf[PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> dex2oatImageFlagsBuf[PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> extraOptsBuf[PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> voldDecryptBuf[PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">enum</span> &#123;</div><div class="line">      kEMDefault,</div><div class="line">      kEMIntPortable,</div><div class="line">      kEMIntFast,</div><div class="line">      kEMJitCompiler,</div><div class="line">    &#125; executionMode = kEMDefault;</div><div class="line">    <span class="keyword">char</span> localeOption[<span class="keyword">sizeof</span>(<span class="string">"-Duser.locale="</span>) + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> lockProfThresholdBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xlockprofthreshold:"</span>)<span class="number">-1</span> + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> nativeBridgeLibrary[<span class="keyword">sizeof</span>(<span class="string">"-XX:NativeBridge="</span>) + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> cpuAbiListBuf[<span class="keyword">sizeof</span>(<span class="string">"--cpu-abilist="</span>) + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> methodTraceFileBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xmethod-trace-file:"</span>) + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> methodTraceFileSizeBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xmethod-trace-file-size:"</span>) + PROPERTY_VALUE_MAX];</div><div class="line">    <span class="keyword">char</span> fingerprintBuf[<span class="keyword">sizeof</span>(<span class="string">"-Xfingerprint:"</span>) + PROPERTY_VALUE_MAX];</div><div class="line"></div><div class="line">    <span class="keyword">bool</span> checkJni = <span class="literal">false</span>;</div><div class="line">    property_get(<span class="string">"dalvik.vm.checkjni"</span>, propBuf, <span class="string">""</span>);</div><div class="line">    <span class="keyword">if</span> (<span class="built_in">strcmp</span>(propBuf, <span class="string">"true"</span>) == <span class="number">0</span>) &#123;</div><div class="line">        checkJni = <span class="literal">true</span>;</div><div class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcmp</span>(propBuf, <span class="string">"false"</span>) != <span class="number">0</span>) &#123;</div><div class="line">        property_get(<span class="string">"ro.kernel.android.checkjni"</span>, propBuf, <span class="string">""</span>);</div><div class="line">        <span class="keyword">if</span> (propBuf[<span class="number">0</span>] == <span class="string">'1'</span>) &#123;</div><div class="line">            checkJni = <span class="literal">true</span>;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    ALOGD(<span class="string">"CheckJNI is %s\n"</span>, checkJni ? <span class="string">"ON"</span> : <span class="string">"OFF"</span>);</div><div class="line">    <span class="keyword">if</span> (checkJni) &#123;</div><div class="line">        addOption(<span class="string">"-Xcheck:jni"</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    property_get(<span class="string">"dalvik.vm.execution-mode"</span>, propBuf, <span class="string">""</span>);</div><div class="line">    <span class="keyword">if</span> (<span class="built_in">strcmp</span>(propBuf, <span class="string">"int:portable"</span>) == <span class="number">0</span>) &#123;</div><div class="line">        executionMode = kEMIntPortable;</div><div class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcmp</span>(propBuf, <span class="string">"int:fast"</span>) == <span class="number">0</span>) &#123;</div><div class="line">        executionMode = kEMIntFast;</div><div class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcmp</span>(propBuf, <span class="string">"int:jit"</span>) == <span class="number">0</span>) &#123;</div><div class="line">        executionMode = kEMJitCompiler;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.stack-trace-file"</span>, stackTraceFileBuf, <span class="string">"-Xstacktracefile:"</span>);</div><div class="line"></div><div class="line">    <span class="built_in">strcpy</span>(jniOptsBuf, <span class="string">"-Xjniopts:"</span>);</div><div class="line">    <span class="keyword">if</span> (parseRuntimeOption(<span class="string">"dalvik.vm.jniopts"</span>, jniOptsBuf, <span class="string">"-Xjniopts:"</span>)) &#123;</div><div class="line">        ALOGI(<span class="string">"JNI options: '%s'\n"</span>, jniOptsBuf);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    addOption(<span class="string">"exit"</span>, (<span class="keyword">void</span>*) runtime_exit); <span class="comment">// exit()线程处理</span></div><div class="line">    addOption(<span class="string">"vfprintf"</span>, (<span class="keyword">void</span>*) runtime_vfprintf); <span class="comment">// fprintf()线程处理</span></div><div class="line">    addOption(<span class="string">"sensitiveThread"</span>, (<span class="keyword">void</span>*) runtime_isSensitiveThread); <span class="comment">// 注册敏感线程框架</span></div><div class="line">    addOption(<span class="string">"-verbose:gc"</span>);</div><div class="line">	<span class="comment">// 默认的启动和堆的最大尺寸</span></div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.heapstartsize"</span>, heapstartsizeOptsBuf, <span class="string">"-Xms"</span>, <span class="string">"4m"</span>);</div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.heapsize"</span>, heapsizeOptsBuf, <span class="string">"-Xmx"</span>, <span class="string">"16m"</span>);</div><div class="line"></div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.heapgrowthlimit"</span>, heapgrowthlimitOptsBuf, <span class="string">"-XX:HeapGrowthLimit="</span>);</div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.heapminfree"</span>, heapminfreeOptsBuf, <span class="string">"-XX:HeapMinFree="</span>);</div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.heapmaxfree"</span>, heapmaxfreeOptsBuf, <span class="string">"-XX:HeapMaxFree="</span>);</div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.heaptargetutilization"</span>,</div><div class="line">                       heaptargetutilizationOptsBuf,</div><div class="line">                       <span class="string">"-XX:HeapTargetUtilization="</span>);</div><div class="line">	<span class="comment">// 设置最大JIT代码缓存大小</span></div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.usejit"</span>, usejitOptsBuf, <span class="string">"-Xusejit:"</span>);</div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.jitmaxsize"</span>, jitmaxsizeOptsBuf, <span class="string">"-Xjitmaxsize:"</span>);</div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.jitinitialsize"</span>, jitinitialsizeOptsBuf, <span class="string">"-Xjitinitialsize:"</span>);</div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.jitthreshold"</span>, jitthresholdOptsBuf, <span class="string">"-Xjitthreshold:"</span>);</div><div class="line">    property_get(<span class="string">"dalvik.vm.usejitprofiles"</span>, useJitProfilesOptsBuf, <span class="string">""</span>);</div><div class="line">    <span class="keyword">if</span> (<span class="built_in">strcmp</span>(useJitProfilesOptsBuf, <span class="string">"true"</span>) == <span class="number">0</span>) &#123;</div><div class="line">        addOption(<span class="string">"-Xjitsaveprofilinginfo"</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.jitprithreadweight"</span>,</div><div class="line">                       jitprithreadweightOptBuf,</div><div class="line">                       <span class="string">"-Xjitprithreadweight:"</span>);</div><div class="line"></div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.jittransitionweight"</span>,</div><div class="line">                       jittransitionweightOptBuf,</div><div class="line">                       <span class="string">"-Xjittransitionweight:"</span>);</div><div class="line"></div><div class="line">    property_get(<span class="string">"ro.config.low_ram"</span>, propBuf, <span class="string">""</span>);</div><div class="line">    <span class="keyword">if</span> (<span class="built_in">strcmp</span>(propBuf, <span class="string">"true"</span>) == <span class="number">0</span>) &#123;</div><div class="line">      addOption(<span class="string">"-XX:LowMemoryMode"</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.gctype"</span>, gctypeOptsBuf, <span class="string">"-Xgc:"</span>);</div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.backgroundgctype"</span>, backgroundgcOptsBuf, <span class="string">"-XX:BackgroundGC="</span>);</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (zygote) &#123;</div><div class="line">      addOption(<span class="string">"-agentlib:jdwp=transport=dt_android_adb,suspend=n,server=y"</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    parseRuntimeOption(<span class="string">"dalvik.vm.lockprof.threshold"</span>,</div><div class="line">                       lockProfThresholdBuf,</div><div class="line">                       <span class="string">"-Xlockprofthreshold:"</span>);</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (executionMode == kEMIntPortable) &#123;</div><div class="line">        addOption(<span class="string">"-Xint:portable"</span>);</div><div class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (executionMode == kEMIntFast) &#123;</div><div class="line">        addOption(<span class="string">"-Xint:fast"</span>);</div><div class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (executionMode == kEMJitCompiler) &#123;</div><div class="line">        addOption(<span class="string">"-Xint:jit"</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    property_get(<span class="string">"vold.decrypt"</span>, voldDecryptBuf, <span class="string">""</span>);</div><div class="line">    <span class="keyword">bool</span> skip_compilation = ((<span class="built_in">strcmp</span>(voldDecryptBuf, <span class="string">"trigger_restart_min_framework"</span>) == <span class="number">0</span>) ||</div><div class="line">                             (<span class="built_in">strcmp</span>(voldDecryptBuf, <span class="string">"1"</span>) == <span class="number">0</span>));</div><div class="line"></div><div class="line">    parseCompilerRuntimeOption(<span class="string">"dalvik.vm.image-dex2oat-Xms"</span>, dex2oatXmsImageFlagsBuf,</div><div class="line">                               <span class="string">"-Xms"</span>, <span class="string">"-Ximage-compiler-option"</span>);</div><div class="line">    parseCompilerRuntimeOption(<span class="string">"dalvik.vm.image-dex2oat-Xmx"</span>, dex2oatXmxImageFlagsBuf,</div><div class="line">                               <span class="string">"-Xmx"</span>, <span class="string">"-Ximage-compiler-option"</span>);</div><div class="line">    <span class="keyword">if</span> (skip_compilation) &#123;</div><div class="line">        addOption(<span class="string">"-Ximage-compiler-option"</span>);</div><div class="line">        addOption(<span class="string">"--compiler-filter=verify-none"</span>);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        parseCompilerOption(<span class="string">"dalvik.vm.image-dex2oat-filter"</span>, dex2oatImageCompilerFilterBuf,</div><div class="line">                            <span class="string">"--compiler-filter="</span>, <span class="string">"-Ximage-compiler-option"</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (!hasFile(<span class="string">"/system/etc/preloaded-classes"</span>)) &#123;</div><div class="line">        ALOGE(<span class="string">"Missing preloaded-classes file, /system/etc/preloaded-classes not found: %s\n"</span>,</div><div class="line">              strerror(errno));</div><div class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</div><div class="line">    &#125;</div><div class="line">    addOption(<span class="string">"-Ximage-compiler-option"</span>);</div><div class="line">    addOption(<span class="string">"--image-classes=/system/etc/preloaded-classes"</span>);</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (hasFile(<span class="string">"/system/etc/compiled-classes"</span>)) &#123;</div><div class="line">        addOption(<span class="string">"-Ximage-compiler-option"</span>);</div><div class="line">        addOption(<span class="string">"--compiled-classes=/system/etc/compiled-classes"</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    property_get(<span class="string">"dalvik.vm.image-dex2oat-flags"</span>, dex2oatImageFlagsBuf, <span class="string">""</span>);</div><div class="line">    parseExtraOpts(dex2oatImageFlagsBuf, <span class="string">"-Ximage-compiler-option"</span>);</div><div class="line"></div><div class="line">    parseCompilerRuntimeOption(<span class="string">"dalvik.vm.dex2oat-Xms"</span>, dex2oatXmsFlagsBuf,</div><div class="line">                               <span class="string">"-Xms"</span>, <span class="string">"-Xcompiler-option"</span>);</div><div class="line">    parseCompilerRuntimeOption(<span class="string">"dalvik.vm.dex2oat-Xmx"</span>, dex2oatXmxFlagsBuf,</div><div class="line">                               <span class="string">"-Xmx"</span>, <span class="string">"-Xcompiler-option"</span>);</div><div class="line">    <span class="keyword">if</span> (skip_compilation) &#123;</div><div class="line">        addOption(<span class="string">"-Xcompiler-option"</span>);</div><div class="line">        addOption(<span class="string">"--compiler-filter=verify-none"</span>);</div><div class="line"></div><div class="line">        addOption(<span class="string">"--runtime-arg"</span>);</div><div class="line">        addOption(<span class="string">"-Xnorelocate"</span>);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        parseCompilerOption(<span class="string">"dalvik.vm.dex2oat-filter"</span>, dex2oatCompilerFilterBuf,</div><div class="line">                            <span class="string">"--compiler-filter="</span>, <span class="string">"-Xcompiler-option"</span>);</div><div class="line">    &#125;</div><div class="line">    parseCompilerOption(<span class="string">"dalvik.vm.dex2oat-threads"</span>, dex2oatThreadsBuf, <span class="string">"-j"</span>, <span class="string">"-Xcompiler-option"</span>);</div><div class="line">    parseCompilerOption(<span class="string">"dalvik.vm.image-dex2oat-threads"</span>, dex2oatThreadsImageBuf, <span class="string">"-j"</span>,</div><div class="line">                        <span class="string">"-Ximage-compiler-option"</span>);</div><div class="line"></div><div class="line"><span class="meta">#<span class="meta-keyword">if</span> defined(__arm__)</span></div><div class="line">    <span class="keyword">constexpr</span> <span class="keyword">const</span> <span class="keyword">char</span>* instruction_set = <span class="string">"arm"</span>;</div><div class="line"><span class="meta">#<span class="meta-keyword">elif</span> defined(__aarch64__)</span></div><div class="line">    <span class="keyword">constexpr</span> <span class="keyword">const</span> <span class="keyword">char</span>* instruction_set = <span class="string">"arm64"</span>;</div><div class="line"><span class="meta">#<span class="meta-keyword">elif</span> defined(__mips__) &amp;&amp; !defined(__LP64__)</span></div><div class="line">    <span class="keyword">constexpr</span> <span class="keyword">const</span> <span class="keyword">char</span>* instruction_set = <span class="string">"mips"</span>;</div><div class="line"><span class="meta">#<span class="meta-keyword">elif</span> defined(__mips__) &amp;&amp; defined(__LP64__)</span></div><div class="line">    <span class="keyword">constexpr</span> <span class="keyword">const</span> <span class="keyword">char</span>* instruction_set = <span class="string">"mips64"</span>;</div><div class="line"><span class="meta">#<span class="meta-keyword">elif</span> defined(__i386__)</span></div><div class="line">    <span class="keyword">constexpr</span> <span class="keyword">const</span> <span class="keyword">char</span>* instruction_set = <span class="string">"x86"</span>;</div><div class="line"><span class="meta">#<span class="meta-keyword">elif</span> defined(__x86_64__)</span></div><div class="line">    <span class="keyword">constexpr</span> <span class="keyword">const</span> <span class="keyword">char</span>* instruction_set = <span class="string">"x86_64"</span>;</div><div class="line"><span class="meta">#<span class="meta-keyword">else</span></span></div><div class="line">    <span class="keyword">constexpr</span> <span class="keyword">const</span> <span class="keyword">char</span>* instruction_set = <span class="string">"unknown"</span>;</div><div class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></div><div class="line">  </div><div class="line">    <span class="built_in">sprintf</span>(dex2oat_isa_variant_key, <span class="string">"dalvik.vm.isa.%s.variant"</span>, instruction_set);</div><div class="line">    parseCompilerOption(dex2oat_isa_variant_key, dex2oat_isa_variant,</div><div class="line">                        <span class="string">"--instruction-set-variant="</span>, <span class="string">"-Ximage-compiler-option"</span>);</div><div class="line">    parseCompilerOption(dex2oat_isa_variant_key, dex2oat_isa_variant,</div><div class="line">                        <span class="string">"--instruction-set-variant="</span>, <span class="string">"-Xcompiler-option"</span>);</div><div class="line">    <span class="built_in">sprintf</span>(dex2oat_isa_features_key, <span class="string">"dalvik.vm.isa.%s.features"</span>, instruction_set);</div><div class="line">    parseCompilerOption(dex2oat_isa_features_key, dex2oat_isa_features,</div><div class="line">                        <span class="string">"--instruction-set-features="</span>, <span class="string">"-Ximage-compiler-option"</span>);</div><div class="line">    parseCompilerOption(dex2oat_isa_features_key, dex2oat_isa_features,</div><div class="line">                        <span class="string">"--instruction-set-features="</span>, <span class="string">"-Xcompiler-option"</span>);</div><div class="line">  property_get(<span class="string">"dalvik.vm.dex2oat-flags"</span>, dex2oatFlagsBuf, <span class="string">""</span>);</div><div class="line">  parseExtraOpts(dex2oatFlagsBuf, <span class="string">"-Xcompiler-option"</span>);</div><div class="line"></div><div class="line">  property_get(<span class="string">"dalvik.vm.extra-opts"</span>, extraOptsBuf, <span class="string">""</span>);</div><div class="line">  parseExtraOpts(extraOptsBuf, <span class="literal">NULL</span>);</div><div class="line"></div><div class="line">  &#123;</div><div class="line">      <span class="built_in">strcpy</span>(localeOption, <span class="string">"-Duser.locale="</span>);</div><div class="line">      <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span> locale = readLocale();</div><div class="line">      <span class="built_in">strncat</span>(localeOption, locale.c_str(), PROPERTY_VALUE_MAX);</div><div class="line">      addOption(localeOption);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  property_get(<span class="string">"ro.debuggable"</span>, propBuf, <span class="string">"0"</span>);</div><div class="line">  <span class="keyword">if</span> (<span class="built_in">strcmp</span>(propBuf, <span class="string">"1"</span>) == <span class="number">0</span>) &#123;</div><div class="line">      property_get(<span class="string">"dalvik.vm.method-trace"</span>, propBuf, <span class="string">"false"</span>);</div><div class="line">      <span class="keyword">if</span> (<span class="built_in">strcmp</span>(propBuf, <span class="string">"true"</span>) == <span class="number">0</span>) &#123;</div><div class="line">          addOption(<span class="string">"-Xmethod-trace"</span>);</div><div class="line">          parseRuntimeOption(<span class="string">"dalvik.vm.method-trace-file"</span>,</div><div class="line">                             methodTraceFileBuf,</div><div class="line">                             <span class="string">"-Xmethod-trace-file:"</span>);</div><div class="line">          parseRuntimeOption(<span class="string">"dalvik.vm.method-trace-file-siz"</span>,</div><div class="line">                             methodTraceFileSizeBuf,</div><div class="line">                             <span class="string">"-Xmethod-trace-file-size:"</span>);</div><div class="line">          property_get(<span class="string">"dalvik.vm.method-trace-stream"</span>, propBuf, <span class="string">"false"</span>);</div><div class="line">          <span class="keyword">if</span> (<span class="built_in">strcmp</span>(propBuf, <span class="string">"true"</span>) == <span class="number">0</span>) &#123;</div><div class="line">              addOption(<span class="string">"-Xmethod-trace-stream"</span>);</div><div class="line">          &#125;</div><div class="line">      &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  property_get(<span class="string">"ro.dalvik.vm.native.bridge"</span>, propBuf, <span class="string">""</span>);</div><div class="line">  <span class="keyword">if</span> (propBuf[<span class="number">0</span>] == <span class="string">'\0'</span>) &#123;</div><div class="line">      ALOGW(<span class="string">"ro.dalvik.vm.native.bridge is not expected to be empty"</span>);</div><div class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcmp</span>(propBuf, <span class="string">"0"</span>) != <span class="number">0</span>) &#123;</div><div class="line">      <span class="built_in">snprintf</span>(nativeBridgeLibrary, <span class="keyword">sizeof</span>(<span class="string">"-XX:NativeBridge="</span>) + PROPERTY_VALUE_MAX,</div><div class="line">               <span class="string">"-XX:NativeBridge=%s"</span>, propBuf);</div><div class="line">      addOption(nativeBridgeLibrary);</div><div class="line">  &#125;</div><div class="line">  <span class="function"><span class="keyword">if</span> <span class="title">defined</span><span class="params">(LP64)</span></span></div><div class="line">  <span class="keyword">const</span> <span class="keyword">char</span>* cpu_abilist_property_name = <span class="string">"ro.product.cpu.abilist64"</span>;</div><div class="line">  <span class="keyword">else</span></div><div class="line">  <span class="keyword">const</span> <span class="keyword">char</span>* cpu_abilist_property_name = <span class="string">"ro.product.cpu.abilist32"</span>;</div><div class="line">  <span class="function">endif</span></div><div class="line">  <span class="title">property_get</span><span class="params">(cpu_abilist_property_name, propBuf, <span class="string">""</span>)</span>;</div><div class="line">  <span class="keyword">if</span> (propBuf[<span class="number">0</span>] == <span class="string">'\0'</span>) &#123;</div><div class="line">      ALOGE(<span class="string">"%s is not expected to be empty"</span>, cpu_abilist_property_name);</div><div class="line">      <span class="keyword">return</span> <span class="number">-1</span>;</div><div class="line">  &#125;</div><div class="line">  <span class="built_in">snprintf</span>(cpuAbiListBuf, <span class="keyword">sizeof</span>(cpuAbiListBuf), <span class="string">"--cpu-abilist=%s"</span>, propBuf);</div><div class="line">  addOption(cpuAbiListBuf);</div><div class="line"></div><div class="line">  parseRuntimeOption(<span class="string">"dalvik.vm.zygote.max-boot-retry"</span>, cachePruneBuf,</div><div class="line">                     <span class="string">"-Xzygote-max-boot-retry="</span>);</div><div class="line"></div><div class="line">  property_get(<span class="string">"debug.generate-debug-info"</span>, propBuf, <span class="string">""</span>);</div><div class="line">  <span class="keyword">if</span> (<span class="built_in">strcmp</span>(propBuf, <span class="string">"true"</span>) == <span class="number">0</span>) &#123;</div><div class="line">      addOption(<span class="string">"-Xcompiler-option"</span>);</div><div class="line">      addOption(<span class="string">"--generate-debug-info"</span>);</div><div class="line">      addOption(<span class="string">"-Ximage-compiler-option"</span>);</div><div class="line">      addOption(<span class="string">"--generate-debug-info"</span>);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  parseRuntimeOption(<span class="string">"ro.build.fingerprint"</span>, fingerprintBuf, <span class="string">"-Xfingerprint:"</span>);</div><div class="line"></div><div class="line">  initArgs.version = JNI_VERSION_1_4;</div><div class="line">  initArgs.options = mOptions.editArray();</div><div class="line">  initArgs.nOptions = mOptions.size();</div><div class="line">  initArgs.ignoreUnrecognized = JNI_FALSE;</div><div class="line">  <span class="comment">// 初始化VM</span></div><div class="line">  <span class="keyword">if</span> (JNI_CreateJavaVM(pJavaVM, pEnv, &amp;initArgs) &lt; <span class="number">0</span>) &#123;</div><div class="line">      ALOGE(<span class="string">"JNI_CreateJavaVM failed\n"</span>);</div><div class="line">      <span class="keyword">return</span> <span class="number">-1</span>;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">｝</div></pre></td></tr></table></figure>
+<p>由上述实现代码可知，函数AndroidRuntime::startVM()最终会调用JNI_CreateJavaVM()函数，其具体实现代码如下。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">extern</span> <span class="string">"C"</span> <span class="function">jint <span class="title">JNI_CreateJavaVM</span><span class="params">(JavaVM** p_vm, JNIEnv** p_env, <span class="keyword">void</span>* vm_args)</span> </span>&#123;</div><div class="line">      <span class="keyword">return</span> JniInvocation::GetJniInvocation().JNI_CreateJavaVM(p_vm, p_env, vm_args);</div><div class="line">  &#125;</div></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">jint JniInvocation::JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, <span class="keyword">void</span>* vm_args) &#123;</div><div class="line">      <span class="keyword">return</span> JNI_CreateJavaVM_(p_vm, p_env, vm_args);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<figure class="highlight cc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">extern</span> <span class="string">"C"</span> <span class="function">jint <span class="title">JNI_CreateJavaVM</span><span class="params">(JavaVM** p_vm, JNIEnv** p_env, <span class="keyword">void</span>* vm_args)</span> </span>&#123;</div><div class="line">      <span class="function">ScopedTrace <span class="title">trace</span><span class="params">(__FUNCTION__)</span></span>;</div><div class="line">      <span class="keyword">const</span> JavaVMInitArgs* args = <span class="keyword">static_cast</span>&lt;JavaVMInitArgs*&gt;(vm_args);</div><div class="line">      <span class="keyword">if</span> (IsBadJniVersion(args-&gt;version)) &#123;</div><div class="line">        LOG(ERROR) &lt;&lt; <span class="string">"Bad JNI version passed to CreateJavaVM: "</span> &lt;&lt; args-&gt;version;</div><div class="line">        <span class="keyword">return</span> JNI_EVERSION;</div><div class="line">      &#125;</div><div class="line">      RuntimeOptions options;</div><div class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; args-&gt;nOptions; ++i) &#123;</div><div class="line">        JavaVMOption* option = &amp;args-&gt;options[i];</div><div class="line">        options.push_back(<span class="built_in">std</span>::make_pair(<span class="built_in">std</span>::<span class="built_in">string</span>(option-&gt;optionString), option-&gt;extraInfo));</div><div class="line">      &#125;</div><div class="line">      <span class="keyword">bool</span> ignore_unrecognized = args-&gt;ignoreUnrecognized;</div><div class="line">      <span class="keyword">if</span> (!Runtime::Create(options, ignore_unrecognized)) &#123;</div><div class="line">        <span class="keyword">return</span> JNI_ERR;</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      android::InitializeNativeLoader();</div><div class="line">	  <span class="comment">// 获取Runtime当前实例，Runtime使用单例模式实现</span></div><div class="line">      Runtime* runtime = Runtime::Current();</div><div class="line">  	  <span class="comment">// 调用start()函数</span></div><div class="line">      <span class="keyword">bool</span> started = runtime-&gt;Start();</div><div class="line">      <span class="keyword">if</span> (!started) &#123;</div><div class="line">        <span class="keyword">delete</span> Thread::Current()-&gt;GetJniEnv();</div><div class="line">        <span class="keyword">delete</span> runtime-&gt;GetJavaVM();</div><div class="line">        LOG(WARNING) &lt;&lt; <span class="string">"CreateJavaVM failed"</span>;</div><div class="line">        <span class="keyword">return</span> JNI_ERR;</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      *p_env = Thread::Current()-&gt;GetJniEnv();</div><div class="line">      *p_vm = runtime-&gt;GetJavaVM();</div><div class="line">      <span class="keyword">return</span> JNI_OK;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>  类JniInvocation的静态成员函数GetJniInvocation()返回的便是前面所创建的JniInvocation实例。有了这个实例后，就继续调用其成员函数JNI_CreateJavaVM()来创建一个JavaVM接口及其对应的JNIEnv接口。类JniInvocation的成员变量JNI<em>CreateJavaVM</em>指向的就是前面所加载的libdvm.so或libart.so所导出的函数JNI_CreateJavaVM()。</p>
+</li>
+<li><p>创建运行实例</p>
+<p>在文件 art/runtime/java_vm_ext.cc中，函数JNI_CreateJavaVM()会调用函数Create()创建Runtime的实例。</p>
+<figure class="highlight cc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">bool</span> Runtime::Create(<span class="keyword">const</span> RuntimeOptions&amp; raw_options, <span class="keyword">bool</span> ignore_unrecognized) &#123;</div><div class="line">  RuntimeArgumentMap runtime_options;</div><div class="line">  <span class="keyword">return</span> ParseOptions(raw_options, ignore_unrecognized, &amp;runtime_options) &amp;&amp;</div><div class="line">      Create(<span class="built_in">std</span>::move(runtime_options));</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Create()函数调用ParseOptions(raw_options, ignore_unrecognized, &amp;runtime_options)函数和Create(std::move(runtime_options)函数。</p>
+<figure class="highlight cc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">bool</span> Runtime::ParseOptions(<span class="keyword">const</span> RuntimeOptions&amp; raw_options,</div><div class="line">                           <span class="keyword">bool</span> ignore_unrecognized,</div><div class="line">                           RuntimeArgumentMap* runtime_options) &#123;</div><div class="line">  InitLogging(<span class="comment">/* argv */</span> <span class="literal">nullptr</span>);  <span class="comment">// 初始化Log系统</span></div><div class="line">  <span class="keyword">bool</span> parsed = ParsedOptions::Parse(raw_options, ignore_unrecognized, runtime_options);</div><div class="line">  <span class="keyword">if</span> (!parsed) &#123;</div><div class="line">    LOG(ERROR) &lt;&lt; <span class="string">"Failed to parse options"</span>;</div><div class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> <span class="literal">true</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">bool</span> Runtime::Create(RuntimeArgumentMap&amp;&amp; runtime_options) &#123;</div><div class="line">  <span class="keyword">if</span> (Runtime::instance_ != <span class="literal">nullptr</span>) &#123;</div><div class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">  &#125;</div><div class="line">  instance_ = <span class="keyword">new</span> Runtime; <span class="comment">// 创建Runtime实例</span></div><div class="line">  <span class="comment">// 初始化Runtime</span></div><div class="line">  <span class="keyword">if</span> (!instance_-&gt;Init(<span class="built_in">std</span>::move(runtime_options))) &#123;</div><div class="line">    instance_ = <span class="literal">nullptr</span>;</div><div class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> <span class="literal">true</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>函数JNI_CreateJavaVM()获取当前Runtime实例后，会调用start()函数，其具体实现如下。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div></pre></td><td class="code"><pre><div class="line">bool Runtime::Start() &#123;</div><div class="line">  VLOG(startup) &lt;&lt; "Runtime::Start entering";</div><div class="line">  CHECK(!no_sig_chain_) &lt;&lt; "A started runtime should have sig chain enabled";</div><div class="line"></div><div class="line">#if defined(__linux__) &amp;&amp; !defined(__ANDROID__) &amp;&amp; defined(__x86_64__)</div><div class="line">  if (kIsDebugBuild) &#123;</div><div class="line">    CHECK_EQ(prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY), 0);</div><div class="line">  &#125;</div><div class="line">#endif</div><div class="line">  // 获取当前运行线程</div><div class="line">  Thread* self = Thread::Current();</div><div class="line"></div><div class="line">  self-&gt;TransitionFromRunnableToSuspended(kNative);</div><div class="line"></div><div class="line">  started_ = true;</div><div class="line"></div><div class="line">  if (jit_options_-&gt;UseJitCompilation() || jit_options_-&gt;GetSaveProfilingInfo()) &#123;</div><div class="line">    std::string error_msg;</div><div class="line">    if (!IsZygote()) &#123;</div><div class="line">      CreateJit();</div><div class="line">    &#125; else if (jit_options_-&gt;UseJitCompilation()) &#123;</div><div class="line">      if (!jit::Jit::LoadCompilerLibrary(&amp;error_msg)) &#123;</div><div class="line">        LOG(WARNING) &lt;&lt; "Failed to load JIT compiler with error " &lt;&lt; error_msg;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  if (!IsImageDex2OatEnabled() || !GetHeap()-&gt;HasBootImageSpace()) &#123;</div><div class="line">    ScopedObjectAccess soa(self);</div><div class="line">    StackHandleScope&lt;2&gt; hs(soa.Self());</div><div class="line"></div><div class="line">    auto class_class(hs.NewHandle&lt;mirror::Class&gt;(mirror::Class::GetJavaLangClass()));</div><div class="line">    auto field_class(hs.NewHandle&lt;mirror::Class&gt;(mirror::Field::StaticClass()));</div><div class="line"></div><div class="line">    class_linker_-&gt;EnsureInitialized(soa.Self(), class_class, true, true);</div><div class="line">    class_linker_-&gt;EnsureInitialized(soa.Self(), field_class, true, true);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  &#123;</div><div class="line">    ScopedTrace trace2("InitNativeMethods");</div><div class="line">    // 完成Native函数的初始化工作</div><div class="line">    InitNativeMethods();</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  InitThreadGroups(self);</div><div class="line"></div><div class="line">  Thread::FinishStartup();</div><div class="line"></div><div class="line">  system_class_loader_ = CreateSystemClassLoader(this);</div><div class="line"></div><div class="line">  if (is_zygote_) &#123;</div><div class="line">    if (!InitZygote()) &#123;</div><div class="line">      return false;</div><div class="line">    &#125;</div><div class="line">  &#125; else &#123;</div><div class="line">    if (is_native_bridge_loaded_) &#123;</div><div class="line">      PreInitializeNativeBridge(".");</div><div class="line">    &#125;</div><div class="line">    NativeBridgeAction action = force_native_bridge_</div><div class="line">        ? NativeBridgeAction::kInitialize</div><div class="line">        : NativeBridgeAction::kUnload;</div><div class="line">    InitNonZygoteOrPostFork(self-&gt;GetJniEnv(),</div><div class="line">                            /* is_system_server */ false,</div><div class="line">                            action,</div><div class="line">                            GetInstructionSetString(kRuntimeISA));</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  StartDaemonThreads();</div><div class="line"></div><div class="line">  &#123;</div><div class="line">    ScopedObjectAccess soa(self);</div><div class="line">    self-&gt;GetJniEnv()-&gt;locals.AssertEmpty();</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  VLOG(startup) &lt;&lt; "Runtime::Start exiting";</div><div class="line">  finished_starting_ = true;</div><div class="line"></div><div class="line">  if (profiler_options_.IsEnabled() &amp;&amp; !profile_output_filename_.empty()) &#123;</div><div class="line">    int fd = open(profile_output_filename_.c_str(), O_RDWR|O_CREAT|O_EXCL, 0660);</div><div class="line">    if (fd &gt;= 0) &#123;</div><div class="line">      close(fd);</div><div class="line">    &#125; else if (errno != EEXIST) &#123;</div><div class="line">      LOG(WARNING) &lt;&lt; "Failed to access the profile file. Profiler disabled.";</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  if (trace_config_.get() != nullptr &amp;&amp; trace_config_-&gt;trace_file != "") &#123;</div><div class="line">    ScopedThreadStateChange tsc(self, kWaitingForMethodTracingStart);</div><div class="line">    Trace::Start(trace_config_-&gt;trace_file.c_str(),</div><div class="line">                 -1,</div><div class="line">                 static_cast&lt;int&gt;(trace_config_-&gt;trace_file_size),</div><div class="line">                 0,</div><div class="line">                 trace_config_-&gt;trace_output_mode,</div><div class="line">                 trace_config_-&gt;trace_mode,</div><div class="line">                 0);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  return true;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>接下来看看InitNativeMethods()函数的具体实现。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> Runtime::InitNativeMethods() &#123;</div><div class="line">  VLOG(startup) &lt;&lt; <span class="string">"Runtime::InitNativeMethods entering"</span>;</div><div class="line">  Thread* self = Thread::Current();</div><div class="line">  JNIEnv* env = self-&gt;GetJniEnv(); <span class="comment">// 获取JNI环境</span></div><div class="line"></div><div class="line">  CHECK_EQ(self-&gt;GetState(), kNative);</div><div class="line"></div><div class="line">  JniConstants::init(env);</div><div class="line"></div><div class="line">  RegisterRuntimeNativeMethods(env); <span class="comment">// 完成Native函数的注册</span></div><div class="line"></div><div class="line">  WellKnownClasses::Init(env);</div><div class="line"></div><div class="line">  &#123;</div><div class="line">    <span class="built_in">std</span>::<span class="built_in">string</span> error_msg;</div><div class="line">    <span class="keyword">if</span> (!java_vm_-&gt;LoadNativeLibrary(env, <span class="string">"libjavacore.so"</span>, <span class="literal">nullptr</span>, <span class="literal">nullptr</span>, &amp;error_msg)) &#123;</div><div class="line">      LOG(FATAL) &lt;&lt; <span class="string">"LoadNativeLibrary failed for \"libjavacore.so\": "</span> &lt;&lt; error_msg;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  &#123;</div><div class="line">    <span class="keyword">constexpr</span> <span class="keyword">const</span> <span class="keyword">char</span>* kOpenJdkLibrary = kIsDebugBuild</div><div class="line">                                                ? <span class="string">"libopenjdkd.so"</span></div><div class="line">                                                : <span class="string">"libopenjdk.so"</span>;</div><div class="line">    <span class="built_in">std</span>::<span class="built_in">string</span> error_msg;</div><div class="line">    <span class="keyword">if</span> (!java_vm_-&gt;LoadNativeLibrary(env, kOpenJdkLibrary, <span class="literal">nullptr</span>, <span class="literal">nullptr</span>, &amp;error_msg)) &#123;</div><div class="line">      LOG(FATAL) &lt;&lt; <span class="string">"LoadNativeLibrary failed for \""</span> &lt;&lt; kOpenJdkLibrary &lt;&lt; <span class="string">"\": "</span> &lt;&lt; error_msg;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  WellKnownClasses::LateInit(env);</div><div class="line"></div><div class="line">  VLOG(startup) &lt;&lt; <span class="string">"Runtime::InitNativeMethods exiting"</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>注册本地JNI函数</p>
+<p>在文件 art/runtime/runtime.cc中的函数Runtime::InitNativeMethods()中，通过调用RegisterRuntimeNativeMethods(env)来注册Native函数，其具体实现如下。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> Runtime::RegisterRuntimeNativeMethods(JNIEnv* env) &#123;</div><div class="line">  register_dalvik_system_DexFile(env);</div><div class="line">  register_dalvik_system_VMDebug(env);</div><div class="line">  register_dalvik_system_VMRuntime(env);</div><div class="line">  register_dalvik_system_VMStack(env);</div><div class="line">  register_dalvik_system_ZygoteHooks(env);</div><div class="line">  register_java_lang_Class(env);</div><div class="line">  register_java_lang_DexCache(env);</div><div class="line">  register_java_lang_Object(env);</div><div class="line">  register_java_lang_ref_FinalizerReference(env);</div><div class="line">  register_java_lang_reflect_AbstractMethod(env);</div><div class="line">  register_java_lang_reflect_Array(env);</div><div class="line">  register_java_lang_reflect_Constructor(env);</div><div class="line">  register_java_lang_reflect_Field(env);</div><div class="line">  register_java_lang_reflect_Method(env);</div><div class="line">  register_java_lang_reflect_Proxy(env);</div><div class="line">  register_java_lang_ref_Reference(env);</div><div class="line">  register_java_lang_String(env);</div><div class="line">  register_java_lang_StringFactory(env);</div><div class="line">  register_java_lang_System(env);</div><div class="line">  register_java_lang_Thread(env);</div><div class="line">  register_java_lang_Throwable(env);</div><div class="line">  register_java_lang_VMClassLoader(env);</div><div class="line">  register_java_util_concurrent_atomic_AtomicLong(env);</div><div class="line">  register_libcore_util_CharsetUtils(env);</div><div class="line">  register_org_apache_harmony_dalvik_ddmc_DdmServer(env);</div><div class="line">  register_org_apache_harmony_dalvik_ddmc_DdmVmInternal(env);</div><div class="line">  register_sun_misc_Unsafe(env);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在上述代码中列出了需要注册的函数列表。</p>
+</li>
+<li><p>启动守护进程</p>
+<p>再次返回到Runtime::Start函数，其中调用InitZygote完成一些文件系统的mount工作。然后通过StartDaemonThreads()代码行调用java.lang.Daemons.start()函数启动守护进程，其具体实现如下。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> Runtime::StartDaemonThreads() &#123;</div><div class="line">  <span class="function">ScopedTrace <span class="title">trace</span><span class="params">(__FUNCTION__)</span></span>;</div><div class="line">  VLOG(startup) &lt;&lt; <span class="string">"Runtime::StartDaemonThreads entering"</span>;</div><div class="line"></div><div class="line">  Thread* self = Thread::Current();</div><div class="line"></div><div class="line">  CHECK_EQ(self-&gt;GetState(), kNative);</div><div class="line"></div><div class="line">  JNIEnv* env = self-&gt;GetJniEnv();</div><div class="line">  env-&gt;CallStaticVoidMethod(WellKnownClasses::java_lang_Daemons,</div><div class="line">                            WellKnownClasses::java_lang_Daemons_start);</div><div class="line">  <span class="keyword">if</span> (env-&gt;ExceptionCheck()) &#123;</div><div class="line">    env-&gt;ExceptionDescribe();</div><div class="line">    LOG(FATAL) &lt;&lt; <span class="string">"Error starting java.lang.Daemons"</span>;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  VLOG(startup) &lt;&lt; <span class="string">"Runtime::StartDaemonThreads exiting"</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>综上所述，android系统通过将ART运行时抽象成一个Java虚拟机，以及通过系统属性persist.sys.dalvik.vm.lib和一个适配层JniInvocation，就可以无缝地将Dalvik虚拟机替换成ART运行时。这个替换过程设计非常巧妙，因为涉及的代码修改非常少。</p>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/%E5%90%AF%E5%8A%A8ART%E6%B6%89%E5%8F%8A%E7%9A%84%E7%B1%BB.png" alt="ART启动涉及的类"></p>
+</li>
+<li><p>解析参数</p>
+<p>在函数JNI_CreateJavaVM()中，现调用Create()函数创建Runtime。Runtime是一个单例，创建后会马上调用/art/runtime/runtime.cc中的Init()函数。Init()函数的功能是解析参数，初始化Heap和JavaVMExt结构，实现线程和信号处理，并创建ClassLinker等。函数Init()的具体实现代码如下。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div><div class="line">143</div><div class="line">144</div><div class="line">145</div><div class="line">146</div><div class="line">147</div><div class="line">148</div><div class="line">149</div><div class="line">150</div><div class="line">151</div><div class="line">152</div><div class="line">153</div><div class="line">154</div><div class="line">155</div><div class="line">156</div><div class="line">157</div><div class="line">158</div><div class="line">159</div><div class="line">160</div><div class="line">161</div><div class="line">162</div><div class="line">163</div><div class="line">164</div><div class="line">165</div><div class="line">166</div><div class="line">167</div><div class="line">168</div><div class="line">169</div><div class="line">170</div><div class="line">171</div><div class="line">172</div><div class="line">173</div><div class="line">174</div><div class="line">175</div><div class="line">176</div><div class="line">177</div><div class="line">178</div><div class="line">179</div><div class="line">180</div><div class="line">181</div><div class="line">182</div><div class="line">183</div><div class="line">184</div><div class="line">185</div><div class="line">186</div><div class="line">187</div><div class="line">188</div><div class="line">189</div><div class="line">190</div><div class="line">191</div><div class="line">192</div><div class="line">193</div><div class="line">194</div><div class="line">195</div><div class="line">196</div><div class="line">197</div><div class="line">198</div><div class="line">199</div></pre></td><td class="code"><pre><div class="line">bool Runtime::Init(RuntimeArgumentMap&amp;&amp; runtime_options_in) &#123;</div><div class="line">  RuntimeArgumentMap runtime_options(std::move(runtime_options_in));</div><div class="line">  ScopedTrace trace(__FUNCTION__);</div><div class="line">  CHECK_EQ(sysconf(_SC_PAGE_SIZE), kPageSize);</div><div class="line"></div><div class="line">  MemMap::Init();</div><div class="line"></div><div class="line">  using Opt = RuntimeArgumentMap;</div><div class="line">  VLOG(startup) &lt;&lt; "Runtime::Init -verbose:startup enabled";</div><div class="line"></div><div class="line">  QuasiAtomic::Startup();</div><div class="line"></div><div class="line">  oat_file_manager_ = new OatFileManager;</div><div class="line"></div><div class="line">  Thread::SetSensitiveThreadHook(runtime_options.GetOrDefault(Opt::HookIsSensitiveThread));</div><div class="line">  Monitor::Init(runtime_options.GetOrDefault(Opt::LockProfThreshold));</div><div class="line"></div><div class="line">  boot_class_path_string_ = runtime_options.ReleaseOrDefault(Opt::BootClassPath);</div><div class="line">  class_path_string_ = runtime_options.ReleaseOrDefault(Opt::ClassPath);</div><div class="line">  properties_ = runtime_options.ReleaseOrDefault(Opt::PropertiesList);</div><div class="line"></div><div class="line">  compiler_callbacks_ = runtime_options.GetOrDefault(Opt::CompilerCallbacksPtr);</div><div class="line">  patchoat_executable_ = runtime_options.ReleaseOrDefault(Opt::PatchOat);</div><div class="line">  must_relocate_ = runtime_options.GetOrDefault(Opt::Relocate);</div><div class="line">  is_zygote_ = runtime_options.Exists(Opt::Zygote);</div><div class="line">  is_explicit_gc_disabled_ = runtime_options.Exists(Opt::DisableExplicitGC);</div><div class="line">  dex2oat_enabled_ = runtime_options.GetOrDefault(Opt::Dex2Oat);</div><div class="line">  image_dex2oat_enabled_ = runtime_options.GetOrDefault(Opt::ImageDex2Oat);</div><div class="line">  dump_native_stack_on_sig_quit_ = runtime_options.GetOrDefault(Opt::DumpNativeStackOnSigQuit);</div><div class="line"></div><div class="line">  vfprintf_ = runtime_options.GetOrDefault(Opt::HookVfprintf);</div><div class="line">  exit_ = runtime_options.GetOrDefault(Opt::HookExit);</div><div class="line">  abort_ = runtime_options.GetOrDefault(Opt::HookAbort);</div><div class="line"></div><div class="line">  default_stack_size_ = runtime_options.GetOrDefault(Opt::StackSize);</div><div class="line">  stack_trace_file_ = runtime_options.ReleaseOrDefault(Opt::StackTraceFile);</div><div class="line"></div><div class="line">  compiler_executable_ = runtime_options.ReleaseOrDefault(Opt::Compiler);</div><div class="line">  compiler_options_ = runtime_options.ReleaseOrDefault(Opt::CompilerOptions);</div><div class="line">  image_compiler_options_ = runtime_options.ReleaseOrDefault(Opt::ImageCompilerOptions);</div><div class="line">  image_location_ = runtime_options.GetOrDefault(Opt::Image);</div><div class="line"></div><div class="line">  max_spins_before_thin_lock_inflation_ =</div><div class="line">      runtime_options.GetOrDefault(Opt::MaxSpinsBeforeThinLockInflation);</div><div class="line">  // 初始化Monitor（相当于mutex + conditional variable，可用于多个线程同步）和线程链表</div><div class="line">  monitor_list_ = new MonitorList;</div><div class="line">  monitor_pool_ = MonitorPool::Create();</div><div class="line">  thread_list_ = new ThreadList;</div><div class="line">  intern_table_ = new InternTable;</div><div class="line"></div><div class="line">  verify_ = runtime_options.GetOrDefault(Opt::Verify);</div><div class="line">  allow_dex_file_fallback_ = !runtime_options.Exists(Opt::NoDexFileFallback);</div><div class="line"></div><div class="line">  no_sig_chain_ = runtime_options.Exists(Opt::NoSigChain);</div><div class="line">  force_native_bridge_ = runtime_options.Exists(Opt::ForceNativeBridge);</div><div class="line"></div><div class="line">  Split(runtime_options.GetOrDefault(Opt::CpuAbiList), ',', &amp;cpu_abilist_);</div><div class="line"></div><div class="line">  fingerprint_ = runtime_options.ReleaseOrDefault(Opt::Fingerprint);</div><div class="line"></div><div class="line">  if (runtime_options.GetOrDefault(Opt::Interpret)) &#123;</div><div class="line">      GetInstrumentation()-&gt;ForceInterpretOnly();</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  zygote_max_failed_boots_ = runtime_options.GetOrDefault(Opt::ZygoteMaxFailedBoots);</div><div class="line">  experimental_flags_ = runtime_options.GetOrDefault(Opt::Experimental);</div><div class="line">  is_low_memory_mode_ = runtime_options.Exists(Opt::LowMemoryMode);</div><div class="line"></div><div class="line">  &#123;</div><div class="line">    CompilerFilter::Filter filter;</div><div class="line">    std::string filter_str = runtime_options.GetOrDefault(Opt::OatFileManagerCompilerFilter);</div><div class="line">    if (!CompilerFilter::ParseCompilerFilter(filter_str.c_str(), &amp;filter)) &#123;</div><div class="line">      LOG(ERROR) &lt;&lt; "Cannot parse compiler filter " &lt;&lt; filter_str;</div><div class="line">      return false;</div><div class="line">    &#125;</div><div class="line">    OatFileManager::SetCompilerFilter(filter);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  XGcOption xgc_option = runtime_options.GetOrDefault(Opt::GcOption);</div><div class="line">  // 实现比较重  要的Heap以及GC的初始化工作</div><div class="line">  heap_ = new gc::Heap(runtime_options.GetOrDefault(Opt::MemoryInitialSize),</div><div class="line">                       runtime_options.GetOrDefault(Opt::HeapGrowthLimit),</div><div class="line">                       runtime_options.GetOrDefault(Opt::HeapMinFree),</div><div class="line">                       runtime_options.GetOrDefault(Opt::HeapMaxFree),</div><div class="line">                       runtime_options.GetOrDefault(Opt::HeapTargetUtilization),</div><div class="line">                       runtime_options.GetOrDefault(Opt::ForegroundHeapGrowthMultiplier),</div><div class="line">                       runtime_options.GetOrDefault(Opt::MemoryMaximumSize),</div><div class="line">                       runtime_options.GetOrDefault(Opt::NonMovingSpaceCapacity),</div><div class="line">                       runtime_options.GetOrDefault(Opt::Image),</div><div class="line">                       runtime_options.GetOrDefault(Opt::ImageInstructionSet),</div><div class="line">                       xgc_option.collector_type_,</div><div class="line">                       runtime_options.GetOrDefault(Opt::BackgroundGc),</div><div class="line">                       runtime_options.GetOrDefault(Opt::LargeObjectSpace),</div><div class="line">                       runtime_options.GetOrDefault(Opt::LargeObjectThreshold),</div><div class="line">                       runtime_options.GetOrDefault(Opt::ParallelGCThreads),</div><div class="line">                       runtime_options.GetOrDefault(Opt::ConcGCThreads),</div><div class="line">                       runtime_options.Exists(Opt::LowMemoryMode),</div><div class="line">                       runtime_options.GetOrDefault(Opt::LongPauseLogThreshold),</div><div class="line">                       runtime_options.GetOrDefault(Opt::LongGCLogThreshold),</div><div class="line">                       runtime_options.Exists(Opt::IgnoreMaxFootprint),</div><div class="line">                       runtime_options.GetOrDefault(Opt::UseTLAB),</div><div class="line">                       xgc_option.verify_pre_gc_heap_,</div><div class="line">                       xgc_option.verify_pre_sweeping_heap_,</div><div class="line">                       xgc_option.verify_post_gc_heap_,</div><div class="line">                       xgc_option.verify_pre_gc_rosalloc_,</div><div class="line">                       xgc_option.verify_pre_sweeping_rosalloc_,</div><div class="line">                       xgc_option.verify_post_gc_rosalloc_,</div><div class="line">                       xgc_option.gcstress_,</div><div class="line">                       runtime_options.GetOrDefault(Opt::EnableHSpaceCompactForOOM),</div><div class="line">                       runtime_options.GetOrDefault(Opt::HSpaceCompactForOOMMinIntervalsMs));</div><div class="line"></div><div class="line">  if (!heap_-&gt;HasBootImageSpace() &amp;&amp; !allow_dex_file_fallback_) &#123;</div><div class="line">    LOG(ERROR) &lt;&lt; "Dex file fallback disabled, cannot continue without image.";</div><div class="line">    return false;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  dump_gc_performance_on_shutdown_ = runtime_options.Exists(Opt::DumpGCPerformanceOnShutdown);</div><div class="line"></div><div class="line">  if (runtime_options.Exists(Opt::JdwpOptions)) &#123;</div><div class="line">    Dbg::ConfigureJdwp(runtime_options.GetOrDefault(Opt::JdwpOptions));</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  jit_options_.reset(jit::JitOptions::CreateFromRuntimeArguments(runtime_options));</div><div class="line">  if (IsAotCompiler()) &#123;</div><div class="line">    jit_options_-&gt;SetUseJitCompilation(false);</div><div class="line">    jit_options_-&gt;SetSaveProfilingInfo(false);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  lambda_box_table_ = MakeUnique&lt;lambda::BoxTable&gt;();</div><div class="line">  const bool use_malloc = IsAotCompiler();</div><div class="line">  arena_pool_.reset(new ArenaPool(use_malloc, /* low_4gb */ false));</div><div class="line">  jit_arena_pool_.reset(</div><div class="line">      new ArenaPool(/* use_malloc */ false, /* low_4gb */ false, "CompilerMetadata"));</div><div class="line"></div><div class="line">  if (IsAotCompiler() &amp;&amp; Is64BitInstructionSet(kRuntimeISA)) &#123;</div><div class="line">    low_4gb_arena_pool_.reset(new ArenaPool(/* use_malloc */ false, /* low_4gb */ true));</div><div class="line">  &#125;</div><div class="line">  linear_alloc_.reset(CreateLinearAlloc());</div><div class="line"></div><div class="line">  BlockSignals();</div><div class="line">  InitPlatformSignalHandlers();</div><div class="line"></div><div class="line">  switch (kRuntimeISA) &#123;</div><div class="line">    case kArm:</div><div class="line">    case kThumb2:</div><div class="line">    case kX86:</div><div class="line">    case kArm64:</div><div class="line">    case kX86_64:</div><div class="line">    case kMips:</div><div class="line">    case kMips64:</div><div class="line">      implicit_null_checks_ = true;</div><div class="line">      implicit_so_checks_ = !(RUNNING_ON_MEMORY_TOOL &amp;&amp; kMemoryToolIsValgrind);</div><div class="line">      break;</div><div class="line">    default:</div><div class="line">      break;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  if (!no_sig_chain_) &#123;</div><div class="line">    InitializeSignalChain();</div><div class="line"></div><div class="line">    if (implicit_null_checks_ || implicit_so_checks_ || implicit_suspend_checks_) &#123;</div><div class="line">      fault_manager.Init();</div><div class="line"></div><div class="line">      if (implicit_suspend_checks_) &#123;</div><div class="line">        new SuspensionHandler(&amp;fault_manager);</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      if (implicit_so_checks_) &#123;</div><div class="line">        new StackOverflowHandler(&amp;fault_manager);</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      if (implicit_null_checks_) &#123;</div><div class="line">        new NullPointerHandler(&amp;fault_manager);</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      if (kEnableJavaStackTraceHandler) &#123;</div><div class="line">        new JavaStackTraceHandler(&amp;fault_manager);</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  java_vm_ = new JavaVMExt(this, runtime_options);</div><div class="line"></div><div class="line">  Thread::Startup();</div><div class="line">  Thread* self = Thread::Attach("main", false, nullptr, false);</div><div class="line">  CHECK_EQ(self-&gt;GetThreadId(), ThreadList::kMainThreadId);</div><div class="line">  CHECK(self != nullptr);</div><div class="line"></div><div class="line">  self-&gt;TransitionFromSuspendedToRunnable();</div><div class="line"></div><div class="line">  GetHeap()-&gt;EnableObjectValidation();</div><div class="line"></div><div class="line">  CHECK_GE(GetHeap()-&gt;GetContinuousSpaces().size(), 1U);</div><div class="line">  // ClassLinker的初始化操作</div><div class="line">  class_linker_ = new ClassLinker(intern_table_);</div><div class="line">  ...</div><div class="line">  VLOG(startup) &lt;&lt; "Runtime::Init exiting";</div><div class="line">  return true;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在文件 art/runtime/runtime.cc中，通过函数Runtime::ParseOptions()解析参数，将raw_options中的参数传入ParsedOptions::Parse()进一步调用ParsedOptions的Parse()函数来解析，其具体实现在parsed_options.cc中。</p>
+<figure class="highlight cc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">bool</span> ParsedOptions::Parse(<span class="keyword">const</span> RuntimeOptions&amp; options,</div><div class="line">                          <span class="keyword">bool</span> ignore_unrecognized,</div><div class="line">                          RuntimeArgumentMap* runtime_options) &#123;</div><div class="line">  CHECK(runtime_options != <span class="literal">nullptr</span>);</div><div class="line"></div><div class="line">  ParsedOptions parser;</div><div class="line">  <span class="keyword">return</span> parser.DoParse(options, ignore_unrecognized, runtime_options);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight cc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div><div class="line">143</div><div class="line">144</div><div class="line">145</div><div class="line">146</div><div class="line">147</div><div class="line">148</div><div class="line">149</div><div class="line">150</div><div class="line">151</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">bool</span> ParsedOptions::DoParse(<span class="keyword">const</span> RuntimeOptions&amp; options,</div><div class="line">                            <span class="keyword">bool</span> ignore_unrecognized,</div><div class="line">                            RuntimeArgumentMap* runtime_options) &#123;</div><div class="line">  <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; options.size(); ++i) &#123;</div><div class="line">    <span class="keyword">if</span> (<span class="literal">true</span> &amp;&amp; options[<span class="number">0</span>].first == <span class="string">"-Xzygote"</span>) &#123;</div><div class="line">      LOG(INFO) &lt;&lt; <span class="string">"option["</span> &lt;&lt; i &lt;&lt; <span class="string">"]="</span> &lt;&lt; options[i].first;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">auto</span> parser = MakeParser(ignore_unrecognized);</div><div class="line">  </div><div class="line">  <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::<span class="built_in">string</span>&gt; argv_list;</div><div class="line">  <span class="keyword">if</span> (!ProcessSpecialOptions(options, <span class="literal">nullptr</span>, &amp;argv_list)) &#123;</div><div class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  CmdlineResult parse_result = parser-&gt;Parse(argv_list);</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (parse_result.IsError()) &#123;</div><div class="line">    <span class="keyword">if</span> (parse_result.GetStatus() == CmdlineResult::kUsage) &#123;</div><div class="line">      UsageMessage(<span class="built_in">stdout</span>, <span class="string">"%s\n"</span>, parse_result.GetMessage().c_str());</div><div class="line">      Exit(<span class="number">0</span>);</div><div class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (parse_result.GetStatus() == CmdlineResult::kUnknown &amp;&amp; !ignore_unrecognized) &#123;</div><div class="line">      Usage(<span class="string">"%s\n"</span>, parse_result.GetMessage().c_str());</div><div class="line">      <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">      Usage(<span class="string">"%s\n"</span>, parse_result.GetMessage().c_str());</div><div class="line">      Exit(<span class="number">0</span>);</div><div class="line">    &#125;</div><div class="line">    UNREACHABLE();</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">using</span> M = RuntimeArgumentMap;</div><div class="line">  RuntimeArgumentMap args = parser-&gt;ReleaseArgumentsMap();</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (args.Exists(M::Help)) &#123;</div><div class="line">    Usage(<span class="literal">nullptr</span>);</div><div class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (args.Exists(M::ShowVersion)) &#123;</div><div class="line">    UsageMessage(<span class="built_in">stdout</span>, <span class="string">"ART version %s\n"</span>, Runtime::GetVersion());</div><div class="line">    Exit(<span class="number">0</span>);</div><div class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (args.Exists(M::BootClassPath)) &#123;</div><div class="line">    LOG(INFO) &lt;&lt; <span class="string">"setting boot class path to "</span> &lt;&lt; *args.Get(M::BootClassPath);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (args.GetOrDefault(M::UseJitCompilation) &amp;&amp; args.GetOrDefault(M::Interpret)) &#123;</div><div class="line">    Usage(<span class="string">"-Xusejit:true and -Xint cannot be specified together"</span>);</div><div class="line">    Exit(<span class="number">0</span>);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (getenv(<span class="string">"BOOTCLASSPATH"</span>) != <span class="literal">nullptr</span>) &#123;</div><div class="line">    args.SetIfMissing(M::BootClassPath, <span class="built_in">std</span>::<span class="built_in">string</span>(getenv(<span class="string">"BOOTCLASSPATH"</span>)));</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (getenv(<span class="string">"CLASSPATH"</span>) != <span class="literal">nullptr</span>) &#123;</div><div class="line">    args.SetIfMissing(M::ClassPath, <span class="built_in">std</span>::<span class="built_in">string</span>(getenv(<span class="string">"CLASSPATH"</span>)));</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  args.SetIfMissing(M::ParallelGCThreads, gc::Heap::kDefaultEnableParallelGC ?</div><div class="line">      <span class="keyword">static_cast</span>&lt;<span class="keyword">unsigned</span> <span class="keyword">int</span>&gt;(sysconf(_SC_NPROCESSORS_CONF) - <span class="number">1u</span>) : <span class="number">0u</span>);</div><div class="line"></div><div class="line">  &#123;</div><div class="line">    LogVerbosity *log_verbosity = args.Get(M::Verbose);</div><div class="line">    <span class="keyword">if</span> (log_verbosity != <span class="literal">nullptr</span>) &#123;</div><div class="line">      gLogVerbosity = *log_verbosity;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  MaybeOverrideVerbosity();</div><div class="line"></div><div class="line">  Trace::SetDefaultClockSource(args.GetOrDefault(M::ProfileClock));</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (!ProcessSpecialOptions(options, &amp;args, <span class="literal">nullptr</span>)) &#123;</div><div class="line">      <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  &#123;</div><div class="line">    gc::CollectorType background_collector_type_;</div><div class="line">    gc::CollectorType collector_type_ = (XGcOption&#123;&#125;).collector_type_;  <span class="comment">// NOLINT</span></div><div class="line">    <span class="keyword">bool</span> low_memory_mode_ = args.Exists(M::LowMemoryMode);</div><div class="line">    background_collector_type_ = args.GetOrDefault(M::BackgroundGc);</div><div class="line">    &#123;</div><div class="line">      XGcOption* xgc = args.Get(M::GcOption);</div><div class="line">      <span class="keyword">if</span> (xgc != <span class="literal">nullptr</span> &amp;&amp; xgc-&gt;collector_type_ != gc::kCollectorTypeNone) &#123;</div><div class="line">        collector_type_ = xgc-&gt;collector_type_;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (background_collector_type_ == gc::kCollectorTypeNone) &#123;</div><div class="line">      <span class="keyword">if</span> (collector_type_ != gc::kCollectorTypeGSS) &#123;</div><div class="line">        background_collector_type_ = low_memory_mode_ ?</div><div class="line">            gc::kCollectorTypeSS : gc::kCollectorTypeHomogeneousSpaceCompact;</div><div class="line">      &#125; <span class="keyword">else</span> &#123;</div><div class="line">        	background_collector_type_ = collector_type_;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">    args.Set(M::BackgroundGc, BackgroundGcOption &#123; background_collector_type_ &#125;);</div><div class="line">  &#125;</div><div class="line">  </div><div class="line"><span class="meta">#<span class="meta-keyword">if</span> defined(ART_TARGET)</span></div><div class="line">  <span class="built_in">std</span>::<span class="function"><span class="built_in">string</span> <span class="title">core_jar</span><span class="params">(<span class="string">"/core.jar"</span>)</span></span>;</div><div class="line">  <span class="built_in">std</span>::<span class="function"><span class="built_in">string</span> <span class="title">core_libart_jar</span><span class="params">(<span class="string">"/core-libart.jar"</span>)</span></span>;</div><div class="line"><span class="meta">#<span class="meta-keyword">else</span></span></div><div class="line">  <span class="built_in">std</span>::<span class="function"><span class="built_in">string</span> <span class="title">core_jar</span><span class="params">(<span class="string">"/core-hostdex.jar"</span>)</span></span>;</div><div class="line">  <span class="built_in">std</span>::<span class="function"><span class="built_in">string</span> <span class="title">core_libart_jar</span><span class="params">(<span class="string">"/core-libart-hostdex.jar"</span>)</span></span>;</div><div class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></div><div class="line">  <span class="keyword">auto</span> boot_class_path_string = args.GetOrDefault(M::BootClassPath);</div><div class="line"></div><div class="line">  <span class="keyword">size_t</span> core_jar_pos = boot_class_path_string.find(core_jar);</div><div class="line">  <span class="keyword">if</span> (core_jar_pos != <span class="built_in">std</span>::<span class="built_in">string</span>::npos) &#123;</div><div class="line">    boot_class_path_string.replace(core_jar_pos, core_jar.size(), core_libart_jar);</div><div class="line">    args.Set(M::BootClassPath, boot_class_path_string);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  &#123;</div><div class="line">    <span class="keyword">auto</span>&amp;&amp; boot_class_path = args.GetOrDefault(M::BootClassPath);</div><div class="line">    <span class="keyword">auto</span>&amp;&amp; boot_class_path_locations = args.GetOrDefault(M::BootClassPathLocations);</div><div class="line">    <span class="keyword">if</span> (args.Exists(M::BootClassPathLocations)) &#123;</div><div class="line">      <span class="keyword">size_t</span> boot_class_path_count = ParseStringList&lt;<span class="string">':'</span>&gt;::Split(boot_class_path).Size();</div><div class="line">      <span class="keyword">if</span> (boot_class_path_count != boot_class_path_locations.Size()) &#123;</div><div class="line">        Usage(<span class="string">"The number of boot class path files does not match"</span></div><div class="line">            <span class="string">" the number of boot class path locations given\n"</span></div><div class="line">            <span class="string">"  boot class path files     (%zu): %s\n"</span></div><div class="line">            <span class="string">"  boot class path locations (%zu): %s\n"</span>,</div><div class="line">            boot_class_path.size(), boot_class_path_string.c_str(),</div><div class="line">            boot_class_path_locations.Size(), boot_class_path_locations.Join().c_str());</div><div class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (!args.Exists(M::CompilerCallbacksPtr) &amp;&amp; !args.Exists(M::Image)) &#123;</div><div class="line">    <span class="built_in">std</span>::<span class="built_in">string</span> image = GetAndroidRoot();</div><div class="line">    image += <span class="string">"/framework/boot.art"</span>;</div><div class="line">    args.Set(M::Image, image);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (args.GetOrDefault(M::HeapGrowthLimit) &lt;= <span class="number">0u</span> ||</div><div class="line">      args.GetOrDefault(M::HeapGrowthLimit) &gt; args.GetOrDefault(M::MemoryMaximumSize)) &#123;</div><div class="line">    args.Set(M::HeapGrowthLimit, args.GetOrDefault(M::MemoryMaximumSize));</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (args.GetOrDefault(M::Experimental) &amp; ExperimentalFlags::kLambdas) &#123;</div><div class="line">    LOG(WARNING) &lt;&lt; <span class="string">"Experimental lambdas have been enabled. All lambda opcodes have "</span></div><div class="line">                 &lt;&lt; <span class="string">"an unstable specification and are nearly guaranteed to change over time. "</span></div><div class="line">                 &lt;&lt; <span class="string">"Do not attempt to write shipping code against these opcodes."</span>;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  *runtime_options = <span class="built_in">std</span>::move(args);</div><div class="line">  <span class="keyword">return</span> <span class="literal">true</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>主要是对环境变量BOOTCLASSPATH和CLASSPATH进行处理。</p>
+<p>执行完Runtime中的函数Create()和Init()后，在JNI_CreateJavaVM()函数中Runtime的Start()函数会被调用。</p>
+</li>
+<li><p>初始化类、方法和域</p>
+<p>在文件runtime.cc的函数InitNativeMethods()中分别调用函数JniConstants::init(env)和WellKnownClasses::Init(env)。这两个函数通过FindClass()、GetStaticFieldID()和GetStaticMethodID()等函数初始化了系统基本类、方法和域，这些都是最基本的类。然后RegisterRuntimeNativeMethods(env)函数注册了系统类中的Native函数。接着函数InitNativeMethods会载入libjavacore.so库，单独载入是因为该库本身包含了System.loadLibrary()实现，不先载入会导致顺序紊乱。</p>
+<p>再次回到Runtime::Start()函数进行线程初始化，再判断是否为zygote线程。如果是则调用InitZygote()进行初始化操作，否则调用InitNonZygoteOrPostFork()函数。最后Start()函数中调用了StartDaemonThreads()函数，此函数的作用是调用Java类的Daemons的start()方法来启动一些Daemons进程，这个过程实际上和Dalvik启动时完成的最后一项工作相同。</p>
+<p>从startVM()返回后，AndroidRuntime执行startReg()在创建线程时加一个hook()函数，这样每个Thread启动时会先去执行AndroidRuntime::javaThreadShell()，而该函数会初始化Java虚拟机环境，这样新建的线程就可以调用Java层了。</p>
+</li>
+</ul>
+<h4 id="进入main-函数"><a href="#进入main-函数" class="headerlink" title="进入main()函数"></a>进入main()函数</h4><p>完成ART的基本初始化工作后，接下来开始执行主函数，具体步骤如下所示：</p>
+<ul>
+<li>先通过FindClass()找到相应的类。</li>
+<li>然后通过GetStaticMethodID()找到相应的方法。</li>
+<li>最后调用CallStaticVoidMethod()进入Java执行托管代码工作。</li>
+</ul>
+<p>这里以Zygote初始化操作为例进行分析，其中，类名为com.android.internal.os.ZygoteInit，方法为main。在AndroidRuntime::start中调用startVM()启动虚拟机，然后调用startReg()注册JNI方法，并调用com.android.internal.os.ZygoteInit类的main()函数。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">char</span>* slashClassName = toSlashClassName(className);</div><div class="line">    jclass startClass = env-&gt;FindClass(slashClassName);</div><div class="line">    <span class="keyword">if</span> (startClass == <span class="literal">NULL</span>) &#123;</div><div class="line">        ALOGE(<span class="string">"JavaVM unable to locate class '%s'\n"</span>, slashClassName);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        jmethodID startMeth = env-&gt;GetStaticMethodID(startClass, <span class="string">"main"</span>,</div><div class="line">            <span class="string">"([Ljava/lang/String;)V"</span>);</div><div class="line">        <span class="keyword">if</span> (startMeth == <span class="literal">NULL</span>) &#123;</div><div class="line">            ALOGE(<span class="string">"JavaVM unable to find main() in '%s'\n"</span>, className);</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            env-&gt;CallStaticVoidMethod(startClass, startMeth, strArray);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="built_in">free</span>(slashClassName);</div></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">static jclass FindClass(JNIEnv* env, const char* name) &#123;</div><div class="line">  CHECK_NON_NULL_ARGUMENT(name);</div><div class="line">  Runtime* runtime = Runtime::Current();</div><div class="line">  // 得到前面初始化好的系统的ClassLoader</div><div class="line">  ClassLinker* class_linker = runtime-&gt;GetClassLinker();</div><div class="line">  std::string descriptor(NormalizeJniClassDescriptor(name));</div><div class="line">  ScopedObjectAccess soa(env);</div><div class="line">  mirror::Class* c = nullptr;</div><div class="line">  if (runtime-&gt;IsStarted()) &#123;</div><div class="line">    StackHandleScope&lt;1&gt; hs(soa.Self());</div><div class="line">    Handle&lt;mirror::ClassLoader&gt; class_loader(hs.NewHandle(GetClassLoader(soa)));</div><div class="line">    c = class_linker-&gt;FindClass(soa.Self(), descriptor.c_str(), class_loader);</div><div class="line">  &#125; else &#123;</div><div class="line">    c = class_linker-&gt;FindSystemClass(soa.Self(), descriptor.c_str());</div><div class="line">  &#125;</div><div class="line">  return soa.AddLocalReference&lt;jclass&gt;(c);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight cc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">static</span> jmethodID <span class="title">GetStaticMethodID</span><span class="params">(JNIEnv* env, jclass java_class, <span class="keyword">const</span> <span class="keyword">char</span>* name,</span></span></div><div class="line">                                   <span class="keyword">const</span> <span class="keyword">char</span>* sig) &#123;</div><div class="line">  CHECK_NON_NULL_ARGUMENT(java_class);</div><div class="line">  CHECK_NON_NULL_ARGUMENT(name);</div><div class="line">  CHECK_NON_NULL_ARGUMENT(sig);</div><div class="line">  <span class="function">ScopedObjectAccess <span class="title">soa</span><span class="params">(env)</span></span>;</div><div class="line">  <span class="keyword">return</span> FindMethodID(soa, java_class, name, sig, <span class="literal">true</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight cc"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">CallStaticVoidMethodA</span><span class="params">(JNIEnv* env, jclass, jmethodID mid, jvalue* args)</span> </span>&#123;</div><div class="line">  CHECK_NON_NULL_ARGUMENT_RETURN_VOID(mid);</div><div class="line">  <span class="function">ScopedObjectAccess <span class="title">soa</span><span class="params">(env)</span></span>;</div><div class="line">  InvokeWithJValues(soa, <span class="literal">nullptr</span>, mid, args);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><h5 id="ART优点"><a href="#ART优点" class="headerlink" title="ART优点"></a>ART优点</h5><ul>
+<li>系统性能的显著提升</li>
+<li>应用启动更快、运行更快、体验更流畅、触感反馈更及时</li>
+<li>更长的电池续航能力</li>
+<li>支持更低的硬件</li>
+</ul>
+<h5 id="ART缺点"><a href="#ART缺点" class="headerlink" title="ART缺点"></a>ART缺点</h5><ul>
+<li>更大的存储空间占用，可能会增加10%~20%</li>
+<li>更长的应用安装时间</li>
+</ul>
+<p>总的来说ART的功效就是“空间换时间”。</p>
+<p>​    </p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android-RunTime/" rel="tag"># android RunTime</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/27/GUI系统之SurfaceFlinger/" rel="next" title="GUI系统之SurfaceFlinger">
+                <i class="fa fa-chevron-left"></i> GUI系统之SurfaceFlinger
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/10/28/JVM概述/" rel="prev" title="JVM概述">
+                JVM概述 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">33</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#概要"><span class="nav-number">1.</span> <span class="nav-text">概要</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ART的启动过程"><span class="nav-number">2.</span> <span class="nav-text">ART的启动过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#进入main-函数"><span class="nav-number">3.</span> <span class="nav-text">进入main()函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#ART优点"><span class="nav-number">4.1.</span> <span class="nav-text">ART优点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#ART缺点"><span class="nav-number">4.2.</span> <span class="nav-text">ART缺点</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>

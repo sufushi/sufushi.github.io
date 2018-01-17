@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android framework," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言GUI（Graphical  User  Interface）即“图形用户界面”，可以说在任何Operating System中都占据着非常重要的位置，因为它是用户对操作系统最直接的“感官”体验。一款优秀的图形界面系统至少要满足以下几个条件。
+
+流畅性
+评判一款GUI系统优劣的重要准则之一，就是流畅性。历史经验表明，即便再“炫酷”的UI界面，一旦出现经常性的画面“滞后”，最终都会被用户多抛弃。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GUI系统之SurfaceFlinger">
+<meta property="og:url" content="sufushi.github.io/2017/10/27/GUI系统之SurfaceFlinger/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="前言GUI（Graphical  User  Interface）即“图形用户界面”，可以说在任何Operating System中都占据着非常重要的位置，因为它是用户对操作系统最直接的“感官”体验。一款优秀的图形界面系统至少要满足以下几个条件。
+
+流畅性
+评判一款GUI系统优劣的重要准则之一，就是流畅性。历史经验表明，即便再“炫酷”的UI界面，一旦出现经常性的画面“滞后”，最终都会被用户多抛弃。">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/SurfaceFlinger%E4%B8%8EOpenGL%20ES%E7%AD%89%E6%A8%A1%E5%9D%97%E7%9A%84%E5%85%B3%E7%B3%BB%E5%9B%BE.png">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/Gralloc%E6%A8%A1%E5%9D%97%E7%AE%80%E5%9B%BE.png">
+<meta property="og:image" content="http://img.blog.csdn.net/20130521125724169">
+<meta property="og:updated_time" content="2017-10-27T13:22:04.064Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="GUI系统之SurfaceFlinger">
+<meta name="twitter:description" content="前言GUI（Graphical  User  Interface）即“图形用户界面”，可以说在任何Operating System中都占据着非常重要的位置，因为它是用户对操作系统最直接的“感官”体验。一款优秀的图形界面系统至少要满足以下几个条件。
+
+流畅性
+评判一款GUI系统优劣的重要准则之一，就是流畅性。历史经验表明，即便再“炫酷”的UI界面，一旦出现经常性的画面“滞后”，最终都会被用户多抛弃。">
+<meta name="twitter:image" content="http://oxsxuoiqx.bkt.clouddn.com/SurfaceFlinger%E4%B8%8EOpenGL%20ES%E7%AD%89%E6%A8%A1%E5%9D%97%E7%9A%84%E5%85%B3%E7%B3%BB%E5%9B%BE.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2017/10/27/GUI系统之SurfaceFlinger/"/>
+
+
+
+
+
+  <title>GUI系统之SurfaceFlinger | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2017/10/27/GUI系统之SurfaceFlinger/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">GUI系统之SurfaceFlinger</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-27T15:10:08+08:00">
+                2017-10-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>GUI（Graphical  User  Interface）即“图形用户界面”，可以说在任何Operating System中都占据着非常重要的位置，因为它是用户对操作系统最直接的“感官”体验。一款优秀的图形界面系统至少要满足以下几个条件。</p>
+<ul>
+<li><p>流畅性</p>
+<p>评判一款GUI系统优劣的重要准则之一，就是流畅性。历史经验表明，即便再“炫酷”的UI界面，一旦出现经常性的画面“滞后”，最终都会被用户多抛弃。</p>
+</li>
+<li><p>友好性</p>
+<p>因为GUI系统是面向终端用户的，可以认为是操作系统的“脸面”。友好性意味着用户操作上的人性化，图形的一致性以及视觉元素上的合理搭配等一系列因素，是一个综合的评判标准。</p>
+</li>
+<li><p>可扩展性</p>
+<p>扩展意味着开发者或用户可以在系统内建的基础上无限延伸自己的创意，比如添加新的界面和交互方式、实现更复杂的图形处理功能等。</p>
+</li>
+</ul>
+<h4 id="OpenGL-ES-与-EGL"><a href="#OpenGL-ES-与-EGL" class="headerlink" title="OpenGL ES 与 EGL"></a>OpenGL ES 与 EGL</h4><p>SurfaceFlinger虽然是GUI系统的核心，但从OpenGL ES的角度来讲，其实只能算是一个“应用程序”。</p>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/SurfaceFlinger%E4%B8%8EOpenGL%20ES%E7%AD%89%E6%A8%A1%E5%9D%97%E7%9A%84%E5%85%B3%E7%B3%BB%E5%9B%BE.png" alt="SurfaceFlinger与OpenGL ES等模块的关系"></p>
+<ul>
+<li><p>Linux内核提供了统一的framebuffer显示驱动。设备节点/dev/graphics/fb <em> 或者 /dev/fb </em>，其中fb0表示第一个Monitor，当前系统实现中只用到一个显示屏。</p>
+</li>
+<li><p>android的HAL层提供了Gralloc，包括fb和gralloc两个设备。前者负责打开内核中的framebuffer、初始化配置，并提供post、setSwapInterval等接口，后者则管理帧缓冲区的分配和释放。这就意味着上层元素只能通过Gralloc来间接访问帧缓冲区，从而保证了系统对framebuffer的有序使用和统一管理。</p>
+<p>另外，HAL层的另一重要模块是Composer，它为厂商自定制“UI合成”提供了接口。Composer的直接使用者是SurfaceFlinger中的HWComposer（有两个HWComposer），后者除了管理Composer的HAL模块，还负责VSync信号的产生和控制。VSync是“Project Buffer”工程中加入的一种同步机制，它既可以由硬件产生，也可以通过软件来模拟（VSyncThread）。</p>
+</li>
+<li><p>由于OpenGL ES是一个通用的函数库，在不同的平台系统上需要被“本地化”——把它与具体平台中的窗口系统建立联系，这样才能保证正常工作。从FramebufferNativeWindow这个名称就能判断出来，它就是负责OpenGL ES在android平台上本地化的中介之一。为OpenGL ES配置本地窗口的是EGL。</p>
+</li>
+<li><p>OpenGL或者OpenGL ES更多的只是一个接口协议，具体实现既可以采用软件，也可以依托于硬件。一方面，这给产品开发带来了灵活性——我们可以根据成本与市场定位来决定硬件配置，满足用户各种需求；另一方面，既然有多种实现的可能性，那么OpenGL ES在动态运行时的取舍是由EGL来实现的，它会去读取egl.cfg这个配置文件，然后根据用户的设定来动态加载libagl（软件实现）或者libhgl（硬件实现）。</p>
+</li>
+<li><p>SurfaceFlinger中持有一个成员数组mDisplays来描述系统中支持的各种“显示设备”——具体有哪些Display是由SurfaceFlinger在readyToRun中判断并赋值的，并且DisplayDevice在初始化还将调用eglGetDisplay、eglCreateWindowSurface等接口，并利用EGL来完成对OpenGL ES环境的搭建。</p>
+</li>
+<li><p>很多模块都可以调用OpenGL ES提供的API，包括SurfaceFlinger、DisplayDivice等。</p>
+</li>
+<li><p>与OpenGL ES相关的模块可以分为如下几类：</p>
+<ul>
+<li><p>配置类    </p>
+<p>即帮助OpenGL ES完成配置的，包括EGL，DisplayHardware都可以归为这一类。</p>
+</li>
+<li><p>依赖类</p>
+<p>也就是OpenGL ES要正常运行起来所依赖的“本地化”的东西。</p>
+</li>
+<li><p>使用类</p>
+<p>使用者也就是配置者，如DisplayDevice既扮演了构建OpenGL ES环境的角色，同时也是它的用户。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="android的硬件接口HAL"><a href="#android的硬件接口HAL" class="headerlink" title="android的硬件接口HAL"></a>android的硬件接口HAL</h4><p>对于android中很多子系统来说（如显示系统、音频系统等），HAL都是必不可少的组成部分——HAL是这些子系统与Linux Kernel驱动之间通信的统一接口。</p>
+<p>HAL需要解决如下问题点：</p>
+<ul>
+<li><p>硬件接口抽象</p>
+<p>HAL并不是专门针对某个特定的硬件设备来设计的，因而如何从众多类型的设备中提取出它们的共同属性并付诸软件实现是一个关键。</p>
+</li>
+<li><p>接口的稳定性</p>
+<p>可想而知，HAL层的接口是不允许频繁更动的，否则就失去了意义。</p>
+</li>
+<li><p>灵活的使用方法</p>
+<p>HAL需要提供一套灵活的使用方法，以供硬件开发商及上层使用者定制它们的需求。</p>
+</li>
+</ul>
+<h4 id="Gralloc与Framebuffer"><a href="#Gralloc与Framebuffer" class="headerlink" title="Gralloc与Framebuffer"></a>Gralloc与Framebuffer</h4><p>Framebuffer是内核系统提供的图形硬件的抽象描述。之所以成为buffer，是因为它也占用了系统存储空间的一部分。由此可见，在“一切都是文件”的Linux系统中，Framebuffer被看成了终端显示设备的“化身”。另外，Framebuffer借助于Linux文件系统向上层应用提供了统一而高效的操作接口，从而让用户空间中运行的程序可以在不做太多修改的情况下去适配多种显示设备——无论它们属于哪家厂商、什么型号，都由Framebuffer内部来兼容。在android系统中，Framebuffer提供的设备问文件节点是/dev/graphics/fb *。因为理论上支持多个屏幕显示，所以fb按数字序号进行排序，即fb0、fb1等。其中第一个fb0是主显示屏幕，必须存在。</p>
+<p>android的各子系统通常不会直接使用内核驱动，而是由HAL层来间接引用底层架构。显示系统也同样如此——它借助于HAL层来操作帧缓冲区，而完成这一中介任务的就是Gralloc。</p>
+<p>Gralloc对应的模块是由FramebufferNativeWindow在构造函数中加载的。Gralloc对应的HAL库被成功加载后，可以给上层提供一些重要的接口。Gralloc的open接口可以帮助上层使用者打开两种设备，分别是fb0和gpu0，fb0就是指“主屏幕”，gpu0负责图形缓冲区的分配和释放。</p>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/Gralloc%E6%A8%A1%E5%9D%97%E7%AE%80%E5%9B%BE.png" alt="Gralloc模块简图"></p>
+<h4 id="android中的本地窗口"><a href="#android中的本地窗口" class="headerlink" title="android中的本地窗口"></a>android中的本地窗口</h4><p>根据整个android系统的GUI设计理念，至少需要两种本地窗口。</p>
+<ul>
+<li><p>面向管理者（SurfaceFlinger）</p>
+<p>既然SurfaceFlinger扮演了系统中所有UI界面的管理者，那么它无可厚非需要直接或间接地持有“本地窗口”，这个窗口就是FramebufferNativeWindow。</p>
+</li>
+<li><p>面向应用程序</p>
+<p>这类本地窗口就是Surface。实际上是从内存缓冲区中分配的空间。</p>
+</li>
+</ul>
+<p><img src="http://img.blog.csdn.net/20130521125724169" alt="改进的窗口系统"></p>
+<p>在这个改进的窗口系统中，我们有了两类本地窗口，即Window-1和Window-2。第一种窗口是能直接显示在终端屏幕上的——它使用了帧缓冲区，而后一种Window实际上是从内存缓冲区分配的空间。当系统中存在多个应用程序时，这能保证它们都可以获得一个“本地窗口”，并且这些窗口最终也能显示到屏幕上——SurfaceFlinger会收集所有程序的显示需求，对它们做统一的图像混合操作(有点类似于AudioFlinger)，然后输出到自己的Window-1上。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android-framework/" rel="tag"># android framework</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/27/未写完/WindowManagerService工作原理（二）/" rel="next" title="WindowManagerService工作原理——窗口管理">
+                <i class="fa fa-chevron-left"></i> WindowManagerService工作原理——窗口管理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/10/27/ART机制架构详解/" rel="prev" title="ART机制架构详解">
+                ART机制架构详解 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">33</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#OpenGL-ES-与-EGL"><span class="nav-number">2.</span> <span class="nav-text">OpenGL ES 与 EGL</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#android的硬件接口HAL"><span class="nav-number">3.</span> <span class="nav-text">android的硬件接口HAL</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Gralloc与Framebuffer"><span class="nav-number">4.</span> <span class="nav-text">Gralloc与Framebuffer</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#android中的本地窗口"><span class="nav-number">5.</span> <span class="nav-text">android中的本地窗口</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>

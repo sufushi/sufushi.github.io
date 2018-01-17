@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="JVM," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Java
+Java不仅仅是一门编程语言，还是一个由一系列计算机软件和规范形成的技术体系，这个技术体系提供了完整的用于软件开发和跨平台部署的支持环境，并广泛应用于嵌入式系统、移动终端、企业服务器、大型机等各种场合。
+Java技术体系拥有一门结构严谨、面向对象的编程语言，摆脱了硬件平台的束缚，实现了“一次编写，到处运行”的理想，提供了一个相对安全的内存管理和访问机制，避免了绝大部分的内存泄漏和指针越界">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM概述">
+<meta property="og:url" content="sufushi.github.io/2017/10/28/JVM概述/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="Java
+Java不仅仅是一门编程语言，还是一个由一系列计算机软件和规范形成的技术体系，这个技术体系提供了完整的用于软件开发和跨平台部署的支持环境，并广泛应用于嵌入式系统、移动终端、企业服务器、大型机等各种场合。
+Java技术体系拥有一门结构严谨、面向对象的编程语言，摆脱了硬件平台的束缚，实现了“一次编写，到处运行”的理想，提供了一个相对安全的内存管理和访问机制，避免了绝大部分的内存泄漏和指针越界">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/JVM%E8%BF%90%E4%BD%9C%E7%BB%93%E6%9E%84.png">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/JVM%E7%9A%84%E7%BB%84%E6%88%90%E7%BB%93%E6%9E%84.png">
+<meta property="og:updated_time" content="2017-10-28T13:21:28.275Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JVM概述">
+<meta name="twitter:description" content="Java
+Java不仅仅是一门编程语言，还是一个由一系列计算机软件和规范形成的技术体系，这个技术体系提供了完整的用于软件开发和跨平台部署的支持环境，并广泛应用于嵌入式系统、移动终端、企业服务器、大型机等各种场合。
+Java技术体系拥有一门结构严谨、面向对象的编程语言，摆脱了硬件平台的束缚，实现了“一次编写，到处运行”的理想，提供了一个相对安全的内存管理和访问机制，避免了绝大部分的内存泄漏和指针越界">
+<meta name="twitter:image" content="http://oxsxuoiqx.bkt.clouddn.com/JVM%E8%BF%90%E4%BD%9C%E7%BB%93%E6%9E%84.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2017/10/28/JVM概述/"/>
+
+
+
+
+
+  <title>JVM概述 | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2017/10/28/JVM概述/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">JVM概述</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-28T16:16:58+08:00">
+                2017-10-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h4><ul>
+<li>Java不仅仅是一门编程语言，还是一个由一系列计算机软件和规范形成的技术体系，这个技术体系提供了完整的用于软件开发和跨平台部署的支持环境，并广泛应用于嵌入式系统、移动终端、企业服务器、大型机等各种场合。</li>
+<li>Java技术体系拥有一门结构严谨、面向对象的编程语言，摆脱了硬件平台的束缚，实现了“一次编写，到处运行”的理想，提供了一个相对安全的内存管理和访问机制，避免了绝大部分的内存泄漏和指针越界问题，实现了热点代码检测和运行时编译及优化，有一套完整的应用程序接口，还有无数来自商业机构和开源社区的第三方类库以实现各种各样的功能……</li>
+<li>从传统意义上来看，Sun公司所定义的Java技术体系包括以下几个组成部分：<ul>
+<li>Java程序设计语言</li>
+<li>各种硬件平台的Java虚拟机</li>
+<li>Class文件格式</li>
+<li>Java API类库</li>
+<li>来自商业机构和开源社区的第三方Java类库</li>
+</ul>
+</li>
+<li>Java程序设计语言、Java虚拟机、Java API类库这三部分统称为JDK，JDK是用于支持Java程序开发的最小环境。</li>
+<li>Java API类库中的Java SE API子集和Java虚拟机这两部分称为JRE，JRE是支持Java程序运行的标准环境。</li>
+</ul>
+<h4 id="Java虚拟机"><a href="#Java虚拟机" class="headerlink" title="Java虚拟机"></a>Java虚拟机</h4><p>JVM（Java虚拟机）是Java Virtual Machine的缩写，它是一个虚构出来的计算机，是通过在实际的计算机上仿真模拟各种计算机功能来实现的。Java虚拟机由自己完善的硬件架构，如处理器、堆栈、寄存器，还具有相应的指令系统。JVM的运作结构如下图。</p>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/JVM%E8%BF%90%E4%BD%9C%E7%BB%93%E6%9E%84.png" alt="JVM运作结构"></p>
+<p>可以看出，JVM是运行在操作系统之上的，它与硬件没有直接的交互。下面是JVM的组成结构。</p>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/JVM%E7%9A%84%E7%BB%84%E6%88%90%E7%BB%93%E6%9E%84.png" alt="JVM结构图"></p>
+<p>使用JVM的原因：</p>
+<p>Java语言的一个非常重要的特点是与平台的无关性，而使用JVM是实现这一特点的关键。一般的高级语言如果要在不同的平台上运行，至少需要编译成不同的目标代码。而引入JVM后，Java语言在不同平台上运时不需要重新编译。Java语言使用模式JVM屏蔽了与具体平台相关的信息，使得Java语言编译程序只需要生成在JVM上运行的字节码，就可以在多种平台上不加修改地运行。JVM在执行字节码时，把字节码解释成具体平台上的机器指令执行。</p>
+<h4 id="Java虚拟机兼容思想"><a href="#Java虚拟机兼容思想" class="headerlink" title="Java虚拟机兼容思想"></a>Java虚拟机兼容思想</h4><p>一款编程语言兼容底层系统的方式大致上分为两种。</p>
+<ul>
+<li><p>通过编译器实现兼容</p>
+<p>例如C、C++等编程语言，既能运行于Linux操作系统，也能运行于Windows操作系统；既能运行于x86平台，也能运行于AMD平台。这种能力并不是编程语言本身所具有的，而是由编译器所赋予。针对不同的硬件平台和操作系统，编译器能够将同样一段C/C++程序翻译成与目标平台匹配的机器指令，从而实现编程语言的兼容性。</p>
+<p>但是通过编译器实现兼容性时，如果设计系统调用，往往都需要修改程序，调用特定系统的特定API，否则程序迁移到新的平台上之后，无法运行。</p>
+</li>
+<li><p>通过中间语言实现兼容</p>
+<p>Java、C#等语言，都属于这种兼容方式。</p>
+<p>Java/C#程序编译后，生成中间语言（ML），中间语言指令由虚拟机负责解释和运行。虚拟机在运行期将中间语言实时翻译成与特定平台匹配的机器指令并运行。无论程序最终运行在哪种底层平台上，源代码被编译成生成的中间语言指令都是相同的，中间语言的兼容性由虚拟机负责完成。</p>
+<p>通过编译器实现兼容性，由于源代码被直接编译成本地机器指令，因为其执行效率非常高。而这正是中间语言的软肋。Java刚问世那几年，就一直因为其性能低下而被嗤之以鼻。但是随着Java语言版本的不断更新，随着大家对改善其性能所作出的持之以恒的努力，如今Java性能已经相当高，甚至比C/C++程序性能还要高。这是因为Java虚拟机内部对寄存器进行了大量手工优化，在某些场景下，人工优化自然会比C/C++编译器所做的机器优化效果还要好很多。</p>
+</li>
+</ul>
+<p>所以，既能实现兼容性，又能自动处理底层系统调用的又快又好的办法就是使用中间语言。课室CPU不认识中间语言，它无法直接执行中间语言。为了使中间语言能够被CPU执行，虚拟机必须将其翻译成对应机器上的机器指令。将中间语言翻译成对应的本地机器指令，可以使用C语言为每一个Java字节码指令写一个对应的实现函数，也可以直接为中间语言生成对应的本地机器码并通过JMP方式跳转到机器码来执行字节码指令。</p>
+<p>将中间语言翻译成机器码的思路：</p>
+<ul>
+<li><p>通过C程序翻译</p>
+<p>使用C程序，将字节码的每一条指令，都逐行逐行地解释为C程序。当执行字节码的程序——JVM（Java虚拟机）程序本身被编译后，字节码指令对应的C程序被一起编译成本地机器码，于是虚拟机在解释字节码指令时，自然会执行对应的C程序所对应的本地机器码。</p>
+<p>虽然通过C程序对中间语言进行解释，程序简单明了，逻辑清晰易懂，然后这种方式却有一个比较大的缺陷——效率低下。</p>
+</li>
+<li><p>直接翻译成机器码</p>
+<p>利用CPU执行代码的原理，使用C语言所提供的语法糖（通过fun = (void *) code这样的方式达到间接修改段寄存器指向的目的）将CS:IP段寄存器指向代码段入口，而这段代码段就是用虚拟机将中间语言指令直接翻译来的机器码。</p>
+<p>虽然将中间语言直接翻译为机器码并直接运行，其效率相比使用C语言来解释执行高效很多，但是，由于中间语言有自己一套内存管理和代码执行方式，因此，使用同样的功能，虽然使用中间语言只需写几行代码，但是翻译后的机器码，比直接编写机器码，还要多出很多指令。指令数量增多，意味着在同样的硬件平台上，执行时间成本必然增加，因此其运行效率仍然不够高。</p>
+</li>
+<li><p>本地编译</p>
+<p>为了能够进一步提升性能，JVM提供了一种机制，能够将中间语言（字节码）直接编译为本地机器指令。Java虚拟机后期也在编译期和运行期做了相应的优化，例如JIT（即使编译）、AOT特性等。android平台也有最初的Dalvik VM转为ART运行时机制。在ART环境下，应用在第一次安装时，字节码就会预先编译成机器码，使其成为真正的本地应用。这个过程叫做预编译（Ahead-Of-Time，AOT）。</p>
+</li>
+</ul>
+<h4 id="JVM数据类型"><a href="#JVM数据类型" class="headerlink" title="JVM数据类型"></a>JVM数据类型</h4><p>Java虚拟机可以支持下面的Java语言的基本数据类型。</p>
+<ul>
+<li>byte：1字节有符号整数的补码</li>
+<li>short：2字节有符号整数的补码</li>
+<li>int：4字节有符号整数的补码</li>
+<li>long：8字节有符号整数的补码</li>
+<li>float：4字节IEEE754单精度浮点数</li>
+<li>double：8字节IEEE754双精度浮点数</li>
+<li>char：2字节无符号Unicode字符</li>
+<li>object：对一个Java Object（对象）的4字节引用</li>
+<li>returnAddress：4字节，用于jsr/ret/jsr-w/ret-w指令</li>
+</ul>
+<h4 id="JVM指令"><a href="#JVM指令" class="headerlink" title="JVM指令"></a>JVM指令</h4><p>在JVM源代码中，定义了Java语言的全部指令集，Java的所有指令集都使用8位二进制描述，总共200多个指令。</p>
+<p>大部份机器指令都支持以下5类计算。</p>
+<ul>
+<li><p>数据传送指令</p>
+<p>这些指令主要在寄存器与内存、寄存器与输入/输出端口之间传送数据。</p>
+</li>
+<li><p>算术运算指令</p>
+<p>包括算术基本四则运算、浮点运算、数学运算等。</p>
+</li>
+<li><p>逻辑运算指令</p>
+<p>与、或、非、左移、右移等指令，都属于逻辑运算指令。</p>
+</li>
+<li><p>串指令</p>
+<p>连续空间分配，连续空间取值，传送等，都要使用串指令。</p>
+</li>
+<li><p>程序转移指令</p>
+<p>if…else判断、for循环、while循环、函数调用等，都需要依靠程序转移指令，否则程序无法跳转。常见的程序转移指令包括jmp跳转、loop循环、ret等。</p>
+</li>
+</ul>
+<p>Java是面向对象的编程语言，有一套支持类型操作的特殊指令。JVM指令集分为以下几部分。</p>
+<ul>
+<li><p>数据交换指令</p>
+<p>JVM内存分为操作数栈、局部变量表、Java堆、常量池、方法区。对于这些内存区域，必须要有指令支持数据在这些内存区域之间的传送和交换。例如，当在Java方法中访问一个静态变量时，其运算过程必然伴随JVM将数据从常量池传送到操作数栈的指令调用。</p>
+<p>JVM执行逻辑运算的主战场是操作数栈（iinc指令除外，该指令可以直接对局部变量进行运算）。不管把数据放在堆栈中还是放在常量池中，要执行运算，最终JVM都会将数据传送到操作数栈中。</p>
+<p>JVM标准提供了丰富的数据交换指令，例如iload、istore、lload、lstore、fload、fstore、dload、dstore、ldc、bipush等指令，这些指令用来实现操作数栈和局部变量表之间的数据交换。JVM规范还提供了getfeild和putfeild指令来实现Java堆中的对象的字段和操作数栈之间得到数据交换，提供了getstatic和putstatic指令来实现类中的字段和操作数栈之间的数据交换，提供了baload、bastore、caload和castore指令来实现JVM堆中的数组和操作数栈之间的数据交换。</p>
+</li>
+<li><p>函数调用指令</p>
+<p>由于Java中的函数类型比较丰富，因此必然要支持更多的函数调用方式。函数调用指令有多个，例如，invokevirtual、invokeinterface、invokespecial、invokestatic和return等。</p>
+<p>JVM没有物理寄存器，所以用操作数栈和PC寄存器来替代。JVM保存现场和恢复现场的解决方案是向Java堆栈中压入一个栈帧，函数返回的时候从Java堆栈中弹出一个栈帧。</p>
+<p>JVM调用函数的时候，不能像CPU硬件那样，直接跳转就能找到对应的代码段。这是因为Java函数的代码并没有被存放在代码段中，而是被放在一个code缓存中，每一个Java函数的代码块在这个code缓存中都会有一个索引位置，最终JVM会跳转到这个索引位置处执行Java函数调用。同时，Java的函数一定是被封装在类中的，因此JVM在执行函数调用时，还需要通过类寻址等等一系列运算，最终才能定位这个入口。</p>
+</li>
+<li><p>运算指令集</p>
+<p>JVM和运算相关的指令集主要有算术运算、位运算、比较运算、逻辑运算等，JVM还为各种基本类型的运算提供不同的操作码。</p>
+<p>JVM规范中常见的运算指令包括iadd（对两个int型数据求和）、isub（对两个int型数据做减法）、fadd（对两个float浮点数进行求和）、ddiv（两个double双精度型数据相除）等。</p>
+</li>
+<li><p>控制转移指令</p>
+<p>与硬件CPU一样，JVM规范也提供了常见的控制转移指令，例如switch分支选择指令、if…else条件判断、do…while循环、for循环、foreach循环、return返回、break中断循环、continue继续循环。</p>
+</li>
+<li><p>对象创建与类型转移指令</p>
+<p>作为一门面向对象的语言，JVM提供了一套创建对象的指令。在Java语法层面使用关键字new可以实例化一个对象，而对应的字节码指令也是new。</p>
+<p>JVM规范还提供了“窄化类型转换”指令与“宽化类型转换”指令，后者是JVM内部天生支持的，不需要另外使用指令。</p>
+</li>
+</ul>
+<p>除了以上这些指令，JVM规范还提供了其他物理CPU所没有的指令，例如，抛出异常的指令，用于线程同步的指令，等等。</p>
+<h4 id="JVM寄存器"><a href="#JVM寄存器" class="headerlink" title="JVM寄存器"></a>JVM寄存器</h4><p>Java虚拟机的寄存器用于保存机器的运行状态，与微处理器中的某些专用寄存器类似，所有寄存器都是32位的。在Java虚拟机中有如下4中寄存器。</p>
+<ul>
+<li>pc：Java程序计数器</li>
+<li>optop：指向操作数栈顶端的指针</li>
+<li>frame：指向当前执行方法的执行环境的指针</li>
+<li>vars：指向当前执行方法的局部变量区第一个变量的指针</li>
+</ul>
+<p>Java虚拟机是栈式的，它不定义或使用寄存器来传递或接受参数，其目的是为了保证指令的简洁性和实现时的高效性，特别是对于寄存器数目不多的处理器。</p>
+<h4 id="JVM栈"><a href="#JVM栈" class="headerlink" title="JVM栈"></a>JVM栈</h4><p>Java虚拟机中的栈有三个区域，分别是局部变量表、运行环境区、操作数区。</p>
+<ul>
+<li><p>局部变量表</p>
+<p>每个Java方法使用一个固定大小的局部变量表，它们按照与Vars寄存器的字偏移量来寻址。局部变量表都是32位的。长整数和双精度浮点数占据了两个局部变量的空间，却按照第一个局部变量的索引来寻址。虚拟机规范并不要求在局部变量中64位的值是64位对齐的。虚拟机提供了把局部变量中的值装载到操作数栈的指令，也提供了把操作数栈中的值写入局部变量的指令。</p>
+</li>
+<li><p>运行环境区</p>
+<p>在运行环境中包含的信息可以实现动态链接、正常的方法返回与异常和错误传播。</p>
+<ul>
+<li><p>动态链接</p>
+<p>运行环境包括对指向当前类和当前方法的解释器符号表的指针，用于支持方法代码的动态链接。方法的class文件代码在引用要调用的方法和要访问的变量时使用符号。动态链接把符号形式的方法调用翻译成实际方法调用，装载必要的类以解释还没有定义的符号，并把变量访问翻译成与这些变量运行时的存储结构相应的偏移地址。动态链接方法和变量使得方法中使用的其他类的变化不会影响到本程序的代码。</p>
+</li>
+<li><p>正常的方法返回</p>
+<p>如果当前方法正常地结束了，在执行了一条具有正确类型的返回指令时，调用的方法会得到一个返回值。执行环境在正常返回的情况下用于恢复调用者的寄存器，并把调用者的程序计数器增加一个适当的数值，以跳过已执行过的方法调用指令，然后在调用者的执行环境中继续执行下去。</p>
+</li>
+<li><p>异常和错误传播</p>
+<p>异常情况在Java中被称为Error（错误）或Expection（异常），是Throwable类的子类，在程序中的原因主要是动态链接错或运行时错造成。</p>
+<p>当发生异常时，Java虚拟机采用如下措施解决：</p>
+<ul>
+<li>检查当前方法相联系的catch子句表。每个catch子句包含其有效指令范围，能够处理异常类型，以及处理异常的代码块地址。</li>
+<li>与异常相匹配的catch子句应该符合下面条件：造成异常的指令在其指令范围内，发生的异常类型是其能处理的异常类型的子类型。如果找到了匹配的catch子句，那么系统将转移到指定的异常处理块处执行。如果没有找到异常代码块，则重复寻找匹配的catch子句的过程，知道当前方法的所有嵌套的catch子句都被检查过。</li>
+<li>由于虚拟机从第一个匹配的catch子句处继续执行，所以catch子句表中的顺序是很重要的。因为Java代码是结构化的，因此总可以把某个方法中所有的异常处理器都按顺序列到一个表中，对任意可能的程序计数器的值，都可以用线性的顺序找到合适的异常处理块，以处理在该程序计数器值下发生的异常情况。</li>
+<li>如果找不到匹配的catch子句，那么当前方法得到一个“未截获异常”的结果并返回到当前方法的调用者，好像异常刚刚在其调用者中发生一样。如果在调用者中仍然没有找到相应的异常处理块，那么这种错误传播将被继续下去。如果错误被传播到最顶层，那么系统将调用一个缺省的异常代码块。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>操作数栈区</p>
+<p>机器指令只能从操作数栈中取操作数，对它们进行操作，并把结果返回到栈中。选择栈结构的原因：在只有少量寄存器或非通用寄存器的机器上，也能够高效地模范虚拟机的行为。操作数栈是32位的，用于给方法传递参数，并从方法接收结果，也用于支持操作的参数，并保存操作的结果。</p>
+</li>
+</ul>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>Java虚拟机的体系结构由如下5部分组成：</p>
+<ul>
+<li>一组指令集</li>
+<li>一组寄存器</li>
+<li>一个栈</li>
+<li>一个无用单元收集堆</li>
+<li>一个方法区域</li>
+</ul>
+<p>一个运行时的Java虚拟机实例的天职是：负责运行一个Java程序。在启动一个Java程序的同时会诞生一个虚拟机实例，当该程序退出时，虚拟机实例也会随之消亡。每个Java程序都运行在它自己的Java虚拟机实例中。</p>
+<p>在Java虚拟机内部有两种线程：守护进程和非守护进程。守护进程通常是由虚拟机自己使用的，比如垃圾收集任务的进程。但是，Java程序也可以把它创建的任何线程标记为守护进程。Java程序的初始线程——main()程序入口，是个非守护进程。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/JVM/" rel="tag"># JVM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/27/ART机制架构详解/" rel="next" title="ART机制架构详解">
+                <i class="fa fa-chevron-left"></i> ART机制架构详解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/10/28/Java执行引擎工作原理——方法调用/" rel="prev" title="Java执行引擎工作原理——方法调用">
+                Java执行引擎工作原理——方法调用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">33</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#Java"><span class="nav-number">1.</span> <span class="nav-text">Java</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Java虚拟机"><span class="nav-number">2.</span> <span class="nav-text">Java虚拟机</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Java虚拟机兼容思想"><span class="nav-number">3.</span> <span class="nav-text">Java虚拟机兼容思想</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#JVM数据类型"><span class="nav-number">4.</span> <span class="nav-text">JVM数据类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#JVM指令"><span class="nav-number">5.</span> <span class="nav-text">JVM指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#JVM寄存器"><span class="nav-number">6.</span> <span class="nav-text">JVM寄存器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#JVM栈"><span class="nav-number">7.</span> <span class="nav-text">JVM栈</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#总结"><span class="nav-number">8.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>

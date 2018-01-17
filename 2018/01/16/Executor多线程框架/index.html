@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Java," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言在Java中，使用线程来异步执行任务。Java线程的创建与销毁需要一定的开销，如果我们为每一个任务创建一个新线程来执行，这些线程的创建与销毁将消耗大量的计算资源。同时，为每一个任务创建一个新线程来执行，这种策略可能会使处于高负荷状态的应用最终奔溃。Java线程既是工作单元，也是执行单元。
+new Thread()的缺点
+
+每次new Thread()耗费性能
+调用new Thread()创建的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Executor多线程框架">
+<meta property="og:url" content="sufushi.github.io/2018/01/16/Executor多线程框架/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="前言在Java中，使用线程来异步执行任务。Java线程的创建与销毁需要一定的开销，如果我们为每一个任务创建一个新线程来执行，这些线程的创建与销毁将消耗大量的计算资源。同时，为每一个任务创建一个新线程来执行，这种策略可能会使处于高负荷状态的应用最终奔溃。Java线程既是工作单元，也是执行单元。
+new Thread()的缺点
+
+每次new Thread()耗费性能
+调用new Thread()创建的">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/Executor%E6%A1%86%E6%9E%B6%E4%B8%A4%E7%BA%A7%E8%B0%83%E5%BA%A6%E6%A8%A1%E5%9E%8B.png">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/Executor%E5%85%B3%E9%94%AE%E5%AE%9E%E7%8E%B0%E7%B1%BB.png">
+<meta property="og:image" content="https://images2015.cnblogs.com/blog/926638/201704/926638-20170420102909977-1095081386.png">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/Executor%E6%A1%86%E6%9E%B6%E7%9A%84%E4%BD%BF%E7%94%A8.png">
+<meta property="og:updated_time" content="2018-01-16T12:22:52.028Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Executor多线程框架">
+<meta name="twitter:description" content="前言在Java中，使用线程来异步执行任务。Java线程的创建与销毁需要一定的开销，如果我们为每一个任务创建一个新线程来执行，这些线程的创建与销毁将消耗大量的计算资源。同时，为每一个任务创建一个新线程来执行，这种策略可能会使处于高负荷状态的应用最终奔溃。Java线程既是工作单元，也是执行单元。
+new Thread()的缺点
+
+每次new Thread()耗费性能
+调用new Thread()创建的">
+<meta name="twitter:image" content="http://oxsxuoiqx.bkt.clouddn.com/Executor%E6%A1%86%E6%9E%B6%E4%B8%A4%E7%BA%A7%E8%B0%83%E5%BA%A6%E6%A8%A1%E5%9E%8B.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2018/01/16/Executor多线程框架/"/>
+
+
+
+
+
+  <title>Executor多线程框架 | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2018/01/16/Executor多线程框架/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Executor多线程框架</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-16T16:45:01+08:00">
+                2018-01-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>在Java中，使用线程来异步执行任务。Java线程的创建与销毁需要一定的开销，如果我们为每一个任务创建一个新线程来执行，这些线程的创建与销毁将消耗大量的计算资源。同时，为每一个任务创建一个新线程来执行，这种策略可能会使处于高负荷状态的应用最终奔溃。Java线程既是工作单元，也是执行单元。</p>
+<p><strong>new Thread()的缺点</strong></p>
+<ul>
+<li>每次new Thread()耗费性能</li>
+<li>调用new Thread()创建的线程缺乏管理，被称之为野线程，而且可以无限制创建，之间相互竞争，会导致过多占用系统资源导致系统瘫痪</li>
+<li>不利于扩展，比如定时执行、定期执行、线程中断</li>
+</ul>
+<p><strong>采用线程池的优点</strong></p>
+<ul>
+<li>重用存在的线程，减少对象创建、消亡的开销，性能低</li>
+<li>可有效控制最大并发线程数，提高系统资源的使用率，同时避免过多资源竞争，避免堵塞</li>
+<li>提供定时执行、定期执行、单线程、并发控制等功能</li>
+</ul>
+<p>从JDK1.5开始，并发编程引入了一堆新的启动、调整和管理线程的API，把工作单元与执行单元机制分离开来，工作单元包括Runnable和Callable，而执行机制由Executor框架提供。</p>
+<p>Executor内部使用了线程池机制，它在java.util.concurrent包下，通过该框架来控制线程的启动、执行和关闭，可以简化并发编程的操作。因此，在Java1.5之后，通过Executor了亲爱启动线程比使用Thread的start方法更好，除了更易管理，效率更好（用线程池实现，借阅开销）外，还有关键的一点：有助于避免this逃逸问题。</p>
+<p>Executor框架包括：线程池、Executor、Executors、ExecutorSeivice、CompletionService、Future、Callable等。</p>
+<h4 id="Executor框架的两级调度模型"><a href="#Executor框架的两级调度模型" class="headerlink" title="Executor框架的两级调度模型"></a>Executor框架的两级调度模型</h4><p>在HotSpot VM的线程模型中，Java线程被一对一映射为本地操作系统线程。Java线程启动时会创建一个本地操作系统线程；当Java线程终止后，这个操作系统线程也会被回收。操作系统会调用所有线程并将它们分配给可用的CPU。可以将此种模式分为两层，在上层，Java多线程程序通常把应用程序分解为若干个任务，然后使用用户级的调度器（Executor框架）将这些任务映射为固定数量的线程；在底层，操作系统内核将这些线程映射到硬件处理器上。</p>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/Executor%E6%A1%86%E6%9E%B6%E4%B8%A4%E7%BA%A7%E8%B0%83%E5%BA%A6%E6%A8%A1%E5%9E%8B.png" alt=""></p>
+<p>从图中可以看出，该框架用来控制应用程序的上层调度（下层调度有操作系统内核控制，不受应用程序的控制）。</p>
+<h4 id="Executor框架的结构"><a href="#Executor框架的结构" class="headerlink" title="Executor框架的结构"></a>Executor框架的结构</h4><h5 id="任务"><a href="#任务" class="headerlink" title="任务"></a>任务</h5><p>包括被执行任务需要实现的接口：Runnable接口和Callable接口</p>
+<ul>
+<li><p>Executor执行Runnable任务</p>
+<p>一旦Runnable任务传递到execute()方法，该方法便会自动在一个线程上执行，但是Runnable任务没有返回值。</p>
+</li>
+<li><p>Callable接口</p>
+<p>Callable任务的call()方法只能通过ExecutorService的submit(Callable task)方法来执行，并且返回一个Future，表示等待任务完成的Future。</p>
+</li>
+</ul>
+<h5 id="任务的执行"><a href="#任务的执行" class="headerlink" title="任务的执行"></a>任务的执行</h5><p>包括任务执行机制的核心接口Executor，以及继承Executor的ExecutorService接口。</p>
+<p>Executor框架有两个关键类实现了ExecutorService接口：ThreadPoolExecutor和ScheduledThreadPoolExecutor。</p>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/Executor%E5%85%B3%E9%94%AE%E5%AE%9E%E7%8E%B0%E7%B1%BB.png" alt=""></p>
+<h5 id="Executor框架的类与接口"><a href="#Executor框架的类与接口" class="headerlink" title="Executor框架的类与接口"></a>Executor框架的类与接口</h5><p><img src="https://images2015.cnblogs.com/blog/926638/201704/926638-20170420102909977-1095081386.png" alt=""></p>
+<ul>
+<li>Executor是一个接口，是Executor框架的基础，它将任务的提交与任务的执行分离</li>
+<li>ThreadPoolExecutor是线程池的核心线程类，用来执行被提交的任务</li>
+<li>ScheduledThreadPoolExecutor是一个实现类，可以在给定的延迟后运行命令，或者定期执行命令。ScheduledThreadPoolExecutor比Timer更灵活，功能更强大</li>
+<li>Future接口和它的实现类FutureTask类，代表异步计算的结果</li>
+<li>Runnable和Callable接口的实现类，都可以被ThreadPoolExecutor或ScheduledThreadPoolExecutor执行</li>
+</ul>
+<h4 id="Executor框架的使用"><a href="#Executor框架的使用" class="headerlink" title="Executor框架的使用"></a>Executor框架的使用</h4><ul>
+<li>主线程首先要创建实现Runnable接口或者实现Callable接口的任务对象</li>
+<li>然后可以把Runnable对象或者Callable对象直接交给ExecutorService执行</li>
+<li>最后，主线程可以执行Future.get()方法来等待任务执行完成，也可以执行Future.cancel()方法来取消此任务的执行</li>
+</ul>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/Executor%E6%A1%86%E6%9E%B6%E7%9A%84%E4%BD%BF%E7%94%A8.png" alt=""></p>
+<h4 id="ThreadPoolExecutor"><a href="#ThreadPoolExecutor" class="headerlink" title="ThreadPoolExecutor"></a>ThreadPoolExecutor</h4><p>Executor框架最核心的类是ThreadPoolExecutor。</p>
+<p><strong>ThreadPoolExecutor的组件构成</strong></p>
+<ul>
+<li>corePool：核心线程池的大小</li>
+<li>maximumPool：最大线程池的大小</li>
+<li>BlockingQueue：用来暂时保存任务的工作队列</li>
+<li>RejectedExecutionHandler：当ThreadPoolExecutor已经关闭或已经饱和时，execute()方法将要调用的Handler</li>
+</ul>
+<p>Executor可以创建3种类型的ThreadPoolExecutor线程池。</p>
+<ul>
+<li><p>FixedThreadPool</p>
+<p>创建固定长度的线程池，每次提交任务创建一个线程，知道达到线程池的最大数量，线程池的大小不再变化。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newFixedThreadPool</span><span class="params">(<span class="keyword">int</span> nThreads, ThreadFactory threadFactory)</span> </span>&#123;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(nThreads, nThreads,</div><div class="line">                                  <span class="number">0L</span>, TimeUnit.MILLISECONDS,</div><div class="line">                                  <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;(),</div><div class="line">                                  threadFactory);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>FixedThreadPool的corePoolSize和maxiumPoolSize都被设置为创建FixedThreadPool时指定的参数nThreads</li>
+<li>0L表示当线程池中的线程数量操作核心线程的数量时，多余的线程将被立即停止</li>
+<li>最后一个参数表示FixedThreadPool使用了无界队列LinkedBlockingQueue作为线程池的做工队列，由于是无界的，当线程池的线程数达到corePoolSize后，新任务将在无界队列中等待，因此线程池的线程数量不会超过corePoolSize，同时maximumPoolSize也就变成了一个无效的参数，并且运行中的线程池并不会拒绝任务</li>
+<li>由于LinkedBlockingQueue是无界队列，所以可以一直添加新任务到线程池中</li>
+</ul>
+<p>FixedThreadPool执行过程如下</p>
+<ul>
+<li>如果当前工作中的线程数少于corePool的数量，就创建新的线程来执行任务</li>
+<li>当线程池的工作中的线程数量达到了corePool，则将任务加入LinkedBlockingQueue</li>
+<li>线程执行完任务后会从队列中取任务</li>
+</ul>
+</li>
+<li><p>SingleThreadExecutor</p>
+<p>SingleThreadExecutor是使用单个worker线程的Executor。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newSingleThreadExecutor</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">new</span> FinalizableDelegatedExecutorService(<span class="keyword">new</span> ThreadPoolExecutor(<span class="number">1</span>, <span class="number">1</span>,</div><div class="line">    	<span class="number">0L</span>, TimeUnit.MILLISECONDS, <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;()));</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>SingleThreadExecutor的corePoolSize和maxiumPoolSize都被设置1，其他参数均与FixedThreadPool相同。</li>
+<li>由于在线程池中只有一个工作线程，所以任务可以按照添加顺序执行</li>
+</ul>
+<p>SingleThreadExecutor执行过程如下</p>
+<ul>
+<li>如果当前工作中的线程数量少于corePool的数量，就创建一个新的线程来执行任务</li>
+<li>当线程池中的工作中的线程数量达到了corePool，则将任务加入LinkedBlockingQueue</li>
+<li>线程执行完任务后会从队列中取任务</li>
+</ul>
+</li>
+<li><p>CachedThreadPool</p>
+<p>CachedThreadPool是一个“无限”容量的线程池，它会根据需要创建新线程执行任务，没有特定的corePool。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newCachedThreadPool</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">0</span>, Integer.MAX_VALUE,</div><div class="line">                                  <span class="number">60L</span>, TimeUnit.SECONDS,</div><div class="line">                                  <span class="keyword">new</span> SynchronousQueue&lt;Runnable&gt;());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>CachedThreadPool的corePoolSize被设置为0，即corePool为空，maximumPoolSize被设置为Integer.MAX_VALUE，即maximum是无界的。这里keepAliveTime设置为60秒，意味着空闲的线程最多可以等待任务60秒，否则将被回收</li>
+<li>CachedThreadPool使用没有容量的SynchronousQueue作为主线程的工作队列，它是一个没有容量的阻塞队列。每个插入操作必须等待另一个线程的对应删除操作。这意味着，如果主线程提交任务的速度高于线程池中处理任务的速度时，CachedThreadPool会不断创建新线程。极端情况下，CachedThreadPool会因为创建过多线程而耗尽CPU资源。</li>
+</ul>
+<p>CachedThreadPool执行过程如下</p>
+<ul>
+<li>首先执行SynchronousQueue.offer(Runnable task)。如果是当前的线程池中有空闲的线程正在执行SynchronousQueue.poll()，那么主线程执行的offer操作与空线程执行的poll操作配对成功，主线程把任务交给空闲线程，execute()方法成功，否则执行下面的步骤2</li>
+<li>当线程池为空（初始maximumPool为空）或没有空闲线程时，配对失败，将没有线程执行SynchronousQueue.poll操作。这种情况下，线程池会创建一个新的线程执行任务</li>
+<li>在创建新的线程任务以后，将会执行poll操作。当步骤2的线程执行完后，将等待60秒，如果此时主线程提交了一个新任务，那么这个空闲线程将执行新任务，否则被回收。因此长时间不提交任务的CachedThreadPool不会占用系统资源</li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Java/" rel="tag"># Java</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/01/06/了解Web及网络基础/" rel="next" title="了解Web及网络基础">
+                <i class="fa fa-chevron-left"></i> 了解Web及网络基础
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/01/16/未写完/ThreadLocal原理/" rel="prev" title="ThreadLocal原理">
+                ThreadLocal原理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">33</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Executor框架的两级调度模型"><span class="nav-number">2.</span> <span class="nav-text">Executor框架的两级调度模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Executor框架的结构"><span class="nav-number">3.</span> <span class="nav-text">Executor框架的结构</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#任务"><span class="nav-number">3.1.</span> <span class="nav-text">任务</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#任务的执行"><span class="nav-number">3.2.</span> <span class="nav-text">任务的执行</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Executor框架的类与接口"><span class="nav-number">3.3.</span> <span class="nav-text">Executor框架的类与接口</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Executor框架的使用"><span class="nav-number">4.</span> <span class="nav-text">Executor框架的使用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ThreadPoolExecutor"><span class="nav-number">5.</span> <span class="nav-text">ThreadPoolExecutor</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>

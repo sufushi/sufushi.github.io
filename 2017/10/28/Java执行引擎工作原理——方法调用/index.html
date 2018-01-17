@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="JVM," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言JVM作为一款虚拟机，必然要涉及计算机核心的3大功能。
+
+方法调用
+方法作为程序组成的基本单元，作为原子指令的初步封装，计算机必须能够支持方法的调用。同样，Java语言的原子指令是字节码，Java方法是对字节码的封装，因此，JVM必须支持对Java方法的调用。
+
+取指
+计算机进入方法后，最终需要逐条取出指令并逐条执行。Java方法也不例外，因此JVM进入方法后，也要模拟硬件CPU，能够从Jav">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java执行引擎工作原理——方法调用">
+<meta property="og:url" content="sufushi.github.io/2017/10/28/Java执行引擎工作原理——方法调用/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="前言JVM作为一款虚拟机，必然要涉及计算机核心的3大功能。
+
+方法调用
+方法作为程序组成的基本单元，作为原子指令的初步封装，计算机必须能够支持方法的调用。同样，Java语言的原子指令是字节码，Java方法是对字节码的封装，因此，JVM必须支持对Java方法的调用。
+
+取指
+计算机进入方法后，最终需要逐条取出指令并逐条执行。Java方法也不例外，因此JVM进入方法后，也要模拟硬件CPU，能够从Jav">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/JVM%E8%B0%83%E7%94%A8Java%E7%A8%8B%E5%BA%8Fmain%28%29%E4%B8%BB%E5%87%BD%E6%95%B0%E7%9A%84%E8%B7%AF%E7%BA%BF%E5%9B%BE.png">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/%E5%87%BD%E6%95%B0%E5%A0%86%E6%A0%88%E7%A9%BA%E9%97%B4%E5%B8%83%E5%B1%80%E9%80%9A%E7%94%A8%E6%A8%A1%E5%9E%8B.png">
+<meta property="og:updated_time" content="2017-11-14T13:18:45.293Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java执行引擎工作原理——方法调用">
+<meta name="twitter:description" content="前言JVM作为一款虚拟机，必然要涉及计算机核心的3大功能。
+
+方法调用
+方法作为程序组成的基本单元，作为原子指令的初步封装，计算机必须能够支持方法的调用。同样，Java语言的原子指令是字节码，Java方法是对字节码的封装，因此，JVM必须支持对Java方法的调用。
+
+取指
+计算机进入方法后，最终需要逐条取出指令并逐条执行。Java方法也不例外，因此JVM进入方法后，也要模拟硬件CPU，能够从Jav">
+<meta name="twitter:image" content="http://oxsxuoiqx.bkt.clouddn.com/JVM%E8%B0%83%E7%94%A8Java%E7%A8%8B%E5%BA%8Fmain%28%29%E4%B8%BB%E5%87%BD%E6%95%B0%E7%9A%84%E8%B7%AF%E7%BA%BF%E5%9B%BE.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2017/10/28/Java执行引擎工作原理——方法调用/"/>
+
+
+
+
+
+  <title>Java执行引擎工作原理——方法调用 | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2017/10/28/Java执行引擎工作原理——方法调用/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Java执行引擎工作原理——方法调用</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-28T21:35:02+08:00">
+                2017-10-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>JVM作为一款虚拟机，必然要涉及计算机核心的3大功能。</p>
+<ul>
+<li><p>方法调用</p>
+<p>方法作为程序组成的基本单元，作为原子指令的初步封装，计算机必须能够支持方法的调用。同样，Java语言的原子指令是字节码，Java方法是对字节码的封装，因此，JVM必须支持对Java方法的调用。</p>
+</li>
+<li><p>取指</p>
+<p>计算机进入方法后，最终需要逐条取出指令并逐条执行。Java方法也不例外，因此JVM进入方法后，也要模拟硬件CPU，能够从Java方法中逐条去除字节码指令。</p>
+</li>
+<li><p>运算</p>
+<p>计算机取出指令后，就要根据指令进行相应的逻辑运算，实现指令的功能。JVM作为虚拟机，也需要具备对Java字节码的运算能力。</p>
+</li>
+</ul>
+<h4 id="方法调用"><a href="#方法调用" class="headerlink" title="方法调用"></a>方法调用</h4><p>Java程序最基本的组成单元是类，Java类是由一个个方法所组成。JVM作为一款虚拟机，要想具备执行一个完整的Java程序的能力，就必定得具备执行单个Java方法的能力。而具备执行Java方法的能力，首先必须要能执行方法调用。</p>
+<p>物理机器在调用函数时，需要进行下面一系列操作：</p>
+<ul>
+<li>保存调用者栈基地址（即当前栈基地址入栈），当前IP寄存器入栈（即调用者中的下一条指令地址入栈）。</li>
+<li>参数入栈。</li>
+<li>代码指针（eip）入栈，使得被调用函数执行完后物理机器可以回来继续执行原来的函数指令。</li>
+<li>调用函数的栈基地址入栈。</li>
+<li>为被调用方分配方法栈空间。一个方法所分配的栈空间大小，取决于该方法内部的局部变量空间、为被调用者所传递的入参大小。</li>
+<li>被调用者在接收入参时，从8（%ebp）处开始，往上逐个获取每一个入参参数。</li>
+<li>被调用者将返回结果保存在eax寄存器中，调用者从该寄存器中获取返回值。</li>
+</ul>
+<p>物理机器在执行程序时，将程序划分为若干个函数，每个函数都对应有一段机器码。一段程序的机器码存放在一块连续的内存中，这块内存叫做代码段。物理机器为每一个函数分配一个方法栈，当物理机器执行到某个函数时，才会为其分别方法栈，函数通过自身的机器指令遥控其对应的方法栈，可以往里面放入数值，也可以将数值移动到其他地方，也可以需哦那个里面读取数据，也可以从调用者的方法栈里取值。通过一条条指令和一个个栈，物理机器得以运行完一整个程序。</p>
+<p>JVM是用C和C++语言编写的一款软件，当JVM执行Java函数时，实际上是执行了一段汇编代码，这中间存在一个边界，边界的一边是C程序，边界的另一边直接是机器指令，C语言要能够直接执行机器指令。</p>
+<p>Java字节码指令直接对应一段特定逻辑的本地机器码，而JVM在解释执行Java字节码指令时，会直接调用字节码指令所对应的本地机器码。JVM是使用C/C++编写而成的，因此JVM要直接执行本地机器码，便意味着必须能够从C/C++程序中直接进入机器指令。这种技术实现的关键便是使用C语言所提供的一种高级功能——函数指针。通过函数指针能够直接有C程序触发一段机器指令。在JVM内部，call_stub便是实现C程序调用字节码的第一步——例如Java主函数的调用。在JVM执行Java主函数所对应的第一条字节码指令之前，必须经过call_stub函数指针进入对应的例程，然后在目标程序中触发对Java主函数第一条字节码指令的调用。</p>
+<h4 id="函数指针"><a href="#函数指针" class="headerlink" title="函数指针"></a>函数指针</h4><p>函数指针是C/C++语言里一种高级的变量和应用，是实现C/C++语言动态扩展能力的关键技术之一，如同Java中的反射与类动态加载技术。</p>
+<ul>
+<li><p>函数指针与指针函数</p>
+<p>函数指针定义示例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> (*fun) (<span class="keyword">int</span> a, <span class="keyword">int</span> b);</div></pre></td></tr></table></figure>
+<p>函数指针声明的是一个指针，指向一个函数的首地址。</p>
+<p>指针函数定义示例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> *<span class="title">fun</span> <span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span></span>;</div></pre></td></tr></table></figure>
+<p>指针函数声明的是一个函数，返回类型是一个指针。</p>
+</li>
+<li><p>函数指针的定义方式</p>
+<ul>
+<li><p>直接声明</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">return_type (*func_pointer) (data_type arg1, data_type arg2, ..., data_type argn);</div></pre></td></tr></table></figure>
+</li>
+<li><p>通过类型声明</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">typedef</span> (*func_pointer) (data_type arg1, data_type arg2, ..., data_type argn);</div></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>函数指针的调用方式</p>
+<ul>
+<li>（*funcPointer）（参数列表）</li>
+<li>funcPointer（参数列表）</li>
+</ul>
+</li>
+</ul>
+<p>函数指针本质上是一种指针，不是函数，但是由于这种指针指向的并不是某个变量的内存地址，而是某个函数的内存首地址，因此C语言允许像函数一样调用函数指针。</p>
+<h4 id="CallStub函数指针定义"><a href="#CallStub函数指针定义" class="headerlink" title="CallStub函数指针定义"></a>CallStub函数指针定义</h4><p>call_stub是JVM内部的一个函数指针，对于JVM执行引擎而言，该函数指针至关重要。</p>
+<p>call_stub函数指针原型定义在stubRoutines.hpp文件中，定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">static</span> CallStub <span class="title">call_stub</span><span class="params">()</span> </span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">return</span> CAST_TO_FN_PTR(CallStub, _call_stub_entry);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>CAST_TO_FN_PTR是一个宏，进行宏替换后可以得到下面这行展开式：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">return</span> (CallStub) (castable_address(_call_stub_entry));</div></pre></td></tr></table></figure>
+<p>这里的CallStub是一种自定义类型。其定义在stubRoutines.hpp文件中，定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">void</span> <span class="params">(*CallStub)</span> <span class="params">(</span></span></div><div class="line">	address link,</div><div class="line">  	<span class="keyword">intptr_t</span>* result,</div><div class="line">  	BasicType result_type,</div><div class="line">  	methodOopDesc* method,</div><div class="line">  	address entry_pointt,</div><div class="line">  	<span class="keyword">intptr_t</span>* parameters,</div><div class="line">  	<span class="keyword">int</span> size_of_parameters,</div><div class="line">  	TRAPS</div><div class="line">);</div></pre></td></tr></table></figure>
+<p>由该定义可知，CallStub是这样一种函数指针类型：其指向的函数，返回值类型是void，并且有8个入参。</p>
+<p>JVM内部在javaCalls::call_helper()中执行了call_stub()函数调用。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArguments* args, TRAPS)</div><div class="line">&#123;</div><div class="line">    ...</div><div class="line">    <span class="comment">// call_stub()调用开始</span></div><div class="line">    &#123;</div><div class="line">        <span class="function">JavaCallWrapper <span class="title">link</span><span class="params">(method, receiver, result, CHECK)</span></span>;</div><div class="line">      	&#123;</div><div class="line">            <span class="function">HandleMark <span class="title">hm</span><span class="params">(thread)</span></span>;</div><div class="line">          	StubRoutines::call_stub()(</div><div class="line">            			(address)&amp;link,</div><div class="line">            			result_val_address,</div><div class="line">            			result_type,</div><div class="line">            			method(),</div><div class="line">            			entry_point,</div><div class="line">            			args-&gt;parameters(),</div><div class="line">            			args-&gt;size_of_parameters(),</div><div class="line">            			CHECK);</div><div class="line">          	result = link.result();</div><div class="line">          	<span class="keyword">if</span> (oop_result_flag) &#123;</div><div class="line">                thread-&gt;set_vm_result((oop)result-&gt;get_jobject());</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">  	<span class="comment">// call_stub()调用结束</span></div><div class="line">  	...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这里JVM隐式调用了函数指针。call_stub()函数最终返回的是一个函数指针的实例变量，这个函数指针变量的类型是CallStub，但是物理机器并不理解这种隐式调用，所以最终还是要靠编译器来实现隐式调用到显式调用的转变。编译器处理后得到显式调用可以用下面这段逻辑表达：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArguments* args, TRAPS)</div><div class="line">&#123;</div><div class="line">    ...</div><div class="line">    <span class="comment">// call_stub()调用开始</span></div><div class="line">    &#123;</div><div class="line">        <span class="function">JavaCallWrapper <span class="title">link</span><span class="params">(method, receiver, result, CHECK)</span></span>;</div><div class="line">      	&#123;</div><div class="line">            <span class="function">HandleMark <span class="title">hm</span><span class="params">(thread)</span></span>;</div><div class="line">          	<span class="comment">// 编译器的处理结果</span></div><div class="line">          	CallStub funcPointer;</div><div class="line">          	funcPointer = StubRoutines::call_stub();</div><div class="line">          	funcPointer(</div><div class="line">            			(address)&amp;link,</div><div class="line">            			result_val_address,</div><div class="line">            			result_type,</div><div class="line">            			method(),</div><div class="line">            			entry_point,</div><div class="line">            			args-&gt;parameters(),</div><div class="line">            			args-&gt;size_of_parameters(),</div><div class="line">            			CHECK);</div><div class="line">          </div><div class="line">          	result = link.result();</div><div class="line">          	<span class="keyword">if</span> (oop_result_flag) &#123;</div><div class="line">                thread-&gt;set_vm_result((oop)result-&gt;get_jobject());</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">  	<span class="comment">// call_stub()调用结束</span></div><div class="line">  	...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>JVM实现call_stub()的机制实际上调用的是call_stub()函数所返回的函数指针变量，由于JVM在使用typedef定义CallStub类型时，就规定这种函数指针类型有8个入参，因此JVM最终在调用这种类型的函数指针时，也必须传入8个类型完全相同的参数。</p>
+<h5 id="castable-address"><a href="#castable-address" class="headerlink" title="castable_address()"></a>castable_address()</h5><p>castable_address()是一个函数，定义在globalDefinitions.hpp文件中，其定义如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">inline</span> address_word <span class="title">castable_address</span><span class="params">(address x)</span></span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">return</span> address_word(x);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这里的address_word也是一种自定义类型，它表示的是一种地址类型，定义在globalDefinitions.hpp文件中，其定义如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">typedef</span> <span class="keyword">uintptr_t</span> address_word;</div></pre></td></tr></table></figure>
+<p>由此可知，address_word类型其实是uintptr_t，而后一种类型也是JVM自定义的类型，但是这种类型是平台相关的，所以在JVM内部有3处定义了这种类型，分别是：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">globalDefinitions_gcc.hpp</div><div class="line">globalDefinitions_sparcWords.hpp</div><div class="line">globalDefinitions_visCPP.hpp</div></pre></td></tr></table></figure>
+<p>在特定的平台上编译JVM时，编译器会自动根据平台类型，编译不同的hpp头文件，上面列出的三种头文件，分别对应Linux、Macintosh和Windows这三种主流的操作系统。</p>
+<p>在Linux平台上，uintprt_t类型的定义如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="keyword">uintprt_t</span>;</div></pre></td></tr></table></figure>
+<p>综上可以知道address_word这种类型实际上是无符号整数类型。</p>
+<p>转回call_stub()函数，将address_word类型进行替换，得到如下代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">static</span> CallStub <span class="title">call_stub</span><span class="params">()</span></span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">return</span> (CallStub)(<span class="keyword">unsigned</span> <span class="keyword">int</span> (_call_stub_entry));</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>到这里，call_stub()函数的逻辑基本上全部还原出来了，将_call_stub_entry变量转换为unsigned int基本类型，再转换为CallStub这一自定义类型，该类型是函数指针类型。 _call_stub_entry类型定义在StubRoutines.hpp中，定义如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">static</span> address _call_stub_entry;</div></pre></td></tr></table></figure>
+<p>由此可知，_call_stub_entry本身就是address类型，而该类型的原型是unsigned int。</p>
+<p>在JVM初始化的过程中，便将_call_stub_entry这一变量指向了某个内存地址。在 x86 32位Linux平台下，JVM在初始化过程中，存在这样一条链路：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">java.c:main()</div><div class="line">  	java_md.c:LoadJavaVM()</div><div class="line">      	jni.c:JNI_CreateJavaVM()</div><div class="line">          	Threads.c:create_vm()</div><div class="line">              	init.c:init_globals()</div><div class="line">                  	StubRoutines.cpp:stubRoutines_init1()</div><div class="line">                      	StubRoutines.cpp:initialzel()</div><div class="line">                          	stubGenerator_x86_x32.cpp:StubGenerator_generate()</div><div class="line">                              	stubGenerator_x86_x32.cpp:StubCodeGenerator()</div><div class="line">                                  	stubGenerator_x86_x32.cpp:generate_initial()</div></pre></td></tr></table></figure>
+<p>这条链路从JVM的main()函数开始，调用到init_globals()这个全局数据初始化模块，最后再调用到StubRoutines这个例程生成模块，最终在stubGenerator_x86_x32.cpp：generate_initial()函数会执行如下代码对_call_stub_entry变量进行初始化。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">generate_initial</span><span class="params">()</span></span>&#123;</div><div class="line">    ...</div><div class="line">    StubRoutines::_call_stub_entry = </div><div class="line">      		generate_call_stub(StubRoutines::_call_stub_return_address);</div><div class="line">  	...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>最终，JVM调用generate_call_stub(StubRoutines::_call_stub_return_address)函数返回一个值赋值给 _call_stub_entry。</p>
+<h5 id="CallStub-入参"><a href="#CallStub-入参" class="headerlink" title="CallStub()入参"></a>CallStub()入参</h5><p>JVM一共传入8个参数，其含义如表所示：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">参数名</th>
+<th style="text-align:left">含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">link</td>
+<td style="text-align:left">连接器</td>
+</tr>
+<tr>
+<td style="text-align:left">result_val_address</td>
+<td style="text-align:left">函数返回地址</td>
+</tr>
+<tr>
+<td style="text-align:left">result_type</td>
+<td style="text-align:left">函数返回类型</td>
+</tr>
+<tr>
+<td style="text-align:left">method()</td>
+<td style="text-align:left">JVM内部所表示的Java方法对象</td>
+</tr>
+<tr>
+<td style="text-align:left">entry_point</td>
+<td style="text-align:left">JVM调用Java方法的例程入口。JVM内部的每一段例程都是在JVM启动过程中预先生成好的一段机器指令。要调用Java方法，都必须经过本例程，即需要先执行这段机器指令，然后才能跳转到Java方法字节码所对应的机器指令去执行</td>
+</tr>
+<tr>
+<td style="text-align:left">parameters()</td>
+<td style="text-align:left">Java方法的入参集合</td>
+</tr>
+<tr>
+<td style="text-align:left">size_of_parameters()</td>
+<td style="text-align:left">Java方法的入参数量</td>
+</tr>
+<tr>
+<td style="text-align:left">CHECK</td>
+<td style="text-align:left">当前线程对象</td>
+</tr>
+</tbody>
+</table>
+<p>这里先简单介绍5个参数：link、method()、entry_point、parameters()和size_of_parameters()。</p>
+<ul>
+<li><p>连接器link</p>
+<p>连接器link的作用就是起到连接、桥梁的作用，其所属类型是JavaCallWrapper，该类型定义在javaCalls.cpp文件中，定义如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">class</span> JavaCallWrapper: StackObj &#123;</div><div class="line">    <span class="keyword">friend</span> <span class="keyword">class</span> VMStructs;</div><div class="line"> 	<span class="keyword">private</span>:</div><div class="line">  	JavaThread* _thread;  <span class="comment">// 当前Java线程所在线程</span></div><div class="line">    JNIHandleBlock* _handles; <span class="comment">// 本地调用句柄</span></div><div class="line">  	methodOop _callee_method; <span class="comment">// 调用者方法对象</span></div><div class="line">  	oop _receiver; <span class="comment">// 被调用者</span></div><div class="line">  	JavaFrameAnchor _anchor; <span class="comment">// Java线程堆栈对象</span></div><div class="line">  	JavaValue* _result; <span class="comment">// Java方法所返回的值</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>通过这些变量可知，link其实在Java函数的调用者与被调用者之间搭建了一座桥梁，通过这座桥梁，可以实现堆栈追踪，可以得到整个方法的调用链路。在Java函数调用时，link指针将被保存在当前方法的堆栈中。</p>
+</li>
+<li><p>method()</p>
+<p>method()是当前Java方法在JVM内部的表示对象。</p>
+<p>每一个Java方法在被JVM加载时，JVM都会在内部为这个Java方法建立函数模型，也就是保存一份Java方法的全部原始描述信息。JVM为Java方法所建立的模型中至少包含以下信息：</p>
+<ul>
+<li>Java函数的名称、所属的Java类</li>
+<li>Java函数的入参信息，包括入参类型、入参参数名、入参数量、入参顺序等</li>
+<li>Java函数编译后的字节码信息，包括对应的字节码指令‘、所占用的总字节码数等</li>
+<li>Java函数的注解信息</li>
+<li>Java函数的继承信息</li>
+<li>Java函数的返回信息</li>
+</ul>
+<p>JVM在调用CallStub()函数指针时，将method()对象传递进去，最终就是为了从method()对象中获取了Java函数编译后的字节码信息，JVM拿到字节码信息之后，就能对字节码进行解释执行了。</p>
+</li>
+<li><p>entry_point</p>
+<p>entry_point是继 _call_stub_entry这一JVM最核心例程之后的又一个最主要的例程入口。前面对 _call_stub_entry进行了简单的分析，JVM每次从JVM内部调用Java函数时，必定调用CallStub函数指针，而该函数指针的值就是 _call_stub_entry。JVM通过 _call_stub_entry所指向的函数地址，最终调用到Java函数。在JVM通过 _call_stub_entry所指向的函数调用Java函数之前，必须要先通过entry_point例程。事实上，在entry_point例程里面会真正从method()对象上拿到Java函数编译后的字节码，JVM通过entry_point可以得到Java函数所对应的第一个字节码指令，然后开始调用Java函数。</p>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/JVM%E8%B0%83%E7%94%A8Java%E7%A8%8B%E5%BA%8Fmain%28%29%E4%B8%BB%E5%87%BD%E6%95%B0%E7%9A%84%E8%B7%AF%E7%BA%BF%E5%9B%BE.png" alt="JVM调用Java程序main()主函数的路线图"></p>
+</li>
+<li><p>parameters()</p>
+<p>这个参数是描述Java函数的入参信息的。在JVM真正调用Java函数的第一个字节码指令之前，JVM会在CallStub()函数中解析Java函数的入参，解析后，JVM会为Java函数分配堆栈，并将Java函数的入参逐个入栈。这样，JVM就为高层次的编程语言建立了方法栈模型。</p>
+<p>因为Java是运行在虚拟机上的，所以不能直接使用物理机器的方法栈，必须在虚拟机层面为每一个Java函数都建立堆栈模型，这种堆栈模型中的局部变量都是Java语言的变量类型。所以，JVM在正式调用Java函数之前，必须要能够获取到Java语言层面上的参数类型、参数对象、参数顺序等信息，惟其如此，JVM才能正确调用并执行Java函数。</p>
+<p>Java语言是一门面向对象的语言，在内存模型上，Java类的实例对象分配早堆中，而堆栈中只保存了引用。所谓引用，在JVM内部，实际上就是一个指针。JVM做出这种内存分配模型策略的原因是，堆栈空间通常比较少，放不下那么大的对象。在物理机器上直接跑的程序，堆栈空间一般最大为64MB，而Java堆栈一般为1MB，或者8MB等。如果每一个函数都设置那么大的堆栈空间，那么函数的调用深度稍微一大，整个物理机器的内存就会溢出。正因如此，JVM只能将类对象实例保存在堆中。</p>
+</li>
+<li><p>size_of_parameters()</p>
+<p>这个入参的含义是Java函数的入参个数。parameters()参数保存了Java函数的所有入参信息，但是parameters()里面其实是使用指针建立起来的数组模型，JVM在后面调用Java函数时，直接通过parameters()内部的指针，无法得知结束位置，因此这里需要将Java函数的入参数量传递进去，JVM在为Java函数分配堆栈空间时，会根据这个值，计算出Java堆栈空间的大小。</p>
+</li>
+</ul>
+<h4 id="call-stub-entry例程"><a href="#call-stub-entry例程" class="headerlink" title="_call_stub_entry例程"></a>_call_stub_entry例程</h4><p>_call_stub_entry变量的值是generate_call_stub()函数返回赋上去的，函数定义如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line"><span class="function">address <span class="title">generate_call_stub</span><span class="params">(address&amp; return_address)</span> </span>&#123;</div><div class="line">    <span class="function">StubCodeMark <span class="title">mark</span><span class="params">(<span class="keyword">this</span>, <span class="string">"StubRoutines"</span>, <span class="string">"call_stub"</span>)</span></span>;</div><div class="line">  	<span class="comment">// 这里先得到当前入口的内存地址，因为本函数后续流程会继续往代码空间中写入call_stub()的指令，而外面却只需要拿到这部分指令的首地址，而这里start就是首地址，因此这里先拿到，最后直接将其返回去即可</span></div><div class="line">  	address start = __pc();</div><div class="line">  	assert(frame::entry_frame_call_wrapper_offset == <span class="number">2</span>, <span class="string">"adjust this code"</span>);</div><div class="line">  	<span class="keyword">bool</span> sse_save = <span class="literal">false</span>; </div><div class="line">  	<span class="function"><span class="keyword">const</span> Address <span class="title">rsp_after_call</span><span class="params">(rbp, <span class="number">-4</span> * wordSize)</span></span>;</div><div class="line">  	<span class="function"><span class="keyword">const</span> <span class="keyword">int</span> <span class="title">locals_count_in_bytes</span><span class="params">(<span class="number">4</span> * wordSize)</span></span>;</div><div class="line">  	<span class="function"><span class="keyword">const</span> Address <span class="title">mxcsr_save</span><span class="params">(rbp, <span class="number">-4</span> * wordSize)</span></span>;</div><div class="line">  	<span class="function"><span class="keyword">const</span> Address <span class="title">saved_rbx</span><span class="params">(rbp, <span class="number">-3</span> * wordSize)</span></span>;</div><div class="line">  	<span class="function"><span class="keyword">const</span> Address <span class="title">saved_rsi</span><span class="params">(rbp, <span class="number">-2</span> * wordSize)</span></span>;</div><div class="line">  	<span class="function"><span class="keyword">const</span> Address <span class="title">saved_rdi</span><span class="params">(rbp, <span class="number">-1</span> * wordSize)</span></span>;</div><div class="line">  	<span class="function"><span class="keyword">const</span> Address <span class="title">result</span><span class="params">(rbp, <span class="number">3</span> * wordSize)</span></span>;</div><div class="line">	<span class="function"><span class="keyword">const</span> Address <span class="title">result_type</span><span class="params">(rbp, <span class="number">4</span> * wordSize)</span></span>;</div><div class="line">  	<span class="function"><span class="keyword">const</span> Address <span class="title">method</span><span class="params">(rbp, <span class="number">5</span> * wordSize)</span></span>;</div><div class="line">  	<span class="function"><span class="keyword">const</span> Address <span class="title">entry_point</span><span class="params">(rbp, <span class="number">6</span> * wordSize)</span></span>;</div><div class="line">  	<span class="function"><span class="keyword">const</span> Address <span class="title">parameters</span><span class="params">(rbp, <span class="number">7</span> * wordSize)</span></span>;</div><div class="line">    <span class="function"><span class="keyword">const</span> Address <span class="title">parameters_size</span><span class="params">(rbp, <span class="number">8</span> * wordSize)</span></span>;</div><div class="line">  	<span class="function"><span class="keyword">const</span> Address <span class="title">thread</span><span class="params">(rbp, <span class="number">9</span> * wordSize)</span></span>;</div><div class="line">	sse_save = UseSSE &gt; <span class="number">0</span>;</div><div class="line">  	</div><div class="line">  	__enter();</div><div class="line">  	__movptr(rcx, parameter_size);</div><div class="line">  	__shlptr(rcx, Interpreter::logStackElementSize);</div><div class="line">  	__addptr(rcx, locals_count_int_bytes);</div><div class="line">  	__subptr(rsp, rcx);</div><div class="line">  	__andptr(rsp, - (StackAlignmentInBytes));</div><div class="line">  	__movptr(saved_rdi, rdi);</div><div class="line">  	__movptr(saved_rsi, rsi);</div><div class="line">  	__movptr(saved_rbx, rbx);</div><div class="line">  	...</div><div class="line">    __BIND(is_double);</div><div class="line">  	<span class="keyword">if</span> (UseSSE &gt;= <span class="number">2</span>) &#123;</div><div class="line">        __movdbl(Address(rdi, <span class="number">0</span>), xmm0);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        __fstp_d(Address(rdi, <span class="number">0</span>));</div><div class="line">    &#125;</div><div class="line">  	__jmp(<span class="built_in">exit</span>);</div><div class="line">  	<span class="keyword">return</span> start;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这段代码最主要的作用就是生成机器码，使用C语言动态生成。</p>
+<ul>
+<li><p>pc()函数</p>
+<p>首先看第一行代码。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">address start = __pc();</div></pre></td></tr></table></figure>
+<p>这行代码保存当前例程所对应的一段机器码的起始位置。pc()函数定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function">address <span class="title">pc</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123;</div><div class="line">    <span class="keyword">return</span> _code_pos;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这函数特别简单，返回_code_pos变量，该变量是一个address类型的变量。</p>
+<p>在JVM启动过程中，JVM会生成很多例程（即一段固定的机器指令，能够实现一种特定的功能逻辑），例如函数调用、字节码例程、异常处理、函数返回等。每一个例程，一开始都有这么一行代码（即address start =   _pc()），代码完全相同。事实上，JVM的所有例程都在一段连续的内存中，我们可以将这段内存想象成一根直线，当JVM刚启动时，这根直线长度为0，没有生成任何例程。第一个例程生成时，pc()返回0，因此此时是从这根直线的零点位置开始。例如第一个例程占20字节，则当JVM生成第一个例程时，第二个例程执行start = <em>pc()时，将返回20。JVM每一个例程都有一个对应的generate()函数（具体的函数名不同，但是基本上都以generate </em>开头），假设第一个例程占20字节，则当第一个例程多对应的generate()函数执行完成后， _code_pos会自动累加到20，于是当JVM生成第二个例程时，pc()函数就会返回20。</p>
+<p>JVM每生成一个例程，就会将例程起始位置增加，每一个例程都会占用JVM堆内存的一块连续区域，相邻例程之间的内存区域相连，所有的例程最后连成一块连续的区域。</p>
+</li>
+<li><p>定义入参</p>
+<p>generate_call_stub()接下来执行下面一段代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">   assert(frame::entry_frame_call_wrapper_offset == <span class="number">2</span>, <span class="string">"adjust this code"</span>);</div><div class="line"> 	<span class="keyword">bool</span> sse_save = <span class="literal">false</span>; </div><div class="line"> 	<span class="function"><span class="keyword">const</span> Address <span class="title">rsp_after_call</span><span class="params">(rbp, <span class="number">-4</span> * wordSize)</span></span>;</div><div class="line"> 	<span class="function"><span class="keyword">const</span> <span class="keyword">int</span> <span class="title">locals_count_in_bytes</span><span class="params">(<span class="number">4</span> * wordSize)</span></span>;</div><div class="line"> 	<span class="function"><span class="keyword">const</span> Address <span class="title">mxcsr_save</span><span class="params">(rbp, <span class="number">-4</span> * wordSize)</span></span>;</div><div class="line"> 	<span class="function"><span class="keyword">const</span> Address <span class="title">saved_rbx</span><span class="params">(rbp, <span class="number">-3</span> * wordSize)</span></span>;</div><div class="line"> 	<span class="function"><span class="keyword">const</span> Address <span class="title">saved_rsi</span><span class="params">(rbp, <span class="number">-2</span> * wordSize)</span></span>;</div><div class="line"> 	<span class="function"><span class="keyword">const</span> Address <span class="title">saved_rdi</span><span class="params">(rbp, <span class="number">-1</span> * wordSize)</span></span>;</div><div class="line"><span class="function"><span class="keyword">const</span> Address <span class="title">result</span><span class="params">(rbp, <span class="number">3</span> * wordSize)</span></span>;</div><div class="line"><span class="function"><span class="keyword">const</span> Address <span class="title">result_type</span><span class="params">(rbp, <span class="number">4</span> * wordSize)</span></span>;</div><div class="line"> 	<span class="function"><span class="keyword">const</span> Address <span class="title">method</span><span class="params">(rbp, <span class="number">5</span> * wordSize)</span></span>;</div><div class="line"> 	<span class="function"><span class="keyword">const</span> Address <span class="title">entry_point</span><span class="params">(rbp, <span class="number">6</span> * wordSize)</span></span>;</div><div class="line"> 	<span class="function"><span class="keyword">const</span> Address <span class="title">parameters</span><span class="params">(rbp, <span class="number">7</span> * wordSize)</span></span>;</div><div class="line">   <span class="function"><span class="keyword">const</span> Address <span class="title">parameters_size</span><span class="params">(rbp, <span class="number">8</span> * wordSize)</span></span>;</div><div class="line"> 	<span class="function"><span class="keyword">const</span> Address <span class="title">thread</span><span class="params">(rbp, <span class="number">9</span> * wordSize)</span></span>;</div></pre></td></tr></table></figure>
+<p>首先回顾一下机器调用时的调用者和被调用者堆栈模型。一个函数的堆栈空间大体上可以分为3部分。</p>
+<p>①堆栈变量区</p>
+<p>保存方法的局部变量，或者对数据的地址引用（指针）。</p>
+<p>如果一个方法中并没有局部变量，则编译器不会为该方法分配堆栈变量区。</p>
+<p>②入参区域</p>
+<p>如果当前方法调用了其他方法，并且给其他方法传递了参数，那么这些参数会保存在调用者的堆栈中，即所谓的“压栈”。</p>
+<p>至少在x86平台上，入参区域相对于方法的堆栈变量区，在内存上位于低位置，即堆栈变量区在高位置方向，而入参区域在低位置方向。x86在分配堆栈空间时，本来就是按照由高地址向低地址的方向分配的。</p>
+<p>③ip和bp区</p>
+<p>ip和bp，一个是代码段寄存器，一个是堆栈栈基寄存器。这两个寄存器，一个用于回复调用者方法的代码位置，一个用于回复调用方法的堆栈位置，是完成物理机器函数调用机制的最主要的2个寄存器。</p>
+<p>函数堆栈空间的一般布局如下图所示。</p>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/%E5%87%BD%E6%95%B0%E5%A0%86%E6%A0%88%E7%A9%BA%E9%97%B4%E5%B8%83%E5%B1%80%E9%80%9A%E7%94%A8%E6%A8%A1%E5%9E%8B.png" alt="函数堆栈空间布局通用模型"></p>
+<p>其实，物理机器在执行函数调用时，存在一定的空间浪费。入参往往是当前方法的局部变量，编译器会将局部变量分配在局部变量区域，而在入参时，会将局部变量再次复制一份放在压栈区域，同一份数据被分配了两次堆栈空间，其实依靠编译器的智能性，完全可以将堆栈空间中的入参区域去掉，但正因为编译器规定了入参空间分配的原则，并使入参按照从左到右或从右到左的顺序压栈，这种规范不仅仅让调用者函数在访问入参时享受到了极大的便利，也让JVM设计者在设计Java函数调用机制时，能够基于这一规范，随心所欲地发挥。基于这一规范，在被调用者方法中，访问入参，就变得有规律可循。</p>
+<p>完成入参压栈后，接着物理机器将ip和bp这两个寄存器入栈，，之后物理机器就开始为被调用函数分配堆栈空间了。物理机器对堆栈内存寻址方式为相对偏移，可以通过相对栈底bp或栈顶sp的位置类绝对定位堆栈内存位置。入参寻址公式为：Pn = (n + 1) * 4(%ebp)。在该公式中，n表示第n个入参（按从左至右的顺序），Pn表示第n个入参的位置。</p>
+<p>诸如m(%ebp)这种标记方法，属于汇编语言，而JVM是使用C/C++写成的，于是JVM大神对汇编语法进行了抽象，使用C++类来表示一个堆栈位置。汇编语言通过寄存器和偏移量唯一定位了一个堆栈内存。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">class</span> Address &#123;</div><div class="line">    <span class="keyword">private</span>:</div><div class="line">  		<span class="comment">// 表示一个物理寄存器，寄存器的作用是标记基址</span></div><div class="line">  		Register _base;</div><div class="line">  		<span class="comment">// 表示偏移量，是个整形数</span></div><div class="line">  		<span class="keyword">int</span> _disp;</div><div class="line">  	<span class="keyword">public</span>:</div><div class="line">  		<span class="comment">// 构造函数</span></div><div class="line">  		Address()</div><div class="line">          	:_base(noreg),</div><div class="line">  			_disp(<span class="number">0</span>)</div><div class="line">        &#123;    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>使用C++类对汇编堆栈寻址进行抽象后，便可以直接用该类进行堆栈寻址了，使用方法为：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function">Address <span class="title">position</span><span class="params">(rbp, n * wordsize)</span></span>;</div></pre></td></tr></table></figure>
+</li>
+<li><p>CallStub：保存调用者堆栈</p>
+<p>generate_call_stub()函数的逻辑部分从下面这行代码开始：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">__enter();</div></pre></td></tr></table></figure>
+<p>这行代码在不同平台上对应不同的机器指令。在x86平台上，其函数定义如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> MacroAssembler::enter() &#123;</div><div class="line">    push(rbp);</div><div class="line">  	mov(rbp, rsp);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这两条指令最终会在JVM运行期翻译为如下所示的机器指令。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">push %bp</div><div class="line">mov %sp, %bp</div></pre></td></tr></table></figure>
+<p>push %ebp指令的含义是保存调用者函数的栈基地址，mov%sp，%bp指令的含义是重新指定栈基地址。由于即将开始新的函数，因此需要将栈基指向调用者函数的栈顶地址，调用者函数的栈顶位置就是被调用者函数的栈基位置。</p>
+</li>
+<li><p>CallStub：动态分配堆栈</p>
+<p>JVM之所以能够在物理机器上分配Java语言变量类型的堆栈，完全得益于机器级别对堆栈空间分配的指令支持。JVM充分利用了这一点，通过重新分配堆栈空间，从而为JVM调用Java函数奠定基石。</p>
+<p>正常编写一段C程序，编译器会根据调用函数中的变量声明，自动计算出被调用函数要多大的堆栈空间。最终物理机器在执行这个C程序时，将按照编译器所计算出的大小为被调用函数分配堆栈空间。</p>
+<p>而Java程序由于无法直接被编译成机器指令，因此Java编译器无法直接计算一个Java函数需要多大的堆栈空间，但是如果仅仅解决Java函数的1堆栈空间的自动计算，还是无法实现Java函数的调用，因为Java有自己的变量类型，这些变量类型不像C语言的变量，Java变量类型并不能直接被编译成物理机器所识别的数据类型，而C语言变量最终完全被编译成物理机器所识别的类型。所以，即使Java程序编译器能够自动计算出Java函数所需要的堆栈空间大小，物理机器也是无法对这段堆栈内存进行读写，因为物理机器完全不识别Java的变量类型。当然，从技术层面上，对于强类型的Java语言，是完全可以做到直接将Java语言编译为机器指令的，JVM的JIT编译器就是这种实现方式，不过由于将Java程序直接编译成机器指令，既要高级语言到原始语言的转换，还要能够确保Java程序的逻辑在编译后保持完全一致。所以JIT提供了对哦中选项，有些选项不进行任何优化就编译，有些选项可以对Java程序进行激进式的编译。不经过优化的编译，与解释型运行时所动态生成的机器指令的数量、质量基本相差不大。但是如果进行激进式的编译，可能会破坏原本Java的程序逻辑。</p>
+<p>JVM为了能够调用Java函数，需要在运行期就知道一个Java函数的入参大小，然后动态计算出所需要的堆栈空间。这就是JVM能够调用Java函数的核心机制。这里的关键问题是，CallStub()作为被javaCalls::call_helper()调用的函数，JVM通过javaCalls::call_helper()最终调用到Java函数，JVM作为一款使用C/C++编写而成的程序，被编译后，C/C++编译器自然会计算出javaCalls::call_helper()传递给CallStub()的入参空间大小，但是C/C++编译器并不会因此就自动计算出Java函数的入参数量以及所需内存的空间大小，因此C/C++编译器并不识别Java程序，并且在JVM被编译期间，JVM尚未加载任何Java程序，因此JVM对Java程序完全无感。等到JVM程序运行起来后，JVM会加载Java程序，并通过javaCalls::call_helper()调用Java主函数。JVM在执行Java函数调用时，仍然沿用了物理机器苏坡使用的“堆栈”这一算法数据结构，因此JVM仍然需要为Java被调用通过函数分配堆栈内存，保存被调用函数的局部变量以及相关上下文数据。因此，JVM必然需要在运行期动态计算Java被调用函数的空间大小，并动态为其分配堆栈空间。而物理机器提供了这种动态分配堆栈空间的能力。</p>
+<p>由于物理机器不能识别Java程序，也不能直接执行Java程序，因此JVM必然要通过自己作为一座桥梁连接到Java程序，并让Java被调用的函数的堆栈能够“寄生”在JVM的某个函数的堆栈空间中，否则物理机器不会自动为Java方法分配堆栈。JVM选择CallStub这一函数指针作为JVM内部的C/C++程序与Java程序的分水岭，或者桥梁，通过这座桥梁，当JVM启动后，执行完JVM自身的一系列指令后，能够跳转到执行Java程序经翻译后所对应的二进制机器指令，CallStub能够实现机器逻辑指令上的联接，同时，在分水岭之后，JVM需要为主函数分配堆栈空间，以在主函数中读取入参数据。很自然的，JVM将Java函数堆栈空间“寄生”在了CallStub()函数堆栈中。这就需要依靠物理机器提供的指令，对CallStub()堆栈进行扩展。物理机器提供了扩展堆栈空间的简单指令，如下（下述指令基于x86平台）：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sub operand, &amp;sp</div></pre></td></tr></table></figure>
+<p>JVM实现堆栈“寄生”的机制是，扩展别人的堆栈，存储自己所需要的数据。</p>
+<p>CallStub()作为JVM内部C/C++与Java程序的分水岭，CallStub()调用者javaCalls::call_helper()并没有直接将Java函数的入参传递给CallStub()，因为这个调用者并不直接是Java函数自己，因此在JVM的编译阶段，并没有将Java函数压栈。JVM内部通过CallStub()函数调用Java主函数main()，在CallStub()函数中必然要将Java程序主函数main()所需的入参信息String[] args进行压栈，否则Java主函数main()内部无法对入参进行寻址。但是在JVM编译期间，C/C++根本不知道Java程序的任何信息，这就需要使用动态分配堆栈的方式了，或者“寄生”。CallStub()函数所对应的机器指令是在JVM启动过程中动态生成的，而非编译期间生成，在CallStub()内部需要知道被调用的Java函数的入参数量，并依此计算入参所需空间大小，最终将其压栈，这样当JVM在执行Java函数时，在被调用的Java函数中就能对入参进行寻址。在CallStub()函数中，通过如下指令计算出被调用Java函数的入参数量，并保存调用者数据段现场。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">__movptr(rcx, parameter_size);</div><div class="line">__shlptr(rcx, Interpreter::logStackElementSize);</div><div class="line">__addptr(rcx, locals_count_int_bytes);</div><div class="line">__subptr(rsp, rcx);</div><div class="line">__andptr(rsp, - (StackAlignmentInBytes));</div><div class="line">__movptr(saved_rdi, rdi);</div><div class="line">__movptr(saved_rsi, rsi);</div><div class="line">__movptr(saved_rbx, rbx);</div></pre></td></tr></table></figure>
+<p>以上这段代码就是JVM在对被调用的Java函数的入参进行计算。javaCalls::call_helper()在调用Java函数之前，会读取Java函数的入参大小，Java函数的入参大小由Java编译器在编译期间计算出来，因此JVM在执行Java函数之前，可以将其直接读取出来。JVM得到Java函数所需要的入参数量后，便可以直接计算出入参压栈所需要的堆栈空间。JVM在内存上建立了一套Java面向对象的标准模型，在JVM内部，一切对Java对象实例及其成员变量和成员方法的访问，最终都是通过指针得以寻址。同理，JVM在传递函数参数时，所传递的也只不过是Java入参对象实例的指针而已。正因为Java函数传参，实际所传递的只是指针，而在物理机器层面，不管何种数据类型的指针，其宽度都是相同的，指针的宽度仅与物理机器的数据总线宽度有关，而与具体某种编程语言中的具体数据类型无关。因此，JCVM在为Java函数计算入参所需要的堆栈空间时，只需要入参的数量即可。</p>
+<p>完成了Java函数入参空间计算后，接下来就需要执行最主要的一步：动态分配堆栈内存，直接执行sub operand, &amp;esp即可实现，operand就表示刚才计算出来的堆栈大小。在CallStub()中使用下面C代码实现：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">__subptr(rsp, rcx);</div></pre></td></tr></table></figure>
+<p>这行代码最终会生成下面这条机器指令：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sub %ecx, %esp</div></pre></td></tr></table></figure>
+<p>在这条指令之前，JVM所计算出的堆栈空间大小保存在ecx寄存器中，因此这里直接将esp减去ecx寄存器的值，就完成堆栈空间的分配。</p>
+<p>至此，JVM完成了动态堆栈内存分配。</p>
+</li>
+<li><p>CallStub：调用者保存</p>
+<p>JVM为即将被调用的Java方法分配了堆栈空间，调用者是CallStub()所指向的函数，其实就是generate_call_stub()。接下来JVM就要将CPU的控制权转交给被调用者的Java方法，但是在转交之前，调用者需要保存自己的寄存器数据，这些寄存器主要包括：edi、esi、edx。</p>
+<p>每次在执行函数调用时，CS:IP寄存器就会从当前调用者函数的机器指令出跳转到被调用函数，这样CPU才能执行被调用的函数。但是当被调用函数执行完之后，CPU需要跳转到调用者函数中继续执行调用者函数的机器指令，换言之，需要恢复CS:IP的值，使之重新指向调用者函数中执行被调用函数的下一条指令。前文讲过，每次发生函数调用时，机器会将调用者函数的CS:IP压入栈中，而在函数调用结束后，再次将调用者函数的CS:IP从栈弹出来进行恢复。</p>
+<p>物理机器通过CS:IP来区分一个内存中的数据到底是真实的数据还是机器指令，而对于数据，物理机器一般会用edi和esi分别保存目的偏移地址和原偏移地址。而在JVM中，edi和esi被赋予更多职责，例如在Java函数调用过程中，esi会用于Java字节码寻址。每当JVM开始执行Java函数的某个字节码指令时，JVM会首先将esi寄存器指向目标字节码指令的偏移地址，然后JVM跳转到该字节码所对应的第一个机器指令开始执行。所以edi和esi在JVM中是与调用者函数紧密关联的寄存器，是调用者函数的私有数据。ebx是一个通用的寄存器，但是也经常被用来作为一段数据的基地址，在JVM中，在执行Java函数调用时，ebx会用来存放Java函数中即将被执行的字节码指令的基地址，然后通过jmp指令跳转到该字节码位置进行字节码解释执行。因此，ebx与edi和esi一样，与调用者函数息息相关，也是调用者函数的私有数据。由于esi、edi和ebx可以被看作是调用者函数的私有数据，因此JVM直接将其保存到了被调用者函数的堆栈中。</p>
+<p>以上过程有一个专业术语，叫做“现场保存”。当调用者函数的现场全部保存完之后，CPU的控制权马上就要移交给被调用者函数了。</p>
+</li>
+<li><p>CallStub：参数压栈</p>
+<p>在动态分配堆栈时，CallStub函数指针为即将调用的函数分配的堆栈空间大小为：Java函数入参数量 <em> 4 + 4 </em> 4，4 <em> 4就是最后rdi、rsi、rbx、mxcsr这4个寄存器所占用的堆栈空间大小。CallStub为被调用者函数所分配的堆栈空间大小完全取决于Java函数的入参数量，接下来JVM要做的就是将即将被调用的Java函数的入参复制到这剩余的堆栈空间里去。由于不同的Java函数的入参数量是不同的，因此CallStub使用了循环进行处理，而这种循环直接是基于机器指令的。在机器层面进行循环，一个约定俗成的做法就是将循环次数暂存到ecx寄存器，因此CallStub必然要先将Java函数的入参数量传送到ecx寄存器中。同时，由于Java函数的多个入参在内存中实际上是一个队列，是一个“串”，而对于串的寻址通常使用基址+变址的偏移寻址指令，因此在CallStub中将以edx寄存器存储基址，以ecx存储变址。对于Java函数的入参队列而言，所谓基址，实际上就是第一个入参的内存地址，每一个指针指向不同的入参实例。 由于Java语言是面向对象的，因此其入参队列在JVM里实际上是指针的队列，每一个指针指向不同的入参实例。指针的宽度是相同的，因此只要知道了第一个入参的位置，便可以知道其后续所有入参的位置，只需要基于第一个位置进行偏移即可。假设第一个入参记为P1，则其后面第N个入参的位置是：P1 + (N -1) </em> 4。根据这个简单的原理，CallStub只要将P1作为基址，将N作为变址就能对Java函数的全部入参进行寻址。所以CallStub将Java函数的参数进行逃入栈的第一步就是分别获取基址和变址。一切准备就绪后，开始循环将Java函数参数压栈。在机器层面进行循环，一般有两种方式：一种是使用loop指令，另一种就是使用跳转。CallStub使用的是跳转，并且其对Java函数的入参采用的是逆向遍历，也就是从后往前遍历参数，将读取到的入参传送到堆栈中。</p>
+</li>
+<li><p>CallStub：调用entry_point例程</p>
+<p>前面经过调用者框架栈帧保存栈基、堆栈动态扩展、现场保存、Java函数参数压栈这一系列的逻辑处理，JVM终于为Java函数的调用演完前奏，一切就绪后，负责吹响号角的就是entry_point例程了。在JVM调用CallStub所指向的函数时，已经将entry_point例程的首地址传递给CallStub函数了，作为其第5个入参。entry_point其实也是一个指向函数的指针，对于CPU而言，只要能够拿到函数的入口地址，就能执行函数调用。</p>
+</li>
+<li><p>CallStub：获取返回值</p>
+<p>CallStub执行entry_point例程调用时，使用的是call指令，而非jmp，因此最终entry_point例程执行完毕之后，CPU的控制权还是会回到CallStub，继续执行entry_point例程调用之后的指令。调用完entry_point例程之后，会有返回值，CallStub会获取返回值并继续处理。CallStub通过下面两条指令分别读取被调用函数所返回的值result和数据类型result_type。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">mov <span class="number">0xc</span>(%ebp), %edi</div><div class="line">mov <span class="number">0x10</span>(%ebp), %esi</div></pre></td></tr></table></figure>
+<p>0xc(%ebp)和0x10(%ebp)这2个堆栈位置所保存的正是resultAddress与result_type。JVM将这2个值分别存储进edi和esi这2个寄存器中，调用方法在获取被调用函数的返回值与返回类型时，也会从这2个寄存器中读取。</p>
+</li>
+<li><p>CallStub：汇编指令总览</p>
+<p>所谓例程，就是一段预先写好的函数，JVM通过例程函数在启动过程中生成机器指令，当执行Java函数调用时，JVM直接跳转到例程所生成的这段机器指令去执行。CallStub例程最终生成的机器指令如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 保存调用者栈帧</span></div><div class="line">push %ebp</div><div class="line">mov %esp, %ebp</div><div class="line"><span class="comment">// 动态分配堆栈</span></div><div class="line">mov <span class="number">0x20</span>(%ebp),%ecx</div><div class="line">shl $<span class="number">0x2</span>,%ecx</div><div class="line">add $<span class="number">0x10</span>],%ecx</div><div class="line">sub %ecx,%esp</div><div class="line">and $<span class="number">0xfffffff0</span>,%esp</div><div class="line"><span class="comment">// 保存edi、esi、ebx这3个寄存器</span></div><div class="line">mov %edi,<span class="number">-0x4</span>(%ebp)</div><div class="line">mov %esi,<span class="number">-0x8</span>(%ebp)</div><div class="line">mov %ebx,<span class="number">-0xc</span>(%ebp)</div><div class="line"><span class="comment">// 保存mscsr寄存器的值，属于SSE，在VS中的寄存器窗口右击，然后选择SSE就可以看到了</span></div><div class="line">stmxcsr <span class="number">-0x10</span>(%ebp)</div><div class="line"><span class="comment">// 循环遍历Java函数入参，并传送到CallStub堆栈中  </span></div><div class="line">mov <span class="number">0x20</span>(%ebp),%ecx</div><div class="line">test %ecx,%ecx</div><div class="line">je <span class="number">0xb370b68b</span></div><div class="line">mov <span class="number">0x1c</span>(%ebp),%edx</div><div class="line">xor %ebx,%ebx</div><div class="line"><span class="comment">// 开始循环</span></div><div class="line">mov <span class="number">-0x4</span>(%edx,%edx,<span class="number">4</span>),%eax</div><div class="line">mov %eax,(%esp,%ebx,<span class="number">4</span>)</div><div class="line">inc %ebx</div><div class="line">dec %ecx</div><div class="line">jne <span class="number">0xb370b96</span></div><div class="line"><span class="comment">// 开始entry_point例程调用  </span></div><div class="line">mov <span class="number">0x14</span>(%ebp),%ebx</div><div class="line">mov <span class="number">0x18</span>(%ebp),%eax</div><div class="line">call *%eax</div><div class="line"><span class="comment">// call_stub_return_address</span></div><div class="line">mov <span class="number">0xc</span>(%ebp),%edi <span class="comment">// result</span></div><div class="line">mov <span class="number">0x10</span>(%ebp),%esi <span class="comment">// result_type</span></div></pre></td></tr></table></figure>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/JVM/" rel="tag"># JVM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/28/JVM概述/" rel="next" title="JVM概述">
+                <i class="fa fa-chevron-left"></i> JVM概述
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/11/14/Java数据解结构与面向对象/" rel="prev" title="Java数据解结构与面向对象">
+                Java数据解结构与面向对象 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">33</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方法调用"><span class="nav-number">2.</span> <span class="nav-text">方法调用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#函数指针"><span class="nav-number">3.</span> <span class="nav-text">函数指针</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#CallStub函数指针定义"><span class="nav-number">4.</span> <span class="nav-text">CallStub函数指针定义</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#castable-address"><span class="nav-number">4.1.</span> <span class="nav-text">castable_address()</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#CallStub-入参"><span class="nav-number">4.2.</span> <span class="nav-text">CallStub()入参</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#call-stub-entry例程"><span class="nav-number">5.</span> <span class="nav-text">_call_stub_entry例程</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Java," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Java是一门以为C++基础而更纯粹的面向对象的程序设计语言。
+无论是C++还是Java都属于杂合语言。但在Java语言中，设计者这种杂合并不像C++里那么重要。杂合语言允许采用多种编程风格，之所以说C++是一种杂合语言，是因为它支持与C语言的向后兼容能力。由于C++是C的一个超集，所以包含的许多特性都是后者不具备的，这些特性使C++在某些地方显得过于复杂。
+Java语言首先便假定了我们只希望进行">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java对象概述">
+<meta property="og:url" content="sufushi.github.io/2017/11/22/Java对象概述/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="Java是一门以为C++基础而更纯粹的面向对象的程序设计语言。
+无论是C++还是Java都属于杂合语言。但在Java语言中，设计者这种杂合并不像C++里那么重要。杂合语言允许采用多种编程风格，之所以说C++是一种杂合语言，是因为它支持与C语言的向后兼容能力。由于C++是C的一个超集，所以包含的许多特性都是后者不具备的，这些特性使C++在某些地方显得过于复杂。
+Java语言首先便假定了我们只希望进行">
+<meta property="og:updated_time" content="2017-11-22T11:55:43.831Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java对象概述">
+<meta name="twitter:description" content="Java是一门以为C++基础而更纯粹的面向对象的程序设计语言。
+无论是C++还是Java都属于杂合语言。但在Java语言中，设计者这种杂合并不像C++里那么重要。杂合语言允许采用多种编程风格，之所以说C++是一种杂合语言，是因为它支持与C语言的向后兼容能力。由于C++是C的一个超集，所以包含的许多特性都是后者不具备的，这些特性使C++在某些地方显得过于复杂。
+Java语言首先便假定了我们只希望进行">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2017/11/22/Java对象概述/"/>
+
+
+
+
+
+  <title>Java对象概述 | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2017/11/22/Java对象概述/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Java对象概述</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-22T16:40:30+08:00">
+                2017-11-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Java是一门以为C++基础而更纯粹的面向对象的程序设计语言。</p>
+<p>无论是C++还是Java都属于杂合语言。但在Java语言中，设计者这种杂合并不像C++里那么重要。杂合语言允许采用多种编程风格，之所以说C++是一种杂合语言，是因为它支持与C语言的向后兼容能力。由于C++是C的一个超集，所以包含的许多特性都是后者不具备的，这些特性使C++在某些地方显得过于复杂。</p>
+<p>Java语言首先便假定了我们只希望进行面向对象的程序设计。也就是说，正是用它设计之前，必须先将自己的思想转入一个面向对象的世界。只有做好这个准备工作，与其他OOP语言相比，才能体会到Java的易学易用。</p>
+<h4 id="用句柄操纵对象"><a href="#用句柄操纵对象" class="headerlink" title="用句柄操纵对象"></a>用句柄操纵对象</h4><p>每种编程语言都有自己的数据处理方式。有些时候，程序员必须时刻留意准备处理的是什么类型。所有这些在Java里得到了简化，任何东西都可以看作对象。因此，我们可采用一种统一的语法，任何地方均可照搬不误。但要注意，尽管将一切都看作对象，但操纵的标识符实际上是指向一个对象的句柄（Handle），或者说是一个引用，甚至一个指针。</p>
+<h4 id="对象创建与保存"><a href="#对象创建与保存" class="headerlink" title="对象创建与保存"></a>对象创建与保存</h4><p>创建句柄时，我们希望它同一个新对象连接。通常用new关键字达到这一目的。</p>
+<p>Java配套提供了数量众多的线程类型，对我们来讲，最重要的就是记住能自行创建类型。事实上，这是Java程序设计的一项基本操作。</p>
+<p>程序运行时，对数据的保存，内存的分配至关重要。有六个地方都可以保存数据。</p>
+<ul>
+<li>寄存器。这是最快的保存区域，因为它位于和其他所有保存方式不同的地方：处理器内部。然而，寄存器的数量十分有限，所以寄存器是根据需要有编译器分配。我们对此没有直接的控制权，也不可能在自己的程序里找到寄存器存在的任何踪迹。</li>
+<li>堆栈。驻留于常规RAM（随机访问存储器）区域，但可通过它的“堆栈指针”获得处理的直接支持。堆栈指针若向下移，会创建新的内存；若向上移，则会释放那些内存。这是一种特别快、特别有效的数据保存方式，仅次于寄存器。创建程序时，Java编译器必须准确地知道堆栈内保存的所有数据的“长度”和“存在时间”。这是由于它必须生成相应的代码，以便向上和向下移动指针。这一限制无疑影响了程序的灵活性，所以尽管有些Java数据要保存在堆栈里——特别是对象句柄，但Java对象并不放在其中。</li>
+<li>堆。一种常规用途的内存池（也在RAM区域），其中保存了Java对象。和堆栈不同，“内存堆”或“堆”最吸引人的地方在于编译器不必知道要从堆里面分配多少存储空间，也不必知道存储的数据要扎起堆里停留多长时间。因此，用堆保存数据时会得到更大的灵活性。要求创建一个对象时，只需用new命令编制相关的代码即可。执行这些代码时，会在堆里自动进行数据的保存。当然，为达到这种灵活性，必然会付出一定的代价，在堆里分配空间时会花掉更长的时间。</li>
+<li>静态存储。这儿的静态是指“位于固定的位置”（尽管也是在RAM里）。程序运行期间，静态存储的数据将随时等候调用。可用static关键字指出一个对象的特定元素是静态的。但Java对象本身永远都不会置入静态存储空间。</li>
+<li>常熟存储。常熟值通常直接置于程序代码内部。这样做是安全的，因为它们都永远不会改变。有的常熟需要严格的保护，所以可考虑将它们置入只读存储器（ROM）。</li>
+<li>非RAM存储。若数据完全独立于一个程序之外，则程序不运行时仍可存在，并在程序的控制范围之外。其中两个最主要的例子便是“流式对象”和“固定对象”。对于流式对象，对象会变成字节流，通常会发给另一台机器。而对于固定对象，对象保存在磁盘中。即使在程序中止运行，它们仍可保持自己的状态不变。对于这些类型的数据存储，一个特别有用的技巧就是它们能存在于其他媒体中。一旦需要，甚至能将它们恢复成普通的、基于RAM的对象。</li>
+</ul>
+<p>有一系列类需特别对待，可将它们想象成“基本”、“主要”或“主”类型，进行程序设计时要频繁用到它们。之所以需要特别对待，使用偶遇用new创建对象（特别是小的、简单的变量）并不是非常有效，因为new将对象置于“堆”中。对于这些类型，Java也采纳了与C与C++相同的方法。也就是说，不是用new创建变量，而是创建一个非句柄的“自动”变量。这个变量容纳了具体的值，并置于堆栈中，能够更高效地存取。</p>
+<p>Java决定了每种主要类型的大小，这些大小并随着机器结构的变化而变化，这种大小的不可更改正是Java程序具有很强移植能力的原因之一。</p>
+<table>
+<thead>
+<tr>
+<th>主类型</th>
+<th>大小（bit）</th>
+<th>最大值</th>
+<th>最小值</th>
+<th>封装器类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>boolean</td>
+<td>1</td>
+<td></td>
+<td></td>
+<td>Boolean</td>
+</tr>
+<tr>
+<td>char</td>
+<td>16</td>
+<td>Unicode</td>
+<td>Uinicode 2的16次方-1</td>
+<td>Character</td>
+</tr>
+<tr>
+<td>byte</td>
+<td>8</td>
+<td>-128</td>
+<td>+127</td>
+<td>Byte</td>
+</tr>
+<tr>
+<td>short</td>
+<td>16</td>
+<td>-2的15次方</td>
+<td>+2的15次方-1</td>
+<td>Short</td>
+</tr>
+<tr>
+<td>int</td>
+<td>32</td>
+<td>-2的31次方</td>
+<td>+2的31次方-1</td>
+<td>Integer</td>
+</tr>
+<tr>
+<td>long</td>
+<td>64</td>
+<td>-2的63次方</td>
+<td>+2的63次方-1</td>
+<td>Long</td>
+</tr>
+<tr>
+<td>float</td>
+<td>32</td>
+<td>IEEE754</td>
+<td>IEEE754</td>
+<td>Float</td>
+</tr>
+<tr>
+<td>double</td>
+<td>64</td>
+<td>IEEE754</td>
+<td>IEEE754</td>
+<td>Double</td>
+</tr>
+<tr>
+<td>void</td>
+<td></td>
+<td></td>
+<td></td>
+<td>Void</td>
+</tr>
+</tbody>
+</table>
+<p>几乎所有程序设计语言都支持数组。在C和C++里使用数组是非常危险的，因为这些数组只是内存块。若程序访问自己内存以外的数组，或者在初始化之前使用内存，会产生不可预测的后果。</p>
+<p>Java新的一项主要设计就是安全性。所以在C和C++里困扰程序员的许多问题都未在Java里重复。一个Java可以保证被初始化，而且不可在它的范围之外访问。由于系统自动进行范围检查，所以必然要付出一些代价：针对每个数组，以及在运行期间对索引的校验，都会造成少量的内存开销。但由此换回的是更高的安全性，以及更高的工作效率。为此付出少许代价是值得的。</p>
+<p>创建对象数组时，实际创建的是一个句柄数组。而且每个句柄都会自动初始化一个特殊值，并带有自己的关键字：null。一旦Java看到null，就知道该句柄并未指向一个对象。正式使用前，必须为每个句柄都分配一个对象。若试图使用仍然为null的一个句柄，就会在运行期报告问题。因此，典型的数组错误在Java里就得到了避免。也可以创建主类型数组。同样地，编译器能够担保对它的初始化，因为会将那个数组的内存划分为零。</p>
+<h4 id="对象的清除"><a href="#对象的清除" class="headerlink" title="对象的清除"></a>对象的清除</h4><p>在大多数程序设计语言中，变量的“存在时间”一直是程序员需要着重考虑的问题。而在Java中会帮助我们完成所有的清除工作。</p>
+<p>大多数程序设计语言都提供了“作用域”的概念。对于在作用域里定于的名字，作用域同时决定了它的可见性以及存在时间。在C、C++和Java里，作用域是由花括号的位置决定的。作为在作用域里定义的一个变量，它只有在那个作用域结束之前才可使用。</p>
+<p>Java对象不具备与主类型一样的存在时间。用new关键字创建一个Java对象的时候，它会超出作用域的范围之外。句柄会在作用域的终点出消失。然而，句柄指向的对象依然占据这内存空间。在C++里，一旦工作完成，必须保证将对象清除。在Java中，情况发生了改观。Java有一个特别的“垃圾收集器”，它会查找用new创建的所有对象，并辨别其中哪些不再被引用。随后，它会自动释放由那些闲置对象占据的内存，以便能由新对象使用。这意味着我们根本不必操心内存的回收问题。只需简单地创建对象，一旦不再需要它们，它们就会自动离去。这样做可防止在C++里很常见的一个编程问题：由于程序员忘记释放内存造成的“内存溢出”。</p>
+<h4 id="新建数据类型：类"><a href="#新建数据类型：类" class="headerlink" title="新建数据类型：类"></a>新建数据类型：类</h4><p>如果说一切东西都是对象，那么每个对象就会有相应的类型与之对应。Java使用关键字class来表达这个意思，通过类的定义，我们可以自由创建新的数据类型。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">ATypeName</span> </span>&#123;</div><div class="line">    类主体</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这样就引入了一种新的类型，并且可以通过new关键字创建这种类型的一个对象。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ATypeName a = <span class="keyword">new</span> ATypeName();</div></pre></td></tr></table></figure>
+<p>定义一个类时，可以在自己的类里设置两种类型的元素：数据成员（字段）以及成员函数（方法）。其中，数据成员是一种对象（通过它的句柄与其通信），可以为任何类型，也可以是主类型之一。如果是指向对象的一个句柄，则必须初始化那个句柄，用一种名为“构建器”的特殊函数将其与一个实际对象连接起来，但若是一种主类型，则可在类定义位置直接初始化。每个对象都为自己的数据成员保有存储空间，数据成员不会在对象之间共享。</p>
+<p>Java的方法决定了一个对象能够接收的消息。方法的基本组成部分包含名字、自变量、返回类型以及主体。</p>
+<h4 id="构建Java程序"><a href="#构建Java程序" class="headerlink" title="构建Java程序"></a>构建Java程序</h4><p>正式构建Java程序之前，有几个问题需要注意。</p>
+<h5 id="名字的可见性"><a href="#名字的可见性" class="headerlink" title="名字的可见性"></a>名字的可见性</h5><p>在所有程序设计语言里，一个不可避免的问题是对名字或名称的控制。C++用额外的关键字引入了“命名空间”的概念，而Java则采用了与Internet域名类似的机制，这种机制使得所有文件都自动存在于自己的命名空间里，而且每一个文件都自动获得一个独一无二的标识符。</p>
+<h5 id="使用其他组件"><a href="#使用其他组件" class="headerlink" title="使用其他组件"></a>使用其他组件</h5><p>一旦要在自己的程序里使用一个预先定义好的类，编译器就必须知道如何为找到它。import关键字准确告诉Java编译器我们希望的类是什么。import关键字的作用是指示编译器导入一个“包”或者说是一个“类库”。大多数时候，我们直接采用来自标准Java库的组件即可，它们是与编译器配套提供的。</p>
+<h5 id="static关键字"><a href="#static关键字" class="headerlink" title="static关键字"></a>static关键字</h5><p>通常，我们创建类时会指示那个类的对象的外观与行为。除非用new创建那个类的一个对象，否则实际上并未得到任何东西。只有执行了new后，才会正式生成数据存储空间，并可使用相应的方法。但在两种特殊的情形下，上述方法并不堪用。一种情形是只想用一个存储区域来保存一个特定的数据，无论要创建多少个对象，甚至根本不创建对象。另一种情形是我们需要一个特殊的方法，它没有与这个类得到任何对象关联。也就是说，即使没有创建对象，也需要一个你能调用的方法。为满足这两方面的要求，可使用static关键字。一旦将什么东西设为static，数据或方法就不会同那个类的任何对象实际联系到一起。所以尽管从未创建那个类的一个对象，仍能调用一个static方法，或访问一些static数据。而在这之前，对于非static数据和方法，我们必须创建一个对象，并用那个对象访问数据或方法。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Java/" rel="tag"># Java</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/11/21/面向对象6大原则/" rel="next" title="面向对象6大原则">
+                <i class="fa fa-chevron-left"></i> 面向对象6大原则
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/11/22/单例模式/" rel="prev" title="单例模式">
+                单例模式 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">33</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#用句柄操纵对象"><span class="nav-number">1.</span> <span class="nav-text">用句柄操纵对象</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#对象创建与保存"><span class="nav-number">2.</span> <span class="nav-text">对象创建与保存</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#对象的清除"><span class="nav-number">3.</span> <span class="nav-text">对象的清除</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#新建数据类型：类"><span class="nav-number">4.</span> <span class="nav-text">新建数据类型：类</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#构建Java程序"><span class="nav-number">5.</span> <span class="nav-text">构建Java程序</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#名字的可见性"><span class="nav-number">5.1.</span> <span class="nav-text">名字的可见性</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#使用其他组件"><span class="nav-number">5.2.</span> <span class="nav-text">使用其他组件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#static关键字"><span class="nav-number">5.3.</span> <span class="nav-text">static关键字</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>

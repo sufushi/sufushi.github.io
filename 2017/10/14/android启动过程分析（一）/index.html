@@ -100,7 +100,7 @@ android是基于Linux内核的系统平台。启动的时候，首先通过bootl
 init进程
 android的init进程对各种设备进行初始化，运行and">
 <meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/android%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B.png">
-<meta property="og:updated_time" content="2017-10-17T07:44:18.889Z">
+<meta property="og:updated_time" content="2018-01-16T03:34:44.337Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="android启动过程分析——init进程">
 <meta name="twitter:description" content="概要android启动过程包含从Linux内核加载到Home应用程序启动的整个过程。
@@ -121,7 +121,7 @@ android的init进程对各种设备进行初始化，运行and">
     root: '/',
     scheme: 'Pisces',
     version: '5.1.3',
-    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
     fancybox: true,
     tabs: true,
     motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
@@ -166,7 +166,7 @@ android的init进程对各种设备进行初始化，运行and">
     
   
 
-  <div class="container sidebar-position-left page-post-detail">
+  <div class="container sidebar-position-right page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -388,7 +388,7 @@ android的init进程对各种设备进行初始化，运行and">
 <p>zygote进程用于缩短android应用程序加载的时间。每当执行Java应用程序的时候，zygote就会派生出一个子进程来执行应用程序，该子进程就是用来执行Java应用程序的虚拟机。</p>
 </li>
 <li><p>system server</p>
-<p>system server是android系统地1一个核心进程，它是由zygote进程创建的，在android启动过程中位于zygote之后。在system server中可以看到它建立的android中的大部分服务，如activity manager service（管理应用程序的生命周期）、location manager service（提供终端的地理位置信息）等。</p>
+<p>system server是android系统的一个核心进程，它是由zygote进程创建的，在android启动过程中位于zygote之后。在system server中可以看到它建立的android中的大部分服务，如activity manager service（管理应用程序的生命周期）、location manager service（提供终端的地理位置信息）等。</p>
 <p>为了将运行在system server中Java系统服务提供给android应用程序或framework内部模块使用，需要将它们先注册到context manager中。</p>
 <p>在通过binder IPC 将Java系统服务注册到基于C语言的服务管理器时，需要使用JNI本地编程接口。JNI允许Java与其他编程语言（如C、C++、汇编语言）编写地1应用程序和库进行交互操作。</p>
 </li>
@@ -413,7 +413,7 @@ android的init进程对各种设备进行初始化，运行and">
 <ul>
 <li><p>process_kernel_cmdline()函数解析内核启动参数</p>
 <p>static void process_kernel_cmdline() {</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 内核启动参数信息保存在/proc/cmdline李main，它是uboot启动时传给内核的信息</span></div><div class="line">chmod(<span class="string">"/proc/cmdline"</span>, <span class="number">0440</span>);</div><div class="line"><span class="comment">// 解析内核启动参数</span></div><div class="line">import_kernel_cmdline(<span class="literal">false</span>, import_kernel_nv);</div><div class="line"><span class="keyword">if</span> (qemu[<span class="number">0</span>]) import_kernel_cmdline(<span class="literal">true</span>, import_kernel_nv);</div></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 内核启动参数信息保存在/proc/cmdline里main，它是uboot启动时传给内核的信息</span></div><div class="line">chmod(<span class="string">"/proc/cmdline"</span>, <span class="number">0440</span>);</div><div class="line"><span class="comment">// 解析内核启动参数</span></div><div class="line">import_kernel_cmdline(<span class="literal">false</span>, import_kernel_nv);</div><div class="line"><span class="keyword">if</span> (qemu[<span class="number">0</span>]) import_kernel_cmdline(<span class="literal">true</span>, import_kernel_nv);</div></pre></td></tr></table></figure>
 <p>}</p>
 </li>
 <li><p>signal_handler_init()函数设置信号处理函数</p>
@@ -676,7 +676,7 @@ service flash_recovery /system/bin/install-recovery.sh
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">33</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -689,7 +689,7 @@ service flash_recovery /system/bin/install-recovery.sh
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-count">8</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -744,7 +744,7 @@ service flash_recovery /system/bin/install-recovery.sh
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2017</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
@@ -917,8 +917,13 @@ service flash_recovery /system/bin/install-recovery.sh
   
 
   
+  
+
 
   
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
 
   
 

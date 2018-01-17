@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android基础篇," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="ListView常用优化技巧使用ViewHolder模式提高效率ViewHolder模式是提高ListView效率的一个重要的方法。ViewHolder模式充分利用了ListView的视图缓存机制，避免了每次在调用getView()的时候都去通过findViewById()实例化控件。据测试，使用ViewHolder将提高50%以上的效率。使用ViewHolder模式来优化ListView非常简单">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入理解ListView工作原理（二）">
+<meta property="og:url" content="sufushi.github.io/2017/11/20/深入理解ListView工作原理（二）/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="ListView常用优化技巧使用ViewHolder模式提高效率ViewHolder模式是提高ListView效率的一个重要的方法。ViewHolder模式充分利用了ListView的视图缓存机制，避免了每次在调用getView()的时候都去通过findViewById()实例化控件。据测试，使用ViewHolder将提高50%以上的效率。使用ViewHolder模式来优化ListView非常简单">
+<meta property="og:updated_time" content="2017-11-21T13:23:07.894Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入理解ListView工作原理（二）">
+<meta name="twitter:description" content="ListView常用优化技巧使用ViewHolder模式提高效率ViewHolder模式是提高ListView效率的一个重要的方法。ViewHolder模式充分利用了ListView的视图缓存机制，避免了每次在调用getView()的时候都去通过findViewById()实例化控件。据测试，使用ViewHolder将提高50%以上的效率。使用ViewHolder模式来优化ListView非常简单">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2017/11/20/深入理解ListView工作原理（二）/"/>
+
+
+
+
+
+  <title>深入理解ListView工作原理（二） | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2017/11/20/深入理解ListView工作原理（二）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">深入理解ListView工作原理（二）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-20T22:58:14+08:00">
+                2017-11-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="ListView常用优化技巧"><a href="#ListView常用优化技巧" class="headerlink" title="ListView常用优化技巧"></a>ListView常用优化技巧</h4><h5 id="使用ViewHolder模式提高效率"><a href="#使用ViewHolder模式提高效率" class="headerlink" title="使用ViewHolder模式提高效率"></a>使用ViewHolder模式提高效率</h5><p>ViewHolder模式是提高ListView效率的一个重要的方法。ViewHolder模式充分利用了ListView的视图缓存机制，避免了每次在调用getView()的时候都去通过findViewById()实例化控件。据测试，使用ViewHolder将提高50%以上的效率。使用ViewHolder模式来优化ListView非常简单，只需要在自定义Adapter中定义一个内部类ViewHolder，并将布局中的控件作为成员变量。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ViewHolder</span> </span>&#123;</div><div class="line">    <span class="keyword">public</span> TextView mTv;</div><div class="line">  	<span class="keyword">public</span> ImageView mIv;</div><div class="line">  	...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>接下来，只要在getView()方法中通过视图缓存机制来重用以缓存即可。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> View <span class="title">getView</span><span class="params">(<span class="keyword">int</span> position, View convertView, ViewGroup parent)</span> </span>&#123;</div><div class="line">    ViewHolder viewHolder = <span class="keyword">null</span>;</div><div class="line">  	<span class="keyword">if</span> (convertView == <span class="keyword">null</span>) &#123;</div><div class="line">        viewHolder = <span class="keyword">new</span> ViewHolder();</div><div class="line">      	convertView = mInflater.infalte(R.layout.viewholder_item, <span class="keyword">null</span>);</div><div class="line">      	viewHolder.mTv = (TextView) convertView.findViewById(R.id.tv);</div><div class="line">      	viewHolder.mIv = (ImageView) convertView.findViewById(R.id.iv);</div><div class="line">      	...</div><div class="line">      	convertView.setTag(viewHolder);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        viewHolder = (ViewHolder) convertView.getTag();</div><div class="line">    &#125;</div><div class="line">  	viewHolder.mTv.setText(mData.get(position));</div><div class="line">  	viewHolder.mIv.setBackgroundResource(R.drawable.ic);</div><div class="line">  	...</div><div class="line">    <span class="keyword">return</span> convertView;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h5 id="设置项目分隔线"><a href="#设置项目分隔线" class="headerlink" title="设置项目分隔线"></a>设置项目分隔线</h5><p>ListView的各个项目之间，可以通过设置分割线来进行区分，系统提供了diver和diverHeight这样两个属性来实现这一功能。通过这两个属性，也可以控制机ListView之间的分割线和它的高度。当然，分割线不仅仅可以设置为一个颜色，同样也可以设置为一个图片资源，分割线的使用代码如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">android:divider=<span class="string">"颜色或图片资源"</span></div><div class="line">android:dividerHeight=<span class="string">"dp值"</span></div></pre></td></tr></table></figure>
+<p>特殊情况下，当设置分隔线为null时，就可以把分隔线设置为透明了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">android:divider=<span class="string">"@null"</span></div></pre></td></tr></table></figure>
+<p>divider的源码实现如下。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div><div class="line">143</div><div class="line">144</div><div class="line">145</div><div class="line">146</div><div class="line">147</div><div class="line">148</div><div class="line">149</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">dispatchDraw</span><span class="params">(Canvas canvas)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (mCachingStarted) &#123;</div><div class="line">        mCachingActive = <span class="keyword">true</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">final</span> <span class="keyword">int</span> dividerHeight = mDividerHeight;</div><div class="line">    <span class="keyword">final</span> Drawable overscrollHeader = mOverScrollHeader;</div><div class="line">    <span class="keyword">final</span> Drawable overscrollFooter = mOverScrollFooter;</div><div class="line">    <span class="keyword">final</span> <span class="keyword">boolean</span> drawOverscrollHeader = overscrollHeader != <span class="keyword">null</span>;</div><div class="line">    <span class="keyword">final</span> <span class="keyword">boolean</span> drawOverscrollFooter = overscrollFooter != <span class="keyword">null</span>;</div><div class="line">    <span class="keyword">final</span> <span class="keyword">boolean</span> drawDividers = dividerHeight &gt; <span class="number">0</span> &amp;&amp; mDivider != <span class="keyword">null</span>;</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (drawDividers || drawOverscrollHeader || drawOverscrollFooter) &#123;</div><div class="line">        <span class="keyword">final</span> Rect bounds = mTempRect;</div><div class="line">        bounds.left = mPaddingLeft;</div><div class="line">        bounds.right = mRight - mLeft - mPaddingRight;</div><div class="line"></div><div class="line">        <span class="keyword">final</span> <span class="keyword">int</span> count = getChildCount();</div><div class="line">        <span class="keyword">final</span> <span class="keyword">int</span> headerCount = getHeaderViewsCount();</div><div class="line">        <span class="keyword">final</span> <span class="keyword">int</span> itemCount = mItemCount;</div><div class="line">        <span class="keyword">final</span> <span class="keyword">int</span> footerLimit = (itemCount - mFooterViewInfos.size());</div><div class="line">        <span class="keyword">final</span> <span class="keyword">boolean</span> headerDividers = mHeaderDividersEnabled;</div><div class="line">        <span class="keyword">final</span> <span class="keyword">boolean</span> footerDividers = mFooterDividersEnabled;</div><div class="line">        <span class="keyword">final</span> <span class="keyword">int</span> first = mFirstPosition;</div><div class="line">        <span class="keyword">final</span> <span class="keyword">boolean</span> areAllItemsSelectable = mAreAllItemsSelectable;</div><div class="line">        <span class="keyword">final</span> ListAdapter adapter = mAdapter;</div><div class="line"></div><div class="line">        <span class="keyword">final</span> <span class="keyword">boolean</span> fillForMissingDividers = isOpaque() &amp;&amp; !<span class="keyword">super</span>.isOpaque();</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (fillForMissingDividers &amp;&amp; mDividerPaint == <span class="keyword">null</span> &amp;&amp; mIsCacheColorOpaque) &#123;</div><div class="line">            mDividerPaint = <span class="keyword">new</span> Paint();</div><div class="line">            mDividerPaint.setColor(getCacheColorHint());</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">final</span> Paint paint = mDividerPaint;</div><div class="line"></div><div class="line">        <span class="keyword">int</span> effectivePaddingTop = <span class="number">0</span>;</div><div class="line">        <span class="keyword">int</span> effectivePaddingBottom = <span class="number">0</span>;</div><div class="line">        <span class="keyword">if</span> ((mGroupFlags &amp; CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) &#123;</div><div class="line">            effectivePaddingTop = mListPadding.top;</div><div class="line">            effectivePaddingBottom = mListPadding.bottom;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">final</span> <span class="keyword">int</span> listBottom = mBottom - mTop - effectivePaddingBottom + mScrollY;</div><div class="line">        <span class="keyword">if</span> (!mStackFromBottom) &#123;</div><div class="line">            <span class="keyword">int</span> bottom = <span class="number">0</span>;</div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> scrollY = mScrollY;</div><div class="line">            <span class="keyword">if</span> (count &gt; <span class="number">0</span> &amp;&amp; scrollY &lt; <span class="number">0</span>) &#123;</div><div class="line">                <span class="keyword">if</span> (drawOverscrollHeader) &#123;</div><div class="line">                    bounds.bottom = <span class="number">0</span>;</div><div class="line">                    bounds.top = scrollY;</div><div class="line">                    drawOverscrollHeader(canvas, overscrollHeader, bounds);</div><div class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (drawDividers) &#123;</div><div class="line">                    bounds.bottom = <span class="number">0</span>;</div><div class="line">                    bounds.top = -dividerHeight;</div><div class="line">                    drawDivider(canvas, bounds, -<span class="number">1</span>);</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</div><div class="line">                <span class="keyword">final</span> <span class="keyword">int</span> itemIndex = (first + i);</div><div class="line">                <span class="keyword">final</span> <span class="keyword">boolean</span> isHeader = (itemIndex &lt; headerCount);</div><div class="line">                <span class="keyword">final</span> <span class="keyword">boolean</span> isFooter = (itemIndex &gt;= footerLimit);</div><div class="line">                <span class="keyword">if</span> ((headerDividers || !isHeader) &amp;&amp; (footerDividers || !isFooter)) &#123;</div><div class="line">                    <span class="keyword">final</span> View child = getChildAt(i);</div><div class="line">                    bottom = child.getBottom();</div><div class="line">                    <span class="keyword">final</span> <span class="keyword">boolean</span> isLastItem = (i == (count - <span class="number">1</span>));</div><div class="line"></div><div class="line">                    <span class="keyword">if</span> (drawDividers &amp;&amp; (bottom &lt; listBottom)</div><div class="line">                            &amp;&amp; !(drawOverscrollFooter &amp;&amp; isLastItem)) &#123;</div><div class="line">                        <span class="keyword">final</span> <span class="keyword">int</span> nextIndex = (itemIndex + <span class="number">1</span>);</div><div class="line">                        <span class="keyword">if</span> (adapter.isEnabled(itemIndex) &amp;&amp; (headerDividers || !isHeader</div><div class="line">                                &amp;&amp; (nextIndex &gt;= headerCount)) &amp;&amp; (isLastItem</div><div class="line">                                || adapter.isEnabled(nextIndex) &amp;&amp; (footerDividers || !isFooter</div><div class="line">                                        &amp;&amp; (nextIndex &lt; footerLimit)))) &#123;</div><div class="line">                            bounds.top = bottom;</div><div class="line">                            bounds.bottom = bottom + dividerHeight;</div><div class="line">                            drawDivider(canvas, bounds, i);</div><div class="line">                        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (fillForMissingDividers) &#123;</div><div class="line">                            bounds.top = bottom;</div><div class="line">                            bounds.bottom = bottom + dividerHeight;</div><div class="line">                            canvas.drawRect(bounds, paint);</div><div class="line">                        &#125;</div><div class="line">                    &#125;</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> overFooterBottom = mBottom + mScrollY;</div><div class="line">            <span class="keyword">if</span> (drawOverscrollFooter &amp;&amp; first + count == itemCount &amp;&amp;</div><div class="line">                    overFooterBottom &gt; bottom) &#123;</div><div class="line">                bounds.top = bottom;</div><div class="line">                bounds.bottom = overFooterBottom;</div><div class="line">                drawOverscrollFooter(canvas, overscrollFooter, bounds);</div><div class="line">            &#125;</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            <span class="keyword">int</span> top;</div><div class="line"></div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> scrollY = mScrollY;</div><div class="line"></div><div class="line">            <span class="keyword">if</span> (count &gt; <span class="number">0</span> &amp;&amp; drawOverscrollHeader) &#123;</div><div class="line">                bounds.top = scrollY;</div><div class="line">                bounds.bottom = getChildAt(<span class="number">0</span>).getTop();</div><div class="line">                drawOverscrollHeader(canvas, overscrollHeader, bounds);</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> start = drawOverscrollHeader ? <span class="number">1</span> : <span class="number">0</span>;</div><div class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = start; i &lt; count; i++) &#123;</div><div class="line">                <span class="keyword">final</span> <span class="keyword">int</span> itemIndex = (first + i);</div><div class="line">                <span class="keyword">final</span> <span class="keyword">boolean</span> isHeader = (itemIndex &lt; headerCount);</div><div class="line">                <span class="keyword">final</span> <span class="keyword">boolean</span> isFooter = (itemIndex &gt;= footerLimit);</div><div class="line">                <span class="keyword">if</span> ((headerDividers || !isHeader) &amp;&amp; (footerDividers || !isFooter)) &#123;</div><div class="line">                    <span class="keyword">final</span> View child = getChildAt(i);</div><div class="line">                    top = child.getTop();</div><div class="line">                    <span class="keyword">if</span> (drawDividers &amp;&amp; (top &gt; effectivePaddingTop)) &#123;</div><div class="line">                        <span class="keyword">final</span> <span class="keyword">boolean</span> isFirstItem = (i == start);</div><div class="line">                        <span class="keyword">final</span> <span class="keyword">int</span> previousIndex = (itemIndex - <span class="number">1</span>);</div><div class="line">                        <span class="keyword">if</span> (adapter.isEnabled(itemIndex) &amp;&amp; (headerDividers || !isHeader</div><div class="line">                                &amp;&amp; (previousIndex &gt;= headerCount)) &amp;&amp; (isFirstItem ||</div><div class="line">                                adapter.isEnabled(previousIndex) &amp;&amp; (footerDividers || !isFooter</div><div class="line">                                        &amp;&amp; (previousIndex &lt; footerLimit)))) &#123;</div><div class="line">                            bounds.top = top - dividerHeight;</div><div class="line">                            bounds.bottom = top;</div><div class="line">                            drawDivider(canvas, bounds, i - <span class="number">1</span>);</div><div class="line">                        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (fillForMissingDividers) &#123;</div><div class="line">                            bounds.top = top - dividerHeight;</div><div class="line">                            bounds.bottom = top;</div><div class="line">                            canvas.drawRect(bounds, paint);</div><div class="line">                        &#125;</div><div class="line">                    &#125;</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">if</span> (count &gt; <span class="number">0</span> &amp;&amp; scrollY &gt; <span class="number">0</span>) &#123;</div><div class="line">                <span class="keyword">if</span> (drawOverscrollFooter) &#123;</div><div class="line">                    <span class="keyword">final</span> <span class="keyword">int</span> absListBottom = mBottom;</div><div class="line">                    bounds.top = absListBottom;</div><div class="line">                    bounds.bottom = absListBottom + scrollY;</div><div class="line">                    drawOverscrollFooter(canvas, overscrollFooter, bounds);</div><div class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (drawDividers) &#123;</div><div class="line">                    bounds.top = listBottom;</div><div class="line">                    bounds.bottom = listBottom + dividerHeight;</div><div class="line">                    drawDivider(canvas, bounds, -<span class="number">1</span>);</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">super</span>.dispatchDraw(canvas);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">drawDivider</span><span class="params">(Canvas canvas, Rect bounds, <span class="keyword">int</span> childIndex)</span> </span>&#123;</div><div class="line">    <span class="keyword">final</span> Drawable divider = mDivider;</div><div class="line">    divider.setBounds(bounds);</div><div class="line">    divider.draw(canvas);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在dispatchDraw()方法里面会计算出每一个divider的bounds范围最终通过drawDivider()方法绘制到canvas上面。</p>
+<h5 id="隐藏ListView的滚动条"><a href="#隐藏ListView的滚动条" class="headerlink" title="隐藏ListView的滚动条"></a>隐藏ListView的滚动条</h5><p>默认的ListView在滚动时，在右边会显示滚动条，指示当前滑动的位置，我们可以设置scrollbars属性，控制ListView的滚动条状态。特别的，当设置scrollbars属性为none的时候，ListView滚动或者不滚动，就都不会出现滚动条了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">android:srcollbars=<span class="string">"none"</span></div></pre></td></tr></table></figure>
+<h5 id="取消ListView的item点击效果"><a href="#取消ListView的item点击效果" class="headerlink" title="取消ListView的item点击效果"></a>取消ListView的item点击效果</h5><p>当点击ListView中的一项时，系统会默认出现一个点击效果，在android5.x上是一个波纹效果，而在android5.x之下的版本则是一个改变背景颜色的效果，但可以通过修改listSelector属性来取消掉点击后的回馈效果。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">android:listSelector=<span class="string">"#00000000"</span></div></pre></td></tr></table></figure>
+<p>当然，也可以直接使用android自带的透明色来实现这个效果。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">android:listSelector=<span class="string">"@android:color/transparent"</span></div></pre></td></tr></table></figure>
+<h5 id="设置ListView需要在显示在第几页"><a href="#设置ListView需要在显示在第几页" class="headerlink" title="设置ListView需要在显示在第几页"></a>设置ListView需要在显示在第几页</h5><p>ListView以Item为单位进行显示，默认显示在第一个Item，当需要指定显示的Item时，可以通过如下代码来实现。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">listView.setSelection(N);</div></pre></td></tr></table></figure>
+<p>其中N就是需要显示的第N个Item。</p>
+<p>当然，这个方法类似srcollTo，是瞬间完成的移动。除此之外，还可以通过如下代码来实现平滑移动。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mListView.smoothSrcollBy(distance, duration);</div><div class="line">mListView.smoothScrollByOffset(offset);</div><div class="line">mListView.smoothScrollToPosition(index);</div></pre></td></tr></table></figure>
+<h5 id="动态修改ListView"><a href="#动态修改ListView" class="headerlink" title="动态修改ListView"></a>动态修改ListView</h5><p>ListView中的数据在某些情况下是需要变化的，当然可以通过重新设置ListView的Adapter来更新ListView的显示，但这也就需要重新获取一下数据，相当于重新创建ListView，这样显然不是非常友好，而且效率也不会太高。因此，可以使用一个简单的方法来哦实现ListView的动态修改，代码如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">mData.add(<span class="string">"new"</span>);</div><div class="line">mAdapter.notifyDataSetChanged();</div></pre></td></tr></table></figure>
+<p>当修改了传递给Adapter的映射List之后，只需要通过调用Adapter的notifyDataSetChanged()方法，通知ListView更改数据源即可完成对ListView的动态修改。不过，使用这个方法有一点需要注意的是，在使用mAdapter.notifyDataSetChanged()方法时，必须保证传进Adapter的数据List是同一个List而不能是其他对象，否则将无法实现该效果。</p>
+<h5 id="遍历ListView中所有item"><a href="#遍历ListView中所有item" class="headerlink" title="遍历ListView中所有item"></a>遍历ListView中所有item</h5><p>ListView作为一个ViewGroup，为我们提供了操纵子View的各种方法，最常用的就是通过getChildAt()来获取第i个子View。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; mListView.getChildCount(); i ++) &#123;</div><div class="line">    View view = mListView.getChildAt(i);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h5 id="处理空ListView"><a href="#处理空ListView" class="headerlink" title="处理空ListView"></a>处理空ListView</h5><p>ListView用于展示列表数据，但当列表中无数据时，ListView不会显示任何数据或提示，按照完善用户体验得到需求，这里应该给以无数据的提示。ListView提供了一个方法——setEmptyView()，通过这个方法可以给ListView设置一个在空数据下显示的默认提示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mListView.setEmptyView(findViewById(R.id.empty_view));</div></pre></td></tr></table></figure>
+<p>通过以上代码，就给ListView在空数据时显示一张默认的图片，用来提示用户，而在有数据时，就不会显示。</p>
+<h5 id="ListView滑动监听"><a href="#ListView滑动监听" class="headerlink" title="ListView滑动监听"></a>ListView滑动监听</h5><p>ListView的滑动监听，是ListView中最重要的技巧，很多重写的ListView，基本上都是在滑动事件的处理上下功夫，通过判断滑动事件进行不同的逻辑处理。而为了更加准确地监听滑动事件，开发者通常还需要使用GestureDetector手势识别，VelocityTracker滑动速度检测等辅助类来完成更好的监听。这里介绍两种监听ListView滑动事件的方法，一个是通过OnTouchListener来实现监听，另一个是使用OnScrollListener来实现监听。</p>
+<ul>
+<li><p>OnTouchListener</p>
+<p>OnTouchListener是View中的监听事件，通常监听ACTION_DOWN、ACTION_MOVE、ACTION_UP这三个事件发生时的坐标，就可以根据坐标判断用户滑动的方向，并在不同的事件中进行相应的逻辑处理，这种方式的使用代码如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">mListView.setOnTouchListener(<span class="keyword">new</span> View.OnTouchListener() &#123;</div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onTouch</span><span class="params">(View v, MotionEvent event)</span> </span>&#123;</div><div class="line">        <span class="keyword">switch</span> (event.getAction()) &#123;</div><div class="line">            <span class="keyword">case</span> MotionEvent.ACTION_DOWN:</div><div class="line">                <span class="keyword">break</span>;</div><div class="line">            <span class="keyword">case</span> MotionEvent.ACTION_MOVE:</div><div class="line">                <span class="keyword">break</span>;</div><div class="line">            <span class="keyword">case</span> MotionEvent.ACTION_UP:</div><div class="line">                <span class="keyword">break</span>;</div><div class="line">            <span class="keyword">default</span>:</div><div class="line">                <span class="keyword">break</span>;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">    &#125;</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+</li>
+<li><p>OnScrollListener</p>
+<p>OnScrollListener是AbsListView中的监听事件，他封装了很多与ListView相关的信息，使用起来也更加灵活。首先来看一下OnScrollListener的一般使用方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line"> mListView.setOnScrollListener(<span class="keyword">new</span> AbsListView.OnScrollListener() &#123;</div><div class="line">     <span class="meta">@Override</span></div><div class="line">     <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onScrollStateChanged</span><span class="params">(AbsListView view, <span class="keyword">int</span> scrollState)</span> </span>&#123;</div><div class="line">         <span class="keyword">switch</span> (scrollState) &#123;</div><div class="line">             <span class="keyword">case</span> SCROLL_STATE_IDLE:</div><div class="line">             	<span class="comment">// 滑动停止时</span></div><div class="line">                 <span class="keyword">break</span>;</div><div class="line">             <span class="keyword">case</span> SCROLL_STATE_TOUCH_SCROLL:</div><div class="line">             	<span class="comment">// 正在滚动</span></div><div class="line">                 <span class="keyword">break</span>;</div><div class="line">             <span class="keyword">case</span> SCROLL_STATE_FLING:</div><div class="line">             	<span class="comment">// 手指抛动时，即手指用例滑动，在离开后ListView由于惯性继续滑动</span></div><div class="line">                 <span class="keyword">break</span>;</div><div class="line">             <span class="keyword">default</span>:</div><div class="line">                 <span class="keyword">break</span>;</div><div class="line">         &#125;</div><div class="line">     &#125;</div><div class="line"></div><div class="line">     <span class="meta">@Override</span></div><div class="line">     <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onScroll</span><span class="params">(AbsListView view, <span class="keyword">int</span> firstVisibleItem,</span></span></div><div class="line">                          <span class="keyword">int</span> visibleItemCount, <span class="keyword">int</span> totalItemCount) &#123;</div><div class="line"><span class="comment">// 滚动时一直调用，firstVisibleItem表示当前的第一个Item的ID（从0开始），			                   visibleItemCount表示当前能看见的Item总数，totalItemCount表示整个ListView的Item总数</span></div><div class="line">     &#125;</div><div class="line"> &#125;);</div></pre></td></tr></table></figure>
+<p>通过OnScroll()方法提供的几个参数，可以方便地进行一些判断，比如判断是否滚动到最后一行，当前可视的第一个Item的ID加上当前当前可视Item的和等于Item总数的时候，即滚动到了最后一行。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (firstVisiableItem + visibleItemCount == totalItemCount &amp;&amp; totalItemCount &gt; <span class="number">0</span>) &#123;</div><div class="line">    <span class="comment">//滚动到最后一行</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>再比如，可以判断滚动的方向，通过一格成员变量lastVisiableItemPostion来记录上次第一个可视的Item的ID并与当前的可视Item的ID进行比较，即可知道当前滚动的方向。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (firstVisiableItem &gt; lastVisiableItemPostion) &#123;</div><div class="line">    <span class="comment">// 上滑</span></div><div class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span>(firstVisiableItem &lt; lastVisiableItemPostion) &#123;</div><div class="line">    <span class="comment">// 下滑</span></div><div class="line">&#125;</div><div class="line">lastVisiableItemPostion = firstVisiableItem;</div></pre></td></tr></table></figure>
+<p>当然，ListView也给我们提供了一些封装的方法来获取当前可视的Item的位置等信息。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 获取可视区域最后一个Item的id</span></div><div class="line">mListView.getLastVisiablePosition();</div><div class="line"><span class="comment">// 获取可视区域内第一个Item的id</span></div><div class="line">mListView.getFirstVisiablePosition();</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="ListView常用扩展"><a href="#ListView常用扩展" class="headerlink" title="ListView常用扩展"></a>ListView常用扩展</h4><p>ListView虽然使用广泛，但系统发原生的ListView显然是不能满足用户在审美、功能上不断提高需求的。不过也不要紧，android完全可以定制化，让我们非常方便地对原生ListView进行扩展、修改。于是，在开发者的创新下，ListView越来越丰富多彩，各种各样的基于原生ListView的扩展让人目不暇接。下面来看几个常用的ListView扩展。</p>
+<h5 id="具有弹性的ListView"><a href="#具有弹性的ListView" class="headerlink" title="具有弹性的ListView"></a>具有弹性的ListView</h5><p>android默认的ListView在滚动到顶端或者底端的时候，并没有很好的提示。在android5.x中，Google为这样的行为值添加了一个半月形的阴影效果。而在iOS系统中，列表都是具有弹性的，即滚动到底端后继续往下或者往上滑动一段距离。</p>
+<p>重写ListView来实现弹性效果的方法有很多，比如增加HeaderView或者使用ScrollView进行嵌套。通过查看ListView源代码的时候可以发现，ListView中有一个控制滑动到边缘的处理方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">overScrollBy</span><span class="params">(<span class="keyword">int</span> deltaX, <span class="keyword">int</span> deltaY,</span></span></div><div class="line">        <span class="keyword">int</span> scrollX, <span class="keyword">int</span> scrollY,</div><div class="line">        <span class="keyword">int</span> scrollRangeX, <span class="keyword">int</span> scrollRangeY,</div><div class="line">        <span class="keyword">int</span> maxOverScrollX, <span class="keyword">int</span> maxOverScrollY,</div><div class="line">        <span class="keyword">boolean</span> isTouchEvent) &#123;</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看见这样一个参数，maxOverScrollY，这个值默认为0，但其实只要修改这个参数的值，就可以让ListView具有弹性了。当然，为了能够满足多分辨率的需求，可以在修改的时候通过屏幕的density来计算具体的值，让不同分辨率的弹性距离基本一致。</p>
+<h5 id="自动显示、隐藏布局的ListView"><a href="#自动显示、隐藏布局的ListView" class="headerlink" title="自动显示、隐藏布局的ListView"></a>自动显示、隐藏布局的ListView</h5><p>Google+有这样一个效果，当我们在ListView上滑动的时候，顶部的ActionBar或者ToolBar就会相应的隐藏或显示。我们知道，让一个布局显示或者隐藏并带有动画效果，可以通过属性动画来很方便地实现，所以这个效果关键就在于如何获得ListView的各种滑动事件。所以借助OnTouchListener接口来监听ListView的滑动，通过比较与上次坐标的大小，来判断滑动的方向，并通过滑动的方向来判断是否需要显示或者隐藏对应的布局。在开始判断滑动事件之前，还要做一些准备工作，首先需要给ListView增加一个HeaderView，避免第一个Item被Toolbar遮挡。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">View header = <span class="keyword">new</span> View(<span class="keyword">this</span>);</div><div class="line">header.setLayoutParams(<span class="keyword">new</span> AbsListView.LayoutParams(AbsListView.LayoutParams.MATCH_PARENT, (<span class="keyword">int</span>)getResource().getDimension(R.dimen.abc_action_bar_default_height_material)));</div><div class="line">mListView.addHeaderView(header);</div></pre></td></tr></table></figure>
+<p>另外，定义一个mTouchSlop变量用来获取系统认为的最低滑动距离，即超过这个距离的移动，系统就将其定义为滑动状态。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mTouchSlop = ViewConfiguration.get(<span class="keyword">this</span>).getScaledTouchSlop();</div></pre></td></tr></table></figure>
+<p>有了前面的准备工作，下面就可以判断滑动的事件了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div></pre></td><td class="code"><pre><div class="line">View.OnTouchListener mTouchListener = <span class="keyword">new</span> View.OnTouchListener() &#123;</div><div class="line">        <span class="meta">@Override</span></div><div class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onTouch</span><span class="params">(View v, MotionEvent event)</span> </span>&#123;</div><div class="line">            <span class="keyword">switch</span> (event.getAction()) &#123;</div><div class="line">                <span class="keyword">case</span> MotionEvent.ACTION_DOWN:</div><div class="line">                	mFirstY = event.getY();</div><div class="line">                    <span class="keyword">break</span>;</div><div class="line">                <span class="keyword">case</span> MotionEvent.ACTION_MOVE:</div><div class="line">                	mCurrent = event.getY();</div><div class="line">                	<span class="keyword">if</span> (mCurrentY - mFirstY &gt; mTouchSlop) &#123;</div><div class="line">                        direction = <span class="number">0</span>; <span class="comment">// down</span></div><div class="line">                    &#125; <span class="keyword">else</span> <span class="keyword">if</span>(mFirstY - mCurrentY &gt; mTouchSlop) &#123;</div><div class="line">                        direction = <span class="number">1</span>; <span class="comment">// up</span></div><div class="line">                    &#125;</div><div class="line">					<span class="keyword">if</span> (direction == <span class="number">1</span>) &#123;</div><div class="line">                        <span class="keyword">if</span> (mShow) &#123;</div><div class="line">                            toolbarAnim(<span class="number">0</span>); <span class="comment">// hide</span></div><div class="line">                          	mShow = !mShow;</div><div class="line">                        &#125;</div><div class="line">                    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (direction == <span class="number">0</span>) &#123;</div><div class="line">                        <span class="keyword">if</span> (!mShow) &#123;</div><div class="line">                            toolbarAnim(<span class="number">1</span>);</div><div class="line">                          	mShow = !mShow;</div><div class="line">                        &#125;</div><div class="line">                    &#125;</div><div class="line">                    <span class="keyword">break</span>;</div><div class="line">                <span class="keyword">case</span> MotionEvent.ACTION_UP:</div><div class="line">                    <span class="keyword">break</span>;</div><div class="line">                <span class="keyword">default</span>:</div><div class="line">                    <span class="keyword">break</span>;</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>代码逻辑非常简单，只是通过滑动点的坐标改变大小，来判断移动的方向，并根据移动方向来执行不同的动画效果。</p>
+<p>有了前面的分析，实现这样一个效果就非常简单了，最后加上控制布局显示隐藏的动画，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">toolbarAnim</span><span class="params">(<span class="keyword">int</span> flag)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (mAnimator != <span class="keyword">null</span> &amp;&amp; mAnimator.isRunning()) &#123;</div><div class="line">        mAnimator.cancel();</div><div class="line">    &#125;</div><div class="line">  	<span class="keyword">if</span> (flag == <span class="number">0</span>) &#123;</div><div class="line">        mAnimator = ObjectAnimator.ofFloat(mToolbar, <span class="string">"translationY"</span>, </div><div class="line">                                           mToolbar.getTraslationY(), <span class="number">0</span>);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        mAnimator = ObjectAnimator.ofFloat(mToolbar, <span class="string">"translationY"</span>, </div><div class="line">                                           mToolbar.getTraslationY(), - mToolbar.getHeight());</div><div class="line">    &#125;</div><div class="line">  	mAnimator.start();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android基础篇/" rel="tag"># android基础篇</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/11/19/深入理解ListView工作原理（一）/" rel="next" title="深入理解ListView工作原理">
+                <i class="fa fa-chevron-left"></i> 深入理解ListView工作原理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/11/21/面向对象6大原则/" rel="prev" title="面向对象6大原则">
+                面向对象6大原则 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">33</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#ListView常用优化技巧"><span class="nav-number">1.</span> <span class="nav-text">ListView常用优化技巧</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#使用ViewHolder模式提高效率"><span class="nav-number">1.1.</span> <span class="nav-text">使用ViewHolder模式提高效率</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#设置项目分隔线"><span class="nav-number">1.2.</span> <span class="nav-text">设置项目分隔线</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#隐藏ListView的滚动条"><span class="nav-number">1.3.</span> <span class="nav-text">隐藏ListView的滚动条</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#取消ListView的item点击效果"><span class="nav-number">1.4.</span> <span class="nav-text">取消ListView的item点击效果</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#设置ListView需要在显示在第几页"><span class="nav-number">1.5.</span> <span class="nav-text">设置ListView需要在显示在第几页</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#动态修改ListView"><span class="nav-number">1.6.</span> <span class="nav-text">动态修改ListView</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#遍历ListView中所有item"><span class="nav-number">1.7.</span> <span class="nav-text">遍历ListView中所有item</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#处理空ListView"><span class="nav-number">1.8.</span> <span class="nav-text">处理空ListView</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#ListView滑动监听"><span class="nav-number">1.9.</span> <span class="nav-text">ListView滑动监听</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ListView常用扩展"><span class="nav-number">2.</span> <span class="nav-text">ListView常用扩展</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#具有弹性的ListView"><span class="nav-number">2.1.</span> <span class="nav-text">具有弹性的ListView</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#自动显示、隐藏布局的ListView"><span class="nav-number">2.2.</span> <span class="nav-text">自动显示、隐藏布局的ListView</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>

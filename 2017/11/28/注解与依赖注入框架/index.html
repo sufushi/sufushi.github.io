@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言在许多程序设计语言中，比如Java、C#。依赖注入是一种比较流行的设计模式，在android开发中也有很多实用的依赖注入框架，可以帮助我们少些一些样板代码，达到各个类之间解耦的目的。
+注解从JDK 5开始，Java增加了注解，注解就是代码里的特殊标记，这些标记可以在编译、类加载、运行时被读取，并执行相应的处理。通过使用注解，开发人员可以在不改变原有逻辑的情况下，在源文件中嵌入一些补充的信息。代">
+<meta property="og:type" content="article">
+<meta property="og:title" content="注解与依赖注入框架">
+<meta property="og:url" content="sufushi.github.io/2017/11/28/注解与依赖注入框架/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="前言在许多程序设计语言中，比如Java、C#。依赖注入是一种比较流行的设计模式，在android开发中也有很多实用的依赖注入框架，可以帮助我们少些一些样板代码，达到各个类之间解耦的目的。
+注解从JDK 5开始，Java增加了注解，注解就是代码里的特殊标记，这些标记可以在编译、类加载、运行时被读取，并执行相应的处理。通过使用注解，开发人员可以在不改变原有逻辑的情况下，在源文件中嵌入一些补充的信息。代">
+<meta property="og:updated_time" content="2017-11-28T14:22:15.167Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="注解与依赖注入框架">
+<meta name="twitter:description" content="前言在许多程序设计语言中，比如Java、C#。依赖注入是一种比较流行的设计模式，在android开发中也有很多实用的依赖注入框架，可以帮助我们少些一些样板代码，达到各个类之间解耦的目的。
+注解从JDK 5开始，Java增加了注解，注解就是代码里的特殊标记，这些标记可以在编译、类加载、运行时被读取，并执行相应的处理。通过使用注解，开发人员可以在不改变原有逻辑的情况下，在源文件中嵌入一些补充的信息。代">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2017/11/28/注解与依赖注入框架/"/>
+
+
+
+
+
+  <title>注解与依赖注入框架 | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2017/11/28/注解与依赖注入框架/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">注解与依赖注入框架</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-28T16:42:57+08:00">
+                2017-11-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>在许多程序设计语言中，比如Java、C#。依赖注入是一种比较流行的设计模式，在android开发中也有很多实用的依赖注入框架，可以帮助我们少些一些样板代码，达到各个类之间解耦的目的。</p>
+<h4 id="注解"><a href="#注解" class="headerlink" title="注解"></a>注解</h4><p>从JDK 5开始，Java增加了注解，注解就是代码里的特殊标记，这些标记可以在编译、类加载、运行时被读取，并执行相应的处理。通过使用注解，开发人员可以在不改变原有逻辑的情况下，在源文件中嵌入一些补充的信息。代码分析工具和部署工具可以通过这些补充信息进行验证、处理或者进行部署。</p>
+<h5 id="注解分类"><a href="#注解分类" class="headerlink" title="注解分类"></a>注解分类</h5><p>注解分为标准注解和元注解。</p>
+<ul>
+<li><p>标准注解</p>
+<p>标准注解有以下4种。</p>
+<ul>
+<li>@Override：对覆盖超类中的方法进行标记，如果被标记的方法并没有实际覆盖超类中的方法，则编译器会发出错误警告。</li>
+<li>@Deprecated：对不鼓励使用或者已过时的方法添加注解，当编译人员使用这些方法时，将会在编译时显示提示信息。</li>
+<li>@SuppressWarnings：选择性的取消特定代码段中的警告。</li>
+<li>@SafeVarargs：JDK1.7新增，用来声明使用了可变长参数的方法，其在与泛型类一起使用时不会出现类型安全问题。</li>
+</ul>
+</li>
+<li><p>元注解</p>
+<p>除了标准注解，还有元注解，它用来创建新的注解。元注解有以下几种。</p>
+<ul>
+<li>@Targe：注解所修饰的对象范围。</li>
+<li>@Inherited：表示注解可以被继承。</li>
+<li>Documented：表示这个注解应该被JavaDoc工具记录。</li>
+<li>Retention：用来声明注解的保留策略。</li>
+<li>Repeatable：JDK 8新增，允许一个注解在同一声明类型（类、属性或者方法）上多次使用。</li>
+</ul>
+<p>其中@Targe注解取值是一个ElementType类型的数组，其中有以下几种取值，对应不同的对象范围。</p>
+<ul>
+<li>ElementType.TYPE：能修饰类、接口或枚举类型。</li>
+<li>ElementType.FIELD：能修饰成员变量。</li>
+<li>ElementType.METHORD：能修饰方法。</li>
+<li>ElementType.PARAAMETER：能修饰参数。</li>
+<li>ElementType.CONSTRUCTOR：能修饰构造函数。</li>
+<li>ElementType.LOCAL_VARIABLE：能修饰局部变量。</li>
+<li>ElementType.ANNOTATION_TYPR：能修饰注解。</li>
+<li>ElementType.PACKAGE：能修饰包。</li>
+<li>ElementType.TYPE_PARAMENTER：类型参数声明。</li>
+<li>ElementType.TYPE_USE：使用类型。</li>
+</ul>
+<p>其中@Retention注解有3种类型，分别表示不同级别的保留策略。</p>
+<ul>
+<li>RetentionPolicy.SOURCE：源码级注解。注解信息只会保留在.java源码中，源码在编译后，注解信息被丢弃，不会保留在.class中。</li>
+<li>RetentionPolicy.CLASS：编译时注解。注解信息会保留在.java源码以及.class中。当运行Java程序时，JVM会丢弃该注解信息，不会保留在JVM中。</li>
+<li>RetentionPolicy.RUNTIME：运行时注解。当运行Java程序时，JVM也会保留该注解信息，可以通过反射获取该注解信息。</li>
+</ul>
+</li>
+</ul>
+<h5 id="定义注解"><a href="#定义注解" class="headerlink" title="定义注解"></a>定义注解</h5><ul>
+<li><p>基本定义</p>
+<p>定义新的注解类型使用@interface关键字，这与定义一个接口很像，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Swordsman &#123;</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>定义完注解后，就可以在程序中使用该注解。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Swordsman</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AnnotationTest</span> </span>&#123;</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>定义成员变量</p>
+<p>注解只有成员变量，没有方法。注解的成员变量在注解定义中以“无形参的方法”形式来声明，其“方法名”定义了该成员变量的名字，其返回值定义了该成员变量的类型。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Swordsman &#123;</div><div class="line">    <span class="function">String <span class="title">name</span><span class="params">()</span></span>;</div><div class="line">    <span class="function"><span class="keyword">int</span> <span class="title">age</span><span class="params">()</span></span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面的代码定义了两个成员变量，这两个成员变量以方法的形式来定义。定义了成员变量后，使用该注解时就应该为该注解的成员变量指定值。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AnnotationTest</span> </span>&#123;</div><div class="line">    <span class="meta">@Swordsman</span>(name = <span class="string">"username"</span>, age = <span class="number">20</span>)</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">fighting</span><span class="params">()</span> </span>&#123;</div><div class="line">        ...</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>也可以在定义注解的成员变量时，使用default关键字为其指定默认值，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Swordsman &#123;</div><div class="line">    <span class="function">String <span class="title">name</span><span class="params">()</span> <span class="keyword">default</span> "username"</span>;</div><div class="line">    <span class="function"><span class="keyword">int</span> <span class="title">age</span><span class="params">()</span> <span class="keyword">default</span> 20</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>因为注解定义了默认值，所以使用时可以不为这些成员变量指定值，而是直接使用默认值。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AnnotationTest</span> </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">fighting</span><span class="params">()</span> </span>&#123;</div><div class="line">        ...</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>定义运行时注解</p>
+<p>可以用@Retention来设定注解的保留策略，这3个策略的生命周期长度为SOURCE &lt; CLASS &lt; RUNTIME。生命周期短的能起作用的地方，生命周期长的一定也能起作用。一般如果在运行时去动态获取注解信息，那只能用RetentionPolicy.RUNTIME；如果要在编译时进行一些预处理操作，比如生成一些辅助代码，就用RetentionPolicy.CLASS；如果只是做一些检查型的操作，比如@Override和@SuppressWarnings，则可选用RetentionPolicy.SOURCE。当设定为RetentionPolicy.RUNTIME时，这个注解就是运行时注解，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</div><div class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Swordsman &#123;</div><div class="line">    <span class="function">String <span class="title">name</span><span class="params">()</span> <span class="keyword">default</span> "username"</span>;</div><div class="line">  	<span class="function"><span class="keyword">int</span> <span class="title">age</span><span class="params">()</span> <span class="keyword">default</span> 20</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>定义编译时注解</p>
+<p>同样地，如果将@Retention的保留策略设定为RetentionPolicy.CLASS，这个注解就是编译时注解，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Retention</span>(RetentionPolicy.CLASS)</div><div class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Swordsman &#123;</div><div class="line">    <span class="function">String <span class="title">name</span><span class="params">()</span> <span class="keyword">default</span> "username"</span>;</div><div class="line">  	<span class="function"><span class="keyword">int</span> <span class="title">age</span><span class="params">()</span> <span class="keyword">default</span> 20</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h5 id="注解处理器"><a href="#注解处理器" class="headerlink" title="注解处理器"></a>注解处理器</h5><p>如果没有处理注解的工具，那么注解也不会有什么大的用处。对于不同的注解有不同的注解处理器。虽然注解处理器的编写会千变万化，但是其也有处理标准，比如，针对运行时注解会采用反射机制处理，针对编译时注解会采用AbstractProcessor来处理。</p>
+<ul>
+<li><p>运行时注解处理器</p>
+<p>处理运行时注解需要使用到反射机制。首先我们要定义运行时注解，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Documented</span></div><div class="line"><span class="meta">@Target</span>(METHOD)</div><div class="line"><span class="meta">@Retention</span>(RUNTIME)</div><div class="line"><span class="keyword">public</span> <span class="meta">@interface</span> GET &#123;</div><div class="line">    <span class="function">String <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> ""</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面的代码是Retrofit中定义的@GET注解。其定义了@Target(METHOD)，这等效于@Target(ElementType.METHOD)，意味着GET注解应用于方法。接下来应用该注解，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AnnotationText</span> </span>&#123;</div><div class="line">    <span class="meta">@GET</span>(value = <span class="string">"http://ip.taobao.com/59.108.54.37"</span>)</div><div class="line">  	<span class="function"><span class="keyword">public</span> String <span class="title">getIpMsg</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> <span class="string">""</span>;</div><div class="line">    &#125;</div><div class="line">  	<span class="meta">@GET</span>(value = <span class="string">"http://ip.taobao.com/"</span>)</div><div class="line">  	<span class="function"><span class="keyword">public</span> String <span class="title">getIp</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> <span class="string">""</span>;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面的代码为@GET的成员变量赋值。接下来写一个简单的注解处理器，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AnnotationProcessor</span> </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">        Method[] methods = AnnotationTest.class.getDeclaredMethods();</div><div class="line">      	<span class="keyword">for</span> (Method m : methods) &#123;</div><div class="line">            GET get = m.getAnnotation(GET.class);</div><div class="line">          	Systen.out.println(get.value());</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面的代码用到了两个反射方法：getDeclaredMethods和getAnnotation，它们都属于AnnotatedElement接口，Class、Method和Field等类都实现了该接口。调用getAnnotation方法返回指定类型的注解对象，也就是GET。最后调用了GET的value方法返回从GET对象中提取的元素的值。输出结果为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">http:<span class="comment">//ip.taobao.com/59.108.54.37</span></div><div class="line">http:<span class="comment">//ip.taobao.com/</span></div></pre></td></tr></table></figure>
+</li>
+<li><p>编译时注解处理器</p>
+<p>处理编译时注解的步骤如下。</p>
+<p>① 定义注解</p>
+<p>这里首先在项目中新建一个Java Library来专门存放注解，这个Library名为annotations。接下来定义注解，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Retention</span>(CLASS)</div><div class="line"><span class="meta">@Targe</span>(FIELD)</div><div class="line"><span class="keyword">public</span> <span class="meta">@interface</span> BindView &#123;</div><div class="line">    <span class="function"><span class="keyword">int</span> <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> 1</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>② 编写注解处理器</p>
+<p>在项目中在新建一个Java Library来存放注解处理器，这个Library名为processor。接着来配置processor库的build.gradle。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">apply plugin: <span class="string">'java'</span></div><div class="line">dependencies &#123;</div><div class="line">    <span class="function">compile <span class="title">fileTree</span><span class="params">(include: [<span class="string">'*.jar'</span>], dir, <span class="string">'libs'</span>)</span></span></div><div class="line">    compile <span class="title">project</span><span class="params">(<span class="string">':annotations'</span>)</span></div><div class="line">&#125;</div><div class="line">sourceCompatibility = <span class="string">"1.7"</span></div><div class="line">targetCompatibility = <span class="string">"1.7"</span></div></pre></td></tr></table></figure>
+<p>接下来编写注解处理器ClassProcessor，它继承AbstractProcessor，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ClassProcessor</span> <span class="keyword">extends</span> <span class="title">AbstractProcessor</span> </span>&#123;</div><div class="line">    <span class="meta">@Override</span></div><div class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(ProcessingEnviroment processingEnv)</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>.init(processingEnv);</div><div class="line">    &#125;</div><div class="line">  	<span class="meta">@Override</span></div><div class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">process</span><span class="params">(Set&lt;? extends TypeElement&gt; annotations, RoundEnvironment roundEnv)</span> 	  </span>&#123;</div><div class="line">        ...</div><div class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">    &#125;</div><div class="line">  	<span class="meta">@Override</span> </div><div class="line">  	<span class="function"><span class="keyword">public</span> Set&lt;String&gt; <span class="title">getSupportedAnnotationTypes</span><span class="params">()</span> </span>&#123;</div><div class="line">        Set&lt;String&gt; anotations = <span class="keyword">new</span> LinkedHashSet&lt;String&gt;();</div><div class="line">      	annotations.add(BindView.class.getCanonicalName());</div><div class="line">      	<span class="keyword">return</span> annotations;</div><div class="line">    &#125;</div><div class="line">  	<span class="meta">@Override</span></div><div class="line">  	<span class="function"><span class="keyword">public</span> SourceVersion <span class="title">getSupportedSourceVersion</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> SourceVersion.lastestSupported();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>首先分别介绍这4个方法的作用。</p>
+<ul>
+<li>init：被注解处理工具调用，并输入ProcessingEnviroment参数。ProcessingEnviroment提供很多有用的工具类，比如Element、Types、Filer和Messager等。</li>
+<li>process：相当于每个处理器的主函数main()，在这里写你的描述、评估和处理注解的代码，以及生成Java文件。输入参数RoundEnviroment，可以让你查询出包含特定注解的被注解元素。</li>
+<li>getSupportedAnnotationTypes：这是必须指定的方法，指定这个注解处理器是注册给哪个注解的。它的返回值是一个字符串的集合，包含本处理器想要处理的注解类型的合法全称。</li>
+<li>getSupportedSourceVersion：用来指定使用的Java版本，通常这里返回SourceVersion.lastestSupported()。</li>
+</ul>
+<p>在Java 7 之后，也可以使用注解来代替getSupportedAnnotationTypes方法和getSupportedSourceVersion方法，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@SupportedSourceVersion</span>(SourceVersion.RELEASE_8)</div><div class="line"><span class="meta">@SupportedAnnotationTypes</span>(<span class="string">"com.example.annotation.cls.BindView"</span>)</div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ClassProcessor</span> <span class="keyword">extends</span> <span class="title">AbstractProcessor</span> </span>&#123;</div><div class="line">    <span class="meta">@Override</span></div><div class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(ProcessingEnviroment processingEnv)</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>.init(processingEnv);</div><div class="line">    &#125;</div><div class="line">  	<span class="meta">@Override</span></div><div class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">process</span><span class="params">(Set&lt;? extends TypeElement&gt; annotations, RoundEnvironment roundEnv)</span> 	  </span>&#123;</div><div class="line">        ...</div><div class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>但是考虑到android兼容性的问题，不建议采用这种注解的方式。接下来编写还未实现的process方法，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">process</span><span class="params">(Set&lt;? extends TypeElement&gt; annotations, RoundEnvironment roundEnv)</span> 	  </span>&#123;</div><div class="line">  	Messager messager = processingEnv.getMessager();</div><div class="line">  	<span class="keyword">for</span> (Element elemnt : roundEnv.getElementsAnnotatedWith(BindView.class)) &#123;</div><div class="line">        <span class="keyword">if</span> (element.getKind() == ElementKind.FIELD) &#123;</div><div class="line">            messager.printMessage(Diagnostic.Kind.NOTE, <span class="string">"printMessaage:"</span> + 			element.toStrintg());</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    ...</div><div class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这里用到Messager的printMessage方法来打印出注解修饰的成员变量的名称。</p>
+<p>③ 注册注解处理器</p>
+<p>为了能使用注解处理器，需要用一个服务文件来注册它。要创建这个服务文件，首先在processor库的main目录下resources资源文件夹，接下来在resources中再建立META-INF/services目录文件夹。最后在META-INF/services中创建javax.annotation.processing.Processor文件，这个文件中的内容是注解处理器的名称。也可以使用Google开源的AutoService，它用来帮助开发者生成META-INF/service/javax.annotation.processing.Processor文件。首先需要添加一个开源库，也可以在processor的build.gradle中直接添加如下代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">dependencies &#123;</div><div class="line">    ...</div><div class="line">    complie <span class="string">'com.google.auto.service:auto-service:1.0-rc2'</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>最后在注解处理器ClassProcessor中添加@AutoService(Processor.class)就可以了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@AutoService</span>(Processor.class)</div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ClassProcessor</span> <span class="keyword">extends</span> <span class="title">AbstractProcessor</span> </span>&#123;</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>④ 应用注解</p>
+<p>接下来在我们定位主工程项目（app）中引用注解。首先要在主工程项目的build.gradle中引用annotations和processor这两个库。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">dependencies &#123;</div><div class="line">  	...</div><div class="line">	<span class="function">complie <span class="title">project</span><span class="params">(<span class="string">':annotations'</span>)</span></span></div><div class="line">    complie <span class="title">project</span><span class="params">(<span class="string">':processor'</span>)</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>接下来在MainActivity中应用注解，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</div><div class="line">    <span class="meta">@BindView</span>(value = R.id.tv_text)</div><div class="line">  	TextView tv_text;</div><div class="line">  	<span class="meta">@Override</span> </div><div class="line">  	<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</div><div class="line">      	setContentView(R.layout.activity_main);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>最后，clean project在make project，在Gradle Console窗口中打印的结果就是@BindView注解修饰的成员变量名：tv_text。</p>
+<p>⑤ 使用android-apt插件</p>
+<p>我们在主工程项目（app）中引用了processor库，但注解处理器只在编译处理期间需要用到，编译处理完后就没有实际作用了，而在主工程项目添加了这个库会引入很多不必要的文件。为了处理这个问题我们需要引入插件android-apt。它主要有两个作用：</p>
+<ul>
+<li>仅仅在编译时期去依赖注解处理器所在·1函数库并进行工作，但不会打包到APK中。</li>
+<li>为注解处理器生成的代码设置好路径，以便android studio能够找到它。</li>
+</ul>
+<p>接下来介绍如何使用它。首先需要在整个工程（project）的build.gradle中添加如下语句。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">buildscript &#123;</div><div class="line">    ...</div><div class="line">    dependencies &#123;</div><div class="line">        ...</div><div class="line">        classpath <span class="string">'com.neenbedankt.gradle.plugins:android-apt:1.8'</span></div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>接下来在主工程项目（app）的build.gradle中以apt的方式引入注解处理器processor，如下所示。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">...</div><div class="line">apply plugin: &apos;com.neenbedankt.android-apt&apos;</div><div class="line">...</div><div class="line">dependencies &#123;</div><div class="line">    ...</div><div class="line">    // complie project(&apos;:processor&apos;)</div><div class="line">    apt project(&apos;:processor&apos;)</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="依赖注入的原理"><a href="#依赖注入的原理" class="headerlink" title="依赖注入的原理"></a>依赖注入的原理</h4><h5 id="控制反转与依赖注入"><a href="#控制反转与依赖注入" class="headerlink" title="控制反转与依赖注入"></a>控制反转与依赖注入</h5><ul>
+<li><p>控制反转</p>
+<p>Inversion of Control（IoC）。IoC理论提出的观点大体是这样的：借助于“第三方”实现具有依赖关系的对象之间的解耦。在软件系统没有引入IoC容器之前，对象之间相互依赖，假设对象A依赖与对象B，那么对象A在初始化或者运行到某一点的时候，自己必须手动去创建对象B或使用已经创建的对象B，无论是创建对象B还是使用对象B，控制权都在自己手上。软件系统在引入IoC容器之后，情形就完全改变了，由于IoC容器的加入，对象A与对象B之间失去了直接联系，所以，当对象A运行到需要对象B的时候，IoC容器会主动创建一个对象B注入到对象A需要的地方。通过引入IoC容器前后的对比，可以看出：对象A获得依赖对象B的过程，由主动行为变为被动行为，控制权颠倒过来了，这就是控制反转这个名称的由来。</p>
+</li>
+<li><p>依赖注入</p>
+<p>控制反转之后，获得依赖对象的过程由自身管理变为由IoC容器主动注入。于是，控制反转有了另一个更合适的名字，叫做依赖注入（Dependency Injection），简称DI。所谓依赖注入，是指IoC容器在运行期间，动态地将某种依赖关系注入到对象中去。</p>
+</li>
+</ul>
+<h5 id="依赖注入的实现方式"><a href="#依赖注入的实现方式" class="headerlink" title="依赖注入的实现方式"></a>依赖注入的实现方式</h5><p>编写代码时常常会发现有一些类是依赖于其他类的，所以类A可能需要一个类B的引用或对象。举个例子。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Car</span> </span>&#123;</div><div class="line">    <span class="keyword">private</span> Engine mEngine;</div><div class="line">  	<span class="function"><span class="keyword">public</span> <span class="title">Car</span><span class="params">()</span> </span>&#123;</div><div class="line">        mEngine = <span class="keyword">new</span> PetrolEngine();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>代码本身没有错，但是Car和Engine高度耦合，在Car中需要自己创建Engine，并且Car还需要Engine的实现方式，也就是Engine的实现类PetrolEngine的存在。另外，一旦Engine的类型变为其他的实现比如DieselEngine，则需要修改Car的构造方法。以上问题需要用依赖注入来解决。接下来，就用依赖注入的3种常用方式来改造上面的代码。</p>
+<ul>
+<li><p>构造方法注入</p>
+<p>通过Car的构造方法，向Car传递了Engine对象，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Car</span> </span>&#123;</div><div class="line">    <span class="keyword">private</span> Engine mEngine;</div><div class="line">  	<span class="function"><span class="keyword">public</span> <span class="title">Car</span><span class="params">(Engine engine)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.mEngine = engine;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>Setter方法注入</p>
+<p>通过Car的set方法向Car传递Engine对象，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Car</span> </span>&#123;</div><div class="line">    <span class="keyword">private</span> Engine mEngine;</div><div class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">set</span><span class="params">(Engine engine)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.mEngine = engine;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>接口注入</p>
+<p>在接口中定义需要注入的信息，并通过接口完成注入，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ICar</span> </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setEngine</span><span class="params">(Engine engine)</span></span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Car</span> <span class="keyword">implements</span> <span class="title">ICar</span> </span>&#123;</div><div class="line">    <span class="keyword">private</span> Engine mEngine;</div><div class="line">  	<span class="meta">@Override</span></div><div class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setEngine</span><span class="params">(Engine engine)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.mEngine = engine;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>通过以上3种注入方法，明显将Car和Engine解耦了。Car不关心Engine的实现，即使Engine的类型变换了，Car也无须做任何修改。</p>
+<h4 id="依赖注入框架"><a href="#依赖注入框架" class="headerlink" title="依赖注入框架"></a>依赖注入框架</h4><p>android目前主流的依赖注入框架有ButterKnife和Dagger2。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android/" rel="tag"># android</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/11/22/单例模式/" rel="next" title="单例模式">
+                <i class="fa fa-chevron-left"></i> 单例模式
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/01/05/Java与C++/" rel="prev" title="Java与C++">
+                Java与C++ <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">33</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#注解"><span class="nav-number">2.</span> <span class="nav-text">注解</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#注解分类"><span class="nav-number">2.1.</span> <span class="nav-text">注解分类</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#定义注解"><span class="nav-number">2.2.</span> <span class="nav-text">定义注解</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#注解处理器"><span class="nav-number">2.3.</span> <span class="nav-text">注解处理器</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#依赖注入的原理"><span class="nav-number">3.</span> <span class="nav-text">依赖注入的原理</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#控制反转与依赖注入"><span class="nav-number">3.1.</span> <span class="nav-text">控制反转与依赖注入</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#依赖注入的实现方式"><span class="nav-number">3.2.</span> <span class="nav-text">依赖注入的实现方式</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#依赖注入框架"><span class="nav-number">4.</span> <span class="nav-text">依赖注入框架</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>
