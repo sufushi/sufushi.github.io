@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android框架源码解析," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概要Glide是一个快速高效的android图片加载库，注重于平滑的滚动。Glide提供了易用的API，高性能、可扩展的图片解码管道，以及自动的资源池计数。
+Glide支持拉取，解码和展示视频快照，图片，和GIF动画，开发者甚至可以插入和替换成自己喜爱的任何网络栈。默认情况下，Glide使用的是一个定制化的基于HttpUrlConnection的栈，但同时也提供了与Google Volley和Sq">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Glide框架源码解析">
+<meta property="og:url" content="sufushi.github.io/2018/01/23/Glide框架源码解析/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="概要Glide是一个快速高效的android图片加载库，注重于平滑的滚动。Glide提供了易用的API，高性能、可扩展的图片解码管道，以及自动的资源池计数。
+Glide支持拉取，解码和展示视频快照，图片，和GIF动画，开发者甚至可以插入和替换成自己喜爱的任何网络栈。默认情况下，Glide使用的是一个定制化的基于HttpUrlConnection的栈，但同时也提供了与Google Volley和Sq">
+<meta property="og:image" content="https://xiaodanchen.github.io/hello-world/img/glide_lifecycle_sample.png">
+<meta property="og:image" content="https://xiaodanchen.github.io/hello-world/img/GlideLifeCycle.png">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/Glide%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E6%97%B6%E5%BA%8F%E5%9B%BE.png">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/Glide%E7%9A%84Request%E7%B1%BB%E5%9B%BE.png">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/Glide%E5%86%85%E5%AD%98%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6%E5%9B%BE.png">
+<meta property="og:image" content="https://xiaodanchen.github.io/hello-world/img/GlideMemoryResourceCache.png">
+<meta property="og:updated_time" content="2018-01-24T08:04:57.615Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Glide框架源码解析">
+<meta name="twitter:description" content="概要Glide是一个快速高效的android图片加载库，注重于平滑的滚动。Glide提供了易用的API，高性能、可扩展的图片解码管道，以及自动的资源池计数。
+Glide支持拉取，解码和展示视频快照，图片，和GIF动画，开发者甚至可以插入和替换成自己喜爱的任何网络栈。默认情况下，Glide使用的是一个定制化的基于HttpUrlConnection的栈，但同时也提供了与Google Volley和Sq">
+<meta name="twitter:image" content="https://xiaodanchen.github.io/hello-world/img/glide_lifecycle_sample.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2018/01/23/Glide框架源码解析/"/>
+
+
+
+
+
+  <title>Glide框架源码解析 | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2018/01/23/Glide框架源码解析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Glide框架源码解析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-23T19:27:32+08:00">
+                2018-01-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h4><p>Glide是一个快速高效的android图片加载库，注重于平滑的滚动。Glide提供了易用的API，高性能、可扩展的图片解码管道，以及自动的资源池计数。</p>
+<p>Glide支持拉取，解码和展示视频快照，图片，和GIF动画，开发者甚至可以插入和替换成自己喜爱的任何网络栈。默认情况下，Glide使用的是一个定制化的基于HttpUrlConnection的栈，但同时也提供了与Google Volley和Square OkHttp快速集成的工具库。</p>
+<p>虽然Glide的主要目标是让任何形式的图片列表的滚动尽可能地变得更快、更平滑，但实际上，Glide几乎能满足你对远程图片的拉取。缩放、显示的一切需求。</p>
+<p>Glide使用简明的链式调用API，使用方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">Glide.with(context)</div><div class="line">     .load(url)</div><div class="line">     .into(imageView);</div></pre></td></tr></table></figure>
+<p>Glide充分考虑了android图片即在性能的两个关键方面：</p>
+<ul>
+<li>图片解码速度</li>
+<li>解码图片带来的资源压力</li>
+</ul>
+<p>为了让用户拥有良好的app使用体验，图片不仅要快速加载，而且还不能因为过多的主线程I/O或频繁的垃圾回收导致页面的闪烁和抖动现象。</p>
+<p>Glide使用了多个步骤来确保在android上加载图片尽可能的快速和平滑：</p>
+<ul>
+<li>自动、智能地采样和缓存，以最小化存储开销和解码次数</li>
+<li>积极的资源重用，例如字节数组和Bitmap，以最小化昂贵的垃圾回收和堆碎片影响</li>
+<li>深度的生命周期集成，以确保仅优先处理活跃的fragment和activity的请求，并有利于应用在必要时释放资源以避免早期后台时被杀掉</li>
+</ul>
+<p><a href="https://github.com/bumptech/glide" target="_blank" rel="external">Glide的源码地址</a></p>
+<h4 id="Glide的生命周期绑定"><a href="#Glide的生命周期绑定" class="headerlink" title="Glide的生命周期绑定"></a>Glide的生命周期绑定</h4><p>Glide是一个性能优良的第三方网络图片加载框架，在节省内存和快速加载方面具有较好体现。究其内部机制，发现其优良性能得益于以下几点：</p>
+<ul>
+<li>与使用环境生命周期绑定：RequestManagerFragment &amp; SupportRequestManagerFragment</li>
+<li>内存的三级缓存池：LruMemoryResources，ActiveResources，BitmapPool</li>
+<li>内存复用机制：BitmapPool</li>
+</ul>
+<p><strong>Glide绑定生命周期的优点</strong></p>
+<ul>
+<li>可以实现网络请求根据生命周期而暂停、执行、恢复、释放等</li>
+<li>可以实现资源比如图片的自动释放</li>
+<li>降低了内存的压力</li>
+<li>降低了内存泄漏的风险</li>
+</ul>
+<p><strong>Glide绑定生命周期原理</strong></p>
+<ul>
+<li>原理的知识基础：FragmentManager中的所有fragment都与FragmentManager所处的context生命周期绑定</li>
+<li>Glide定义了RequestManagerFragment和SupportRequestManagerFragment两种fragment。该两类Fragment不具有任何界面和其他功能，通过入口传入的context获取的FragmentManager绑定生命周期到context上</li>
+<li>Glide内部的生命周期机制进一步通过基于RequestManagerFragment的生命周期接口的回调实现</li>
+</ul>
+<p><strong>Glide生命周期回调示意图</strong></p>
+<p><img src="https://xiaodanchen.github.io/hello-world/img/glide_lifecycle_sample.png" alt=""></p>
+<p><strong>Glide生命周期绑定机制类图</strong></p>
+<p><img src="https://xiaodanchen.github.io/hello-world/img/GlideLifeCycle.png" alt=""></p>
+<p><strong>Glide生命周期绑定机制时序图</strong></p>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/Glide%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E6%97%B6%E5%BA%8F%E5%9B%BE.png" alt=""></p>
+<h4 id="Glide的请求管理机制"><a href="#Glide的请求管理机制" class="headerlink" title="Glide的请求管理机制"></a>Glide的请求管理机制</h4><p>Glide的with()方法获取了RequestManager对象，load()方法设置Request对象需要的资源链接，into()方法    获取Request对象并绑定viewTarget发起网络请求。代码十分简洁，但是内部功能十分强大，比如：</p>
+<ul>
+<li>request的生命周期管理</li>
+<li>viewTarget的生命周期管理</li>
+<li>资源的复用和释放</li>
+<li>灵活的配置（request的builder构建者模式）</li>
+</ul>
+<p><strong>request及其生命周期管理</strong></p>
+<p>从上文可知，Glide内部生命周期接口为LifecycleListener，RequestManager具有生命周期（实现了LifecycleListener接口），request由RequestManager的into()方法获得，request的生命周期由RequestManager统一管理。</p>
+<p><strong>Glide请求管理机制类图</strong></p>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/Glide%E7%9A%84Request%E7%B1%BB%E5%9B%BE.png" alt=""></p>
+<p>如上图所示：</p>
+<ul>
+<li>RequestManager持有一个RequestTracker对象requestTracker</li>
+<li>requestTracker对象维护request的队列集合</li>
+<li>RequestManager的load()方法最终会调用RequestBuilder的load()方法，RequestBuilder的load()方法内部调用loadGeneric()方法，最终把model设置好即完成request的URL设置后并返回RequestBuilder对象</li>
+<li>RequestBuilder的into()方法是实际产生request和消费request的地方</li>
+<li>RequestBuilder的into(target)方法最终会调用obtainRequest()方法获取SingleRequest对象request，request与target相互绑定并被requestTracker维护</li>
+</ul>
+<h4 id="Glide的内存缓存机制"><a href="#Glide的内存缓存机制" class="headerlink" title="Glide的内存缓存机制"></a>Glide的内存缓存机制</h4><p>不同于其他常见的网络加载框架只有LruCatch一种缓存机制，Glide内存为三块：</p>
+<ul>
+<li>ActiveResourceCache：缓存当前正在使用的资源（注意是弱引用）</li>
+<li>LruResourceCache：缓存最近使用过但是当前未使用的资源，LRU算法</li>
+<li>BitmapPool：缓存所有被释放的图片，内存复用，LRU算法</li>
+</ul>
+<p>首先来看一下源码实现原理。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div></pre></td><td class="code"><pre><div class="line"> <span class="keyword">public</span> &lt;R&gt; <span class="function">LoadStatus <span class="title">load</span><span class="params">(</span></span></div><div class="line">     GlideContext glideContext,</div><div class="line">     Object model,</div><div class="line">     Key signature,</div><div class="line">     <span class="keyword">int</span> width,</div><div class="line">     <span class="keyword">int</span> height,</div><div class="line">     Class&lt;?&gt; resourceClass,</div><div class="line">     Class&lt;R&gt; transcodeClass,</div><div class="line">     Priority priority,</div><div class="line">     DiskCacheStrategy diskCacheStrategy,</div><div class="line">     Map&lt;Class&lt;?&gt;, Transformation&lt;?&gt;&gt; transformations,</div><div class="line">     <span class="keyword">boolean</span> isTransformationRequired,</div><div class="line">     Options options,</div><div class="line">     <span class="keyword">boolean</span> isMemoryCacheable,</div><div class="line">     <span class="keyword">boolean</span> useUnlimitedSourceExecutorPool,</div><div class="line">     <span class="keyword">boolean</span> onlyRetrieveFromCache,</div><div class="line">     ResourceCallback cb) &#123;</div><div class="line">   <span class="comment">// 判断是否在主线程中个运行，说明到目前为止还是在主线程执行的，并没有真正的开启子线程</span></div><div class="line">   Util.assertMainThread();</div><div class="line">   <span class="keyword">long</span> startTime = LogTime.getLogTime();</div><div class="line"><span class="comment">// 通过keyFactory工厂来构建一个EngineKey对象，key关联着model，也就是URL，它会根据model，view的宽高等	        等属性来构建一个EngineKey对象，这个对象可以用来指定缓存地址，可以用来从缓存中查找资源等</span></div><div class="line">   EngineKey key = keyFactory.buildKey(model, signature, width, height, transformations,</div><div class="line">       resourceClass, transcodeClass, options);</div><div class="line"></div><div class="line">   EngineResource&lt;?&gt; cached = loadFromCache(key, isMemoryCacheable);</div><div class="line">   <span class="keyword">if</span> (cached != <span class="keyword">null</span>) &#123;</div><div class="line">     <span class="comment">// 获取LruResourceCache缓存资源成功则回调来直接设置图片</span></div><div class="line">     cb.onResourceReady(cached, DataSource.MEMORY_CACHE);</div><div class="line">     <span class="keyword">if</span> (Log.isLoggable(TAG, Log.VERBOSE)) &#123;</div><div class="line">       logWithTimeAndKey(<span class="string">"Loaded resource from cache"</span>, startTime, key);</div><div class="line">     &#125;</div><div class="line">     <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">   &#125;</div><div class="line"></div><div class="line">   EngineResource&lt;?&gt; active = loadFromActiveResources(key, isMemoryCacheable);</div><div class="line">   <span class="keyword">if</span> (active != <span class="keyword">null</span>) &#123;</div><div class="line">     <span class="comment">// 获取ActiveResourceCache缓存资源成功则回调来直接设置图片</span></div><div class="line">     cb.onResourceReady(active, DataSource.MEMORY_CACHE);</div><div class="line">     <span class="keyword">if</span> (Log.isLoggable(TAG, Log.VERBOSE)) &#123;</div><div class="line">       logWithTimeAndKey(<span class="string">"Loaded resource from active resources"</span>, startTime, key);</div><div class="line">     &#125;</div><div class="line">     <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">   &#125;</div><div class="line"></div><div class="line">   EngineJob&lt;?&gt; current = jobs.get(key);</div><div class="line">   <span class="keyword">if</span> (current != <span class="keyword">null</span>) &#123;</div><div class="line">     current.addCallback(cb);</div><div class="line">     <span class="keyword">if</span> (Log.isLoggable(TAG, Log.VERBOSE)) &#123;</div><div class="line">       logWithTimeAndKey(<span class="string">"Added to existing load"</span>, startTime, key);</div><div class="line">     &#125;</div><div class="line">     <span class="keyword">return</span> <span class="keyword">new</span> LoadStatus(cb, current);</div><div class="line">   &#125;</div><div class="line"></div><div class="line">   EngineJob&lt;R&gt; engineJob = engineJobFactory.build(key, isMemoryCacheable,</div><div class="line">       useUnlimitedSourceExecutorPool);</div><div class="line">   DecodeJob&lt;R&gt; decodeJob = decodeJobFactory.build(</div><div class="line">       glideContext,</div><div class="line">       model,</div><div class="line">       key,</div><div class="line">       signature,</div><div class="line">       width,</div><div class="line">       height,</div><div class="line">       resourceClass,</div><div class="line">       transcodeClass,</div><div class="line">       priority,</div><div class="line">       diskCacheStrategy,</div><div class="line">       transformations,</div><div class="line">       isTransformationRequired,</div><div class="line">       onlyRetrieveFromCache,</div><div class="line">       options,</div><div class="line">       engineJob);</div><div class="line">   jobs.put(key, engineJob);</div><div class="line">   engineJob.addCallback(cb);</div><div class="line">   engineJob.start(decodeJob);</div><div class="line"></div><div class="line">   <span class="keyword">if</span> (Log.isLoggable(TAG, Log.VERBOSE)) &#123;</div><div class="line">     logWithTimeAndKey(<span class="string">"Started new load"</span>, startTime, key);</div><div class="line">   &#125;</div><div class="line">   <span class="keyword">return</span> <span class="keyword">new</span> LoadStatus(cb, engineJob);</div><div class="line"> &#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> EngineResource&lt;?&gt; loadFromCache(Key key, <span class="keyword">boolean</span> isMemoryCacheable) &#123;</div><div class="line">    <span class="keyword">if</span> (!isMemoryCacheable) &#123;</div><div class="line">      <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    EngineResource&lt;?&gt; cached = getEngineResourceFromCache(key);</div><div class="line">    <span class="keyword">if</span> (cached != <span class="keyword">null</span>) &#123;</div><div class="line">      cached.acquire();</div><div class="line">      activeResources.put(key, <span class="keyword">new</span> ResourceWeakReference(key, cached, getReferenceQueue()));</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> cached;</div><div class="line">  &#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> EngineResource&lt;?&gt; loadFromActiveResources(Key key, <span class="keyword">boolean</span> isMemoryCacheable) &#123;</div><div class="line">    <span class="keyword">if</span> (!isMemoryCacheable) &#123;</div><div class="line">      <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    EngineResource&lt;?&gt; active = <span class="keyword">null</span>;</div><div class="line">    WeakReference&lt;EngineResource&lt;?&gt;&gt; activeRef = activeResources.get(key);</div><div class="line">    <span class="keyword">if</span> (activeRef != <span class="keyword">null</span>) &#123;</div><div class="line">      active = activeRef.get();</div><div class="line">      <span class="keyword">if</span> (active != <span class="keyword">null</span>) &#123;</div><div class="line">        active.acquire();</div><div class="line">      &#125; <span class="keyword">else</span> &#123;</div><div class="line">        activeResources.remove(key);</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> active;</div><div class="line">  &#125;</div></pre></td></tr></table></figure>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/Glide%E5%86%85%E5%AD%98%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6%E5%9B%BE.png" alt=""></p>
+<ul>
+<li>当我们需要显示某个资源时，Glide会先去查找LruResourceCache，找到了则将从LruResourceCache移除加入到ActiveResourceCache</li>
+<li>LruResourceCache找不到资源则查找ActiveResourceCache</li>
+<li>如果在ActiveResourceCache也找不到合适的资源，则会根据加载策略从硬盘或者网络加载资源</li>
+<li>分别使用engineJobFactory和decodeJobFactory构建EngineJob和DecodeJob对象，这两个对象是真正的加载资源的两个重要类，EngineJob对象负责开启线程去加载资源，并且加载到资源后转换到子线程并进行回调，DecodeJob是真正的执行者，它就是网络加载资源的地方，EngineJob开启线程，真正执行的是DecodeJob，DecodeJob执行完毕之后回到EngineJob去分发回调</li>
+<li>获取数据后Glide会从BitmapPool中找寻合适的可供内存复用的废弃recycled bitmap（找不到则会重新构建bitmap对象），然后刷新bitmap的数据</li>
+<li>bitmap被转换封装为Resource缓存入ActiveResourceCache和Request对象中</li>
+<li>Request的target会获取resource中引用的bitmap并展示</li>
+<li>当target的资源需要release时，resource会根据缓存策略被缓存到LruResourceCache，同时ActiveResourceCache中的弱引用会被删除。如果该资源不能缓存到LruResourceCache，则资源被recycle到BitmapPool</li>
+<li>当需要回收内存时（比如系统内存不足或者生命周期结束），LruResourceCache将根据LRU算法recycle一些resource到BitmapPool</li>
+<li>BitmapPool会根据缓存池的尺寸和recycled resource的缓存策略来缓存resource的bitmap</li>
+<li>BitmapPool会根据LRU算法和缓存池的尺寸来释放一些老旧资源</li>
+<li>当系统GC时，则会回收可回收的资源释放内存</li>
+</ul>
+<p>再来看一下Glide内存复用机制</p>
+<p><img src="https://xiaodanchen.github.io/hello-world/img/GlideMemoryResourceCache.png" alt=""></p>
+<p>如图，当系统内存不足时，LruResourceCache会根据LRU算法移除一些资源（resource）到BitmapPool，到Bitmap会根据LRU算法移除一些资源（bitmap），当应用再次需要资源时，会有限复用到BitmapPool中的bitmap对象（复用其内存），只需刷新bitmap的像素数据。这样能有效地降低内存抖动，由于很多情况下可以复用废弃bitmap的内存，因此避免了内存分配等造成的性能损耗，系统比较流畅，降低了系统GC的频率。</p>
+<h4 id="Glide的网络请求原理"><a href="#Glide的网络请求原理" class="headerlink" title="Glide的网络请求原理"></a>Glide的网络请求原理</h4><p>从上文可知，DecodeJob是网络加载资源的地方，DecodeJob实现了Runnable，下面看一下其run()方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line"></div><div class="line">  TraceCompat.beginSection(<span class="string">"DecodeJob#run"</span>);</div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">    <span class="keyword">if</span> (isCancelled) &#123;</div><div class="line">      notifyFailed();</div><div class="line">      <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">    runWrapped();</div><div class="line">  &#125; <span class="keyword">catch</span> (RuntimeException e) &#123;</div><div class="line">    <span class="keyword">if</span> (Log.isLoggable(TAG, Log.DEBUG)) &#123;</div><div class="line">      Log.d(TAG, <span class="string">"DecodeJob threw unexpectedly"</span></div><div class="line">          + <span class="string">", isCancelled: "</span> + isCancelled</div><div class="line">          + <span class="string">", stage: "</span> + stage, e);</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    <span class="keyword">if</span> (stage != Stage.ENCODE) &#123;</div><div class="line">      notifyFailed();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (!isCancelled) &#123;</div><div class="line">      <span class="keyword">throw</span> e;</div><div class="line">    &#125;</div><div class="line">  &#125; <span class="keyword">finally</span> &#123;</div><div class="line">    <span class="keyword">if</span> (currentFetcher != <span class="keyword">null</span>) &#123;</div><div class="line">      currentFetcher.cleanup();</div><div class="line">    &#125;</div><div class="line">    TraceCompat.endSection();</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>追踪到runWrapped()方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">runWrapped</span><span class="params">()</span> </span>&#123;</div><div class="line">   <span class="keyword">switch</span> (runReason) &#123;</div><div class="line">    <span class="keyword">case</span> INITIALIZE:</div><div class="line">      stage = getNextStage(Stage.INITIALIZE);</div><div class="line">      currentGenerator = getNextGenerator();</div><div class="line">      runGenerators();</div><div class="line">      <span class="keyword">break</span>;</div><div class="line">    <span class="keyword">case</span> SWITCH_TO_SOURCE_SERVICE:</div><div class="line">      runGenerators();</div><div class="line">      <span class="keyword">break</span>;</div><div class="line">    <span class="keyword">case</span> DECODE_DATA:</div><div class="line">      decodeFromRetrievedData();</div><div class="line">      <span class="keyword">break</span>;</div><div class="line">    <span class="keyword">default</span>:</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Unrecognized run reason: "</span> + runReason);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> Stage <span class="title">getNextStage</span><span class="params">(Stage current)</span> </span>&#123;</div><div class="line">  <span class="keyword">switch</span> (current) &#123;</div><div class="line">    <span class="keyword">case</span> INITIALIZE:</div><div class="line">      <span class="keyword">return</span> diskCacheStrategy.decodeCachedResource()</div><div class="line">          ? Stage.RESOURCE_CACHE : getNextStage(Stage.RESOURCE_CACHE);</div><div class="line">    <span class="keyword">case</span> RESOURCE_CACHE:</div><div class="line">      <span class="keyword">return</span> diskCacheStrategy.decodeCachedData()</div><div class="line">          ? Stage.DATA_CACHE : getNextStage(Stage.DATA_CACHE);</div><div class="line">    <span class="keyword">case</span> DATA_CACHE:</div><div class="line">      <span class="keyword">return</span> onlyRetrieveFromCache ? Stage.FINISHED : Stage.SOURCE;</div><div class="line">    <span class="keyword">case</span> SOURCE:</div><div class="line">    <span class="keyword">case</span> FINISHED:</div><div class="line">      <span class="keyword">return</span> Stage.FINISHED;</div><div class="line">    <span class="keyword">default</span>:</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Unrecognized stage: "</span> + current);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> DataFetcherGenerator <span class="title">getNextGenerator</span><span class="params">()</span> </span>&#123;</div><div class="line">  <span class="keyword">switch</span> (stage) &#123;</div><div class="line">    <span class="keyword">case</span> RESOURCE_CACHE:</div><div class="line">      <span class="keyword">return</span> <span class="keyword">new</span> ResourceCacheGenerator(decodeHelper, <span class="keyword">this</span>);</div><div class="line">    <span class="keyword">case</span> DATA_CACHE:</div><div class="line">      <span class="keyword">return</span> <span class="keyword">new</span> DataCacheGenerator(decodeHelper, <span class="keyword">this</span>);</div><div class="line">    <span class="keyword">case</span> SOURCE:</div><div class="line">      <span class="keyword">return</span> <span class="keyword">new</span> SourceGenerator(decodeHelper, <span class="keyword">this</span>);</div><div class="line">    <span class="keyword">case</span> FINISHED:</div><div class="line">      <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">    <span class="keyword">default</span>:</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Unrecognized stage: "</span> + stage);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">runGenerators</span><span class="params">()</span> </span>&#123;</div><div class="line">  currentThread = Thread.currentThread();</div><div class="line">  startFetchTime = LogTime.getLogTime();</div><div class="line">  <span class="keyword">boolean</span> isStarted = <span class="keyword">false</span>;</div><div class="line">  <span class="keyword">while</span> (!isCancelled &amp;&amp; currentGenerator != <span class="keyword">null</span></div><div class="line">      &amp;&amp; !(isStarted = currentGenerator.startNext())) &#123;</div><div class="line">    stage = getNextStage(stage);</div><div class="line">    currentGenerator = getNextGenerator();</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (stage == Stage.SOURCE) &#123;</div><div class="line">      reschedule();</div><div class="line">      <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> ((stage == Stage.FINISHED || isCancelled) &amp;&amp; !isStarted) &#123;</div><div class="line">    notifyFailed();</div><div class="line">  &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>不难看出来，网络请求原理逻辑主要在currentGenerator.startNext()这句代码上面，而currentGeneric的实现类是SourceGenerator，所以可以定位到SourceGenerator的startNext()方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">startNext</span><span class="params">()</span> </span>&#123;</div><div class="line">  <span class="keyword">if</span> (dataToCache != <span class="keyword">null</span>) &#123;</div><div class="line">    Object data = dataToCache;</div><div class="line">    dataToCache = <span class="keyword">null</span>;</div><div class="line">    cacheData(data);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (sourceCacheGenerator != <span class="keyword">null</span> &amp;&amp; sourceCacheGenerator.startNext()) &#123;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">  &#125;</div><div class="line">  sourceCacheGenerator = <span class="keyword">null</span>;</div><div class="line"></div><div class="line">  loadData = <span class="keyword">null</span>;</div><div class="line">  <span class="keyword">boolean</span> started = <span class="keyword">false</span>;</div><div class="line">  <span class="keyword">while</span> (!started &amp;&amp; hasNextModelLoader()) &#123;</div><div class="line">    loadData = helper.getLoadData().get(loadDataListIndex++);</div><div class="line">    <span class="keyword">if</span> (loadData != <span class="keyword">null</span></div><div class="line">        &amp;&amp; (helper.getDiskCacheStrategy().isDataCacheable(loadData.fetcher.getDataSource())</div><div class="line">        || helper.hasLoadPath(loadData.fetcher.getDataClass()))) &#123;</div><div class="line">      started = <span class="keyword">true</span>;</div><div class="line">      loadData.fetcher.loadData(helper.getPriority(), <span class="keyword">this</span>);</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> started;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>SourceGenerator的startNext()方法最主要的逻辑在于while循环，关键代码是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">loadData.fetcher.loadData(helper.getPriority(), <span class="keyword">this</span>);</div></pre></td></tr></table></figure>
+<p>loadData的fetcher实现类是HttpUrlFetcher，这是在Glide构造registry时候注册进去的实现类，所以其loadData()方法就是主要的实现逻辑。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">loadData</span><span class="params">(Priority priority, DataCallback&lt;? <span class="keyword">super</span> InputStream&gt; callback)</span> </span>&#123;</div><div class="line">  <span class="keyword">long</span> startTime = LogTime.getLogTime();</div><div class="line">  <span class="keyword">final</span> InputStream result;</div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">    result = loadDataWithRedirects(glideUrl.toURL(), <span class="number">0</span> <span class="comment">/*redirects*/</span>, <span class="keyword">null</span> <span class="comment">/*lastUrl*/</span>,</div><div class="line">        glideUrl.getHeaders());</div><div class="line">  &#125; <span class="keyword">catch</span> (IOException e) &#123;</div><div class="line">    <span class="keyword">if</span> (Log.isLoggable(TAG, Log.DEBUG)) &#123;</div><div class="line">      Log.d(TAG, <span class="string">"Failed to load data for url"</span>, e);</div><div class="line">    &#125;</div><div class="line">    callback.onLoadFailed(e);</div><div class="line">    <span class="keyword">return</span>;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (Log.isLoggable(TAG, Log.VERBOSE)) &#123;</div><div class="line">    Log.v(TAG, <span class="string">"Finished http url fetcher fetch in "</span> + LogTime.getElapsedMillis(startTime)</div><div class="line">        + <span class="string">" ms and loaded "</span> + result);</div><div class="line">  &#125;</div><div class="line">  callback.onDataReady(result);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> InputStream <span class="title">loadDataWithRedirects</span><span class="params">(URL url, <span class="keyword">int</span> redirects, URL lastUrl,</span></span></div><div class="line">      Map&lt;String, String&gt; headers) <span class="keyword">throws</span> IOException &#123;</div><div class="line">    <span class="keyword">if</span> (redirects &gt;= MAXIMUM_REDIRECTS) &#123;</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> HttpException(<span class="string">"Too many (&gt; "</span> + MAXIMUM_REDIRECTS + <span class="string">") redirects!"</span>);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line"></div><div class="line">      <span class="keyword">try</span> &#123;</div><div class="line">        <span class="keyword">if</span> (lastUrl != <span class="keyword">null</span> &amp;&amp; url.toURI().equals(lastUrl.toURI())) &#123;</div><div class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> HttpException(<span class="string">"In re-direct loop"</span>);</div><div class="line"></div><div class="line">        &#125;</div><div class="line">      &#125; <span class="keyword">catch</span> (URISyntaxException e) &#123;</div><div class="line"></div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    urlConnection = connectionFactory.build(url);</div><div class="line">    <span class="keyword">for</span> (Map.Entry&lt;String, String&gt; headerEntry : headers.entrySet()) &#123;</div><div class="line">      urlConnection.addRequestProperty(headerEntry.getKey(), headerEntry.getValue());</div><div class="line">    &#125;</div><div class="line">    urlConnection.setConnectTimeout(timeout);</div><div class="line">    urlConnection.setReadTimeout(timeout);</div><div class="line">    urlConnection.setUseCaches(<span class="keyword">false</span>);</div><div class="line">    urlConnection.setDoInput(<span class="keyword">true</span>);</div><div class="line"></div><div class="line">    urlConnection.setInstanceFollowRedirects(<span class="keyword">false</span>);</div><div class="line"></div><div class="line">    urlConnection.connect();</div><div class="line">    <span class="keyword">if</span> (isCancelled) &#123;</div><div class="line">      <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">final</span> <span class="keyword">int</span> statusCode = urlConnection.getResponseCode();</div><div class="line">    <span class="keyword">if</span> (statusCode / <span class="number">100</span> == <span class="number">2</span>) &#123;</div><div class="line">      <span class="keyword">return</span> getStreamForSuccessfulRequest(urlConnection);</div><div class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (statusCode / <span class="number">100</span> == <span class="number">3</span>) &#123;</div><div class="line">      String redirectUrlString = urlConnection.getHeaderField(<span class="string">"Location"</span>);</div><div class="line">      <span class="keyword">if</span> (TextUtils.isEmpty(redirectUrlString)) &#123;</div><div class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> HttpException(<span class="string">"Received empty or null redirect url"</span>);</div><div class="line">      &#125;</div><div class="line">      URL redirectUrl = <span class="keyword">new</span> URL(url, redirectUrlString);</div><div class="line">      <span class="keyword">return</span> loadDataWithRedirects(redirectUrl, redirects + <span class="number">1</span>, url, headers);</div><div class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (statusCode == -<span class="number">1</span>) &#123;</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> HttpException(statusCode);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> HttpException(urlConnection.getResponseMessage(), statusCode);</div><div class="line">    &#125;</div><div class="line">  &#125;</div></pre></td></tr></table></figure>
+<p>可以看到Glide的网络请求是基于我们平时比较熟悉的HttpURLConnection，通过HttpURLConnection的connect()方法连接网络获取文件数据流，把文件数据流拉取到内存之后，就开始了图片解码的工作。</p>
+<p>Glide的解码工作还是比较复杂繁琐的，具体可以参照以下下面这篇博文。</p>
+<p><a href="http://www.cnblogs.com/guanmanman/p/7040942.html" target="_blank" rel="external">android图片加载框架Glide4.0源码完全解析（二）</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android框架源码解析/" rel="tag"># android框架源码解析</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/01/16/ThreadLocal原理/" rel="next" title="ThreadLocal原理">
+                <i class="fa fa-chevron-left"></i> ThreadLocal原理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/sufushi" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#概要"><span class="nav-number">1.</span> <span class="nav-text">概要</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Glide的生命周期绑定"><span class="nav-number">2.</span> <span class="nav-text">Glide的生命周期绑定</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Glide的请求管理机制"><span class="nav-number">3.</span> <span class="nav-text">Glide的请求管理机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Glide的内存缓存机制"><span class="nav-number">4.</span> <span class="nav-text">Glide的内存缓存机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Glide的网络请求原理"><span class="nav-number">5.</span> <span class="nav-text">Glide的网络请求原理</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>
