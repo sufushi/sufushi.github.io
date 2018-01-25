@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="android框架源码解析," />
 
 
 
@@ -79,33 +79,41 @@
 
 
 
-<meta name="description" content="本版本仅适用于Win环境本文关键字： Hexo绿色版，Hexo便携版，Hexo配置，Hexo，U盘
+<meta name="description" content="前言OkHttp是一个处理网络请求的开源项目，是android端最火热的轻量级框架，由移动支付Square公司贡献用于替代HttpUrlConnection和Apache HttpClient。OkHttp有如下特点：
 
-Hexo是一个快速、简洁且高效的博客框架，支持 GitHub Flavored Markdown 的所有功能；具有超快生成速度，让上百个页面在几秒内瞬间完成渲染；还拥有各式各样的插件等等。
-但是就像很多教程里面写的那样，搭建 Hexo 本地环境，需要安装 Node.js、Git 以及使用 np">
+支持HTTP / HTTP2 / WebSocket
+内部维护任务队列线程池，友好支持并发访问
+内部维护连接池，支持多路复用，减少连接创建开销
+socket创建支持最佳路由
+提供">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
-<meta property="og:url" content="sufushi.github.io/2017/10/06/hello-world/index.html">
+<meta property="og:title" content="OkHttp框架源码解析——整体架构">
+<meta property="og:url" content="sufushi.github.io/2018/01/25/OkHttp框架源码解析（一）/index.html">
 <meta property="og:site_name" content="苏富仕的博客">
-<meta property="og:description" content="本版本仅适用于Win环境本文关键字： Hexo绿色版，Hexo便携版，Hexo配置，Hexo，U盘
+<meta property="og:description" content="前言OkHttp是一个处理网络请求的开源项目，是android端最火热的轻量级框架，由移动支付Square公司贡献用于替代HttpUrlConnection和Apache HttpClient。OkHttp有如下特点：
 
-Hexo是一个快速、简洁且高效的博客框架，支持 GitHub Flavored Markdown 的所有功能；具有超快生成速度，让上百个页面在几秒内瞬间完成渲染；还拥有各式各样的插件等等。
-但是就像很多教程里面写的那样，搭建 Hexo 本地环境，需要安装 Node.js、Git 以及使用 np">
-<meta property="og:image" content="https://portablehexo.bitmoe.cn/hexopp/hexop.png">
-<meta property="og:image" content="https://portablehexo.bitmoe.cn/hexopp/hexop2.png">
-<meta property="og:image" content="https://portablehexo.bitmoe.cn/hexopp/hexop3.png">
-<meta property="og:image" content="https://portablehexo.bitmoe.cn/hexopp/hexop5.png">
-<meta property="og:image" content="https://portablehexo.bitmoe.cn/hexopp/hexop6.png">
-<meta property="og:image" content="https://portablehexo.bitmoe.cn/hexopp/hexop7.png">
-<meta property="og:image" content="https://portablehexo.bitmoe.cn/hexopp/hexop8.png">
-<meta property="og:updated_time" content="2017-03-22T12:08:02.137Z">
+支持HTTP / HTTP2 / WebSocket
+内部维护任务队列线程池，友好支持并发访问
+内部维护连接池，支持多路复用，减少连接创建开销
+socket创建支持最佳路由
+提供">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/OkHttp%E6%8E%A5%E5%8F%A3%E5%B1%82.png">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/1972369-a9445edaa4858ddc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/565">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/1972369-295bd48651beabb0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/603">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/1972369-f197845a1ed7dd0a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/610">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/1972369-e5c0541cd9a56dc6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/596">
+<meta property="og:image" content="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/f6e2ac304ee22891eca4ad1218602044.png">
+<meta property="og:updated_time" content="2018-01-25T13:19:15.232Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hello World">
-<meta name="twitter:description" content="本版本仅适用于Win环境本文关键字： Hexo绿色版，Hexo便携版，Hexo配置，Hexo，U盘
+<meta name="twitter:title" content="OkHttp框架源码解析——整体架构">
+<meta name="twitter:description" content="前言OkHttp是一个处理网络请求的开源项目，是android端最火热的轻量级框架，由移动支付Square公司贡献用于替代HttpUrlConnection和Apache HttpClient。OkHttp有如下特点：
 
-Hexo是一个快速、简洁且高效的博客框架，支持 GitHub Flavored Markdown 的所有功能；具有超快生成速度，让上百个页面在几秒内瞬间完成渲染；还拥有各式各样的插件等等。
-但是就像很多教程里面写的那样，搭建 Hexo 本地环境，需要安装 Node.js、Git 以及使用 np">
-<meta name="twitter:image" content="https://portablehexo.bitmoe.cn/hexopp/hexop.png">
+支持HTTP / HTTP2 / WebSocket
+内部维护任务队列线程池，友好支持并发访问
+内部维护连接池，支持多路复用，减少连接创建开销
+socket创建支持最佳路由
+提供">
+<meta name="twitter:image" content="http://oxsxuoiqx.bkt.clouddn.com/OkHttp%E6%8E%A5%E5%8F%A3%E5%B1%82.png">
 
 
 
@@ -135,13 +143,13 @@ Hexo是一个快速、简洁且高效的博客框架，支持 GitHub Flavored Ma
 
 
 
-  <link rel="canonical" href="sufushi.github.io/2017/10/06/hello-world/"/>
+  <link rel="canonical" href="sufushi.github.io/2018/01/25/OkHttp框架源码解析（一）/"/>
 
 
 
 
 
-  <title>Hello World | 苏富仕的博客</title>
+  <title>OkHttp框架源码解析——整体架构 | 苏富仕的博客</title>
   
 
 
@@ -288,7 +296,7 @@ Hexo是一个快速、简洁且高效的博客框架，支持 GitHub Flavored Ma
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2017/10/06/hello-world/">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2018/01/25/OkHttp框架源码解析（一）/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="sufushi">
@@ -305,7 +313,7 @@ Hexo是一个快速、简洁且高效的博客框架，支持 GitHub Flavored Ma
 
         
         
-          <h1 class="post-title" itemprop="name headline">Hello World</h1>
+          <h1 class="post-title" itemprop="name headline">OkHttp框架源码解析——整体架构</h1>
         
 
         <div class="post-meta">
@@ -317,8 +325,8 @@ Hexo是一个快速、简洁且高效的博客框架，支持 GitHub Flavored Ma
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-06T23:00:08+08:00">
-                2017-10-06
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-25T19:41:54+08:00">
+                2018-01-25
               </time>
             
 
@@ -355,86 +363,47 @@ Hexo是一个快速、简洁且高效的博客框架，支持 GitHub Flavored Ma
       
 
       
-        <p><img src="https://portablehexo.bitmoe.cn/hexopp/hexop.png" alt=""></p>
-<blockquote>
-<p><strong>本版本仅适用于Win环境</strong><br>本文关键字： <strong>Hexo绿色版</strong>，<strong>Hexo便携版</strong>，<strong>Hexo配置</strong>，<strong>Hexo</strong>，<strong>U盘</strong></p>
-</blockquote>
-<p><a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>是一个快速、简洁且高效的博客框架，支持 GitHub Flavored Markdown 的所有功能；具有超快生成速度，让上百个页面在几秒内瞬间完成渲染；还拥有各式各样的插件等等。</p>
-<p>但是就像很多教程里面写的那样，搭建 Hexo 本地环境，需要安装 Node.js、Git 以及使用 npm 进行安装和配置。这对于毫无经验的新手来说，是一个很大的挑战。同时，由于这些环境的存在，导致如果需要更换计算机的时候，重新安装配置一个新的Hexo环境，又得花费一些功夫。</p>
-<p>所以呢，锵锵，我们整合了一个 Hexo 便携版，来简化本地环境的部署。</p>
-<p>####<strong>版本介绍</strong><br>那么所谓的便携版到底是什么？便携版就是将 Hexo 本地环境所需要的各种依赖环境的整合到一起，做成的不需要安装的版本。</p>
-<p>本便携版（Release 1.0.0）所包含的软件如下：</p>
-<blockquote>
+        <h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>OkHttp是一个处理网络请求的开源项目，是android端最火热的轻量级框架，由移动支付Square公司贡献用于替代HttpUrlConnection和Apache HttpClient。OkHttp有如下特点：</p>
 <ul>
-<li>Git: 2.7.4</li>
-<li>Nodejs: 6.10.1</li>
-<li>Npm: 4.4.1</li>
-<li>Hexo: 3.2.2</li>
+<li>支持HTTP / HTTP2 / WebSocket</li>
+<li>内部维护任务队列线程池，友好支持并发访问</li>
+<li>内部维护连接池，支持多路复用，减少连接创建开销</li>
+<li>socket创建支持最佳路由</li>
+<li>提供拦截器，实现request与response的分层处理（如透明GZIP压缩，logging等）</li>
 </ul>
-</blockquote>
-<p>为了便携的需要，不能配置固定的环境变量，所以除此之外还有相应的批处理文件，下文将详细介绍。</p>
-<p>####<strong>从零开始，1分钟搭建Hexo写作环境</strong><br>说了这么多，我们这就开始教你如何在1分钟内，从零开始搭建Hexo写作环境！</p>
-<p>#####1 注册一个Github帐号</p>
-<p>1.1 进入<a href="https://github.com" target="_blank" rel="external">Github</a>，并在右边的3个框框中分别填写 用户名、邮箱地址、账户密码，并点击 <strong><code>Sign up for Github</code></strong>;</p>
-<p><img src="https://portablehexo.bitmoe.cn/hexopp/hexop2.png" alt="图1.1.1"></p>
-<p>1.2 进入欢迎页面后，点击<strong><code>Finish sign up</code></strong>;</p>
-<p><img src="https://portablehexo.bitmoe.cn/hexopp/hexop3.png" alt="图1.2.1"></p>
-<p>1.3 进入到这一步之后（<strong>图1.3.1</strong>），先别记着点任何东西，查看你的邮箱，应该会收到如下的邮件（<strong>图1.3.2</strong>），确认你的邮件。否则，你会看到错误页面（<strong>图1.3.3</strong>）。query完毕之后在<strong>图1.3.1</strong>所示的页面，点击<strong><code>+ New repository</code></strong>;</p>
-<p><img src="https://portablehexo.bitmoe.cn/hexopp/hexop5.png" alt="图1.3.1"></p>
-<p><img src="https://portablehexo.bitmoe.cn/hexopp/hexop6.png" alt="图1.3.2"></p>
-<p><img src="https://portablehexo.bitmoe.cn/hexopp/hexop7.png" alt="图1.3.3"></p>
-<p>1.4 请在红框中的 <strong><code>Repository name</code></strong> 里面输入 <strong><code>用户名.github.io</code></strong> ( <strong>用户名</strong> 就是你刚刚 <strong>步骤1.1</strong> 中注册的用户名)，然后点击 <strong><code>Create repository</code></strong>;</p>
-<p><img src="https://portablehexo.bitmoe.cn/hexopp/hexop8.png" alt="图1.4.1"></p>
-<p>1.5 至此，Github网页注册的部分完毕</p>
-<p>####2 下载HEXO Portable</p>
-<p>2.1 访问我们的 <a href="https://project.bitmoe.cn/PortableHexo/" target="_blank" rel="external">HEXO Portable</a> 页面，或者 <a href="https://github.com/Bitmoe/PortableHexo" target="_blank" rel="external">Github仓库</a> 下载最新的便携版；</p>
-<p>2.2 双击得到的自解压文件，解压到你需要安装博客的地方，可以选择硬盘或者U盘；</p>
-<p>####3 配置你的环境</p>
-<p>3.1 在你的博客的文件夹，你会发现很多批处理文件，我先介绍下各个文件的用途：</p>
-<blockquote>
+<h4 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h4><p>OkHttp的整体架构如下：</p>
 <ul>
-<li>配置基本信息 &gt;&gt; 配置博客的基本环境</li>
-<li>配置Github部署 &gt;&gt; 配置博客的部署</li>
-<li>启动命令行 &gt;&gt; 启动带环境变量的Git-Bash，否则无法使用node、npm、git等命令</li>
-<li>新建文章 &gt;&gt; 新建一篇文章</li>
-<li>渲染并本地测试 &gt;&gt; 生成并本地预览</li>
-<li>渲染并部署 &gt;&gt; 生成并部署到GitHub</li>
-<li>重置配置文件 &gt;&gt; 重置_config.yml</li>
+<li>Interface：接口层，接收网络访问的请求</li>
+<li>Protocol：协议层，处理协议逻辑</li>
+<li>Connection：连接层，管理网络连接，发送新的请求，接收服务器访问</li>
+<li>Cache：缓存层，管理本地缓存</li>
+<li>I / O ：I / O 层，实际数据读写实现</li>
+<li>InterceptChain：拦截器层，拦截网络访问，插入拦截逻辑</li>
 </ul>
-</blockquote>
-<p>3.2 我们继续进行环境配置，双击<strong><code>配置基本信息</code></strong>并按顺序输入以下信息：</p>
-<blockquote>
-<ul>
-<li>主标题：顾名思义</li>
-<li>副标题：顾名思义</li>
-<li>描述：顾名思义</li>
-<li>作者：顾名思义</li>
-<li>网站地址：填写 <strong>用户名.github.io</strong> （此处的用户名为<strong>步骤1.1</strong>中填写的用户名）<br><strong>如果您已经购买了域名，可以参看相关的文章！</strong></li>
-</ul>
-</blockquote>
-<p>3.3 双击<strong><code>配置Github部署</code></strong>并按顺序输入以下信息：</p>
-<blockquote>
-<ul>
-<li>Github的用户名：此处的用户名为<strong>步骤1.1</strong>中填写的用户名</li>
-<li>Github注册邮箱：此处的注册邮箱为<strong>步骤1.1</strong>中填写的注册邮箱</li>
-</ul>
-</blockquote>
-<p>3.4 输入完毕之后，会进行测试部署，等待屏幕提示<strong>下面将进行部署测试，稍后将有一个openssh的对话框出现，请输入你的github用户密码。</strong>的时候，按回车继续；（此处的用户密码为<strong>步骤1.1</strong>中填写的用户密码）</p>
-<p>3.5 然后继续等待，此时屏幕会出现n多行，耐心等待即可；</p>
-<p>3.6 等待屏幕提示<strong>请访问 <a href="https://用户名.github.io" target="_blank" rel="external">https://用户名.github.io</a> 查看是否部署成功！</strong>的时候，在浏览器中输入<strong><a href="https://用户名.github.io" target="_blank" rel="external">https://用户名.github.io</a> </strong>，理论上可以看到你的Hexo站点！（此处的用户名为<strong>步骤1.1</strong>中填写的用户名）</p>
-<p>3.7 至此，你的Hexo环境就配置完成了，这样你的这个Hexo博客文件夹无论移动到哪一台电脑，都能通过<strong>启动命令行</strong>出现的bash命令行，或者其余便捷的批处理文件比如<strong>新建文章</strong>、<strong>渲染并本地测试</strong>、<strong>渲染并部署</strong>进行相应的操作。</p>
-<p>3.8 如果你在配置中出错，可以运行<strong>重置配置文件</strong>后，再重复<strong>3.1~3.6步骤</strong></p>
-<p>####4 开始享受纯粹的Hexo写作吧！</p>
-<p>####5 备注</p>
-<blockquote>
-<ul>
-<li>本便携版以及本文均使用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="external">CC BY-NC-SA 4.0</a>协议；</li>
-<li>本文所有权归 <a href="http://qistchan.com" target="_blank" rel="external">QistChan</a> &amp; <a href="https://wwww.bitmoe.com" target="_blank" rel="external">Bitmoe Inc.</a> 所有；</li>
-<li>本便携版由 <a href="https://www.bitmoe.com" target="_blank" rel="external">Bitmoe Inc.</a> 维护并提供技术支持；</li>
-<li>需要技术支持可以在<a href="https://github.com/Bitmoe/PortableHexo" target="_blank" rel="external">Github仓库</a> 提交<strong><code>Issues</code></strong>；</li>
-<li>Written with <a href="https://stackedit.io/" target="_blank" rel="external">StackEdit</a>.</li>
-</ul>
-</blockquote>
+<p>接下来详细分析一下这几个层次。</p>
+<p><strong>Interface接口层</strong></p>
+<p>接口层接收用户的网络访问请求（同步请求 / 异步请求），发起实际的网络访问。</p>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/OkHttp%E6%8E%A5%E5%8F%A3%E5%B1%82.png" alt=""></p>
+<p>OkHttpClient是OkHttp框架的客户端，更确切的说是一个用户面板。用户使用OkHttp进行各种设置，发起各种网络请求都是通过OkHttpClient完成的。每个OkHttpClient内部维护了属于自己的任务队列，连接池，Cache，拦截器等，所以在使用OkHttp作为网络框架时应该全局共享一个OkHttpClient实例。</p>
+<p>Call描述一个实际的访问请求，用户的每一个网络请求都是一个Call实例。Call实例本身是一个接口，定义了Call的接口方法，实际执行过程中，OkHttp会为每一个请求创建一个RealCall，每一个RealCall内部有一个AsyncCall。AsyncCall继承的NamedRunnable继承子Runnable接口，所以每一个Call就是一个线程，而执行Call的过程就是执行其execute方法的过程。</p>
+<p>Dispatcher是OkHttp的任务队列，其内部维护了一个线程池，当有接收到一个Call时，Dispatcher负责在线程池中找到空闲的线程并执行其execute方法。</p>
+<p><strong>Protocol协议层</strong></p>
+<p>Protocol层负责处理协议逻辑，OkHttp支持HTTP1 / HTTP2 / WebSocket 协议，并在3.7版本中放弃对Spdy协议，鼓励开发者使用HTTP 2。</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/1972369-a9445edaa4858ddc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/565" alt=""></p>
+<p><strong>Connection连接层</strong></p>
+<p>连接层主要就是负责网络连接，是OkHttp的核心部分。在连接层中有一个连接池，统一管理所有的Socket连接，当用户新发起一个网络请求时，OkHttp会首先从连接池中查找是否有符合要求的连接，如果有则直接通过该连接发送网络请求，否则新创建一个网络连接。</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/1972369-295bd48651beabb0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/603" alt=""></p>
+<p>RealConnection描述一个物理Socket连接，连接池中维护多个RealConnection实例。由于Http2 支持多路复用，一个RealConnection可以支持多个网络访问请求，所以OkHttp又引入了StreamAllocation来描述一个实际的网络请求开销（从逻辑上一个Stream对应一个Call，但在实际网络请求过程中一个Call常常涉及到多次请求。如重定向，Authenticate等场景。所以准确的说，一个Stream对应一次请求，而一个Call对应一组有逻辑关联的Stream），一个RealConnection对应一个或多个StreamAllocation，所以StreamAllocation可以看做是RealConnection的计数器，当RealConnection的引用计数变为0，且长时间没有被其他请求占用就将被释放。</p>
+<p><strong>Cache缓存层</strong></p>
+<p>Cache层负责维护请求缓存，当用户的网络请求在本地已有符合要求的缓存时，OkHttp会直接从缓存中返回结果，从而节省网络开销。</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/1972369-f197845a1ed7dd0a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/610" alt=""></p>
+<p><strong>I / O 层</strong></p>
+<p>I / O 层负责实际的数据读写。OkHttp的另一大特点就是其高效的I / O操作，这归因于其高效的I / O库okio。</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/1972369-e5c0541cd9a56dc6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/596" alt=""></p>
+<p><strong>Interceptor拦截器层</strong></p>
+<p>拦截器层提供了一个类AOP接口，方便用户可以切入到各个层面对网络访问进行拦截并执行相关逻辑。</p>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>最后附上各个层次的总揽图。</p>
+<p><img src="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/f6e2ac304ee22891eca4ad1218602044.png" alt=""></p>
 
       
     </div>
@@ -450,6 +419,12 @@ Hexo是一个快速、简洁且高效的博客框架，支持 GitHub Flavored Ma
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/android框架源码解析/" rel="tag"># android框架源码解析</a>
+          
+        </div>
+      
 
       
       
@@ -459,14 +434,18 @@ Hexo是一个快速、简洁且高效的博客框架，支持 GitHub Flavored Ma
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
+              <a href="/2018/01/24/android中的序列化机制原理/" rel="next" title="android中的序列化机制原理">
+                <i class="fa fa-chevron-left"></i> android中的序列化机制原理
+              </a>
+            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2017/10/14/android启动过程分析（一）/" rel="prev" title="android启动过程分析——init进程">
-                android启动过程分析——init进程 <i class="fa fa-chevron-right"></i>
+              <a href="/2018/01/25/OkHttp框架源码解析/" rel="prev" title="OkHttp框架源码解析——拦截器">
+                OkHttp框架源码解析——拦截器 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -519,8 +498,17 @@ Hexo是一个快速、简洁且高效的博客框架，支持 GitHub Flavored Ma
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -585,6 +573,22 @@ Hexo是一个快速、简洁且高效的博客框架，支持 GitHub Flavored Ma
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#整体架构"><span class="nav-number">2.</span> <span class="nav-text">整体架构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#小结"><span class="nav-number">3.</span> <span class="nav-text">小结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
