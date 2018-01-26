@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android框架源码解析," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言OkHttp的连接池管理部分也是其核心部分，通过维护连接池，最大限度重用现有连接，减少网络连接的创建开销，以此提升网络请求效率。
+连接池实现背景keep-alive机制
+在HTTP1.0中HTTP的请求流程如下：
+
+这种方法的好处是简单，各个请求互不干扰。但在复杂的网络请求场景下这种方式几乎不可用。例如：浏览器加载一个HTML网页，HTML中可能需要加载数十个资源，典型场景下这些资源中大部分来">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OkHttp框架源码解析——多路复用">
+<meta property="og:url" content="sufushi.github.io/2018/01/26/OkHttp框架源码解析/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="前言OkHttp的连接池管理部分也是其核心部分，通过维护连接池，最大限度重用现有连接，减少网络连接的创建开销，以此提升网络请求效率。
+连接池实现背景keep-alive机制
+在HTTP1.0中HTTP的请求流程如下：
+
+这种方法的好处是简单，各个请求互不干扰。但在复杂的网络请求场景下这种方式几乎不可用。例如：浏览器加载一个HTML网页，HTML中可能需要加载数十个资源，典型场景下这些资源中大部分来">
+<meta property="og:image" content="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/59d08a51c67491151da84524ea04ce7b.png">
+<meta property="og:image" content="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/0a7e20cbfa732fc661e88eb670aa4aa9.png">
+<meta property="og:image" content="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/03c77355f41162f738505e202ac7860d.png">
+<meta property="og:image" content="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/a0b6775e83c2c1a24ed85e06ffa514fe.png">
+<meta property="og:updated_time" content="2018-01-26T07:02:18.034Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="OkHttp框架源码解析——多路复用">
+<meta name="twitter:description" content="前言OkHttp的连接池管理部分也是其核心部分，通过维护连接池，最大限度重用现有连接，减少网络连接的创建开销，以此提升网络请求效率。
+连接池实现背景keep-alive机制
+在HTTP1.0中HTTP的请求流程如下：
+
+这种方法的好处是简单，各个请求互不干扰。但在复杂的网络请求场景下这种方式几乎不可用。例如：浏览器加载一个HTML网页，HTML中可能需要加载数十个资源，典型场景下这些资源中大部分来">
+<meta name="twitter:image" content="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/59d08a51c67491151da84524ea04ce7b.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2018/01/26/OkHttp框架源码解析/"/>
+
+
+
+
+
+  <title>OkHttp框架源码解析——多路复用 | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2018/01/26/OkHttp框架源码解析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">OkHttp框架源码解析——多路复用</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-26T13:00:56+08:00">
+                2018-01-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>OkHttp的连接池管理部分也是其核心部分，通过维护连接池，最大限度重用现有连接，减少网络连接的创建开销，以此提升网络请求效率。</p>
+<h4 id="连接池实现背景"><a href="#连接池实现背景" class="headerlink" title="连接池实现背景"></a>连接池实现背景</h4><p><strong>keep-alive机制</strong></p>
+<p>在HTTP1.0中HTTP的请求流程如下：</p>
+<p><img src="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/59d08a51c67491151da84524ea04ce7b.png" alt=""></p>
+<p>这种方法的好处是简单，各个请求互不干扰。但在复杂的网络请求场景下这种方式几乎不可用。例如：浏览器加载一个HTML网页，HTML中可能需要加载数十个资源，典型场景下这些资源中大部分来自同一个站点。按照HTTP1.0的做法，这需要建立数十个TCP连接，每个连接负责一个资源请求。创建一个TCP连接需要3次握手，而释放连接则需要4次挥手。重复的创建和释放连接极大地影响了网络效率，同时也增加了系统开销。</p>
+<p>为了有效地解决这一问题，HTTP / 1.1提出了keep-alive机制，当一个HTTP请求的数据传输结束够，TCP连接不立即释放，如果此时有新的HTTP请求，且其请求的Host同上次请求相同，则可以直接复用为释放TCP连接，从而省去了TCP的释放和再次创建的开销，减少了网络延时。</p>
+<p><img src="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/0a7e20cbfa732fc661e88eb670aa4aa9.png" alt=""></p>
+<p>在现代浏览器中，一般同时开启6~8个keep-alive connection的socket连接，并保持一定的链路生命，当不需要时再关闭。而在服务器中，一般是由软件根据负载情况（比如FD最大值、Socket内存、超时时间、栈内存、栈数量等）决定是否主动关闭。</p>
+<p><strong>多路复用机制</strong></p>
+<p>在HTTP / 1.x中，如果客户端向发起多个并行请求必须建立多个TCP连接，这无疑增大了网络开销。另外，HTTP / 1.x不会压缩请求和响应报头，导致了不必要的网络流量；HTTP / 1.x不支持资源优先级导致底层TCP连接利用率低下。而这些问题都是HTTP / 2要着力解决的。简单来说HTTP / 2主要解决了以下问题：</p>
+<ul>
+<li>报头压缩：HTTP / 2使用HPACK压缩格式压缩请求和响应报头数据，减少了不必要的流量开销</li>
+<li>请求与响应复用：HTTP / 2通过引入新的二进制分帧层实现了完整的请求和响应复用，客户端和服务器可以将HTTP消息分解为互不依赖的帧，然后交错发送，最后再在另一端将其重新组装</li>
+<li>指定数据流优先级：将HTTP消息分解为很多独立的帧之后，我们就可以复用多个数据流中的帧，客户端和服务器交错发送和传输这些帧的顺序就成为关键的性能决定因素。为了做到这一点，HTTP / 2标准允许每个数据流都有一个关联的权重和依赖关系</li>
+<li>流控制：HTTP / 2提供了一组简单的构建块，这些构建块允许客户端和服务器实现其自己的数据流和连接级流控制</li>
+</ul>
+<p>HTTP / 2所有性能增强的核心在于新的二进制分帧层，它定义了如何封装HTTP消息并在客户端与服务器之间进行传输。</p>
+<p><img src="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/03c77355f41162f738505e202ac7860d.png" alt=""></p>
+<p>同时HTTP / 2引入了三个新的概念：</p>
+<ul>
+<li>数据流：基于TCP连接之上的逻辑双向字节流，对应一个请求及其响应。客户端没发起一个请求就建立一个数据流，后续该请求及其响应的所有数据都通过该数据流传输</li>
+<li>消息：一个请求或响应对应的一系列数据帧</li>
+<li>帧：HTTP / 2的最小数据切片单位</li>
+</ul>
+<p>上述概念之间的逻辑关系：</p>
+<ul>
+<li>所有通信都在一个TCP连接上完成，此连接可以承载任何数量的双向数据流</li>
+<li>每个数据流都有一个唯一的标识符和可选的优先级信息，用于承载双向消息</li>
+<li>每条消息都是一条逻辑HTTP消息（例如请求或响应），包含一个或多个帧</li>
+<li>帧是最小的通信单位，承载着特定类型的数据，例如HTTP标头、消息负载，等等。来自不同数据流的帧可以交错发送，然后在根据每个帧头的数据流标识符重新组装</li>
+<li>每个HTTP消息被分解为多个独立的帧后可以交错发送，从而在宏观上实现了多个请求或响应并行传输的效果。这类似与多线程环境下的时间片机制</li>
+</ul>
+<p><img src="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/a0b6775e83c2c1a24ed85e06ffa514fe.png" alt=""></p>
+<h4 id="连接池的使用与分析"><a href="#连接池的使用与分析" class="headerlink" title="连接池的使用与分析"></a>连接池的使用与分析</h4><p>无论是HTTP / 1.1的keep-alive机制还是HTTP / 2的多路复用机制，在实现上都需要引入连接池来维护网络连接。接下来看下OkHttp中的连接池实现。</p>
+<p>OkHttp内部通过ConnectionPool来管理连接池，首先来看下ConnectionPool的主要成员：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div><div class="line">143</div><div class="line">144</div><div class="line">145</div><div class="line">146</div><div class="line">147</div><div class="line">148</div><div class="line">149</div><div class="line">150</div><div class="line">151</div><div class="line">152</div><div class="line">153</div><div class="line">154</div><div class="line">155</div><div class="line">156</div><div class="line">157</div><div class="line">158</div><div class="line">159</div><div class="line">160</div><div class="line">161</div><div class="line">162</div><div class="line">163</div><div class="line">164</div><div class="line">165</div><div class="line">166</div><div class="line">167</div><div class="line">168</div><div class="line">169</div><div class="line">170</div><div class="line">171</div><div class="line">172</div><div class="line">173</div><div class="line">174</div><div class="line">175</div><div class="line">176</div><div class="line">177</div><div class="line">178</div><div class="line">179</div><div class="line">180</div><div class="line">181</div><div class="line">182</div><div class="line">183</div><div class="line">184</div><div class="line">185</div><div class="line">186</div><div class="line">187</div><div class="line">188</div><div class="line">189</div><div class="line">190</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ConnectionPool</span> </span>&#123;</div><div class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Executor executor = <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">0</span> <span class="comment">/* corePoolSize */</span>,</div><div class="line">      Integer.MAX_VALUE <span class="comment">/* maximumPoolSize */</span>, <span class="number">60L</span> <span class="comment">/* keepAliveTime */</span>, TimeUnit.SECONDS,</div><div class="line">      <span class="keyword">new</span> SynchronousQueue&lt;Runnable&gt;(), Util.threadFactory(<span class="string">"OkHttp ConnectionPool"</span>, <span class="keyword">true</span>));</div><div class="line"></div><div class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> maxIdleConnections;</div><div class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> keepAliveDurationNs;</div><div class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Runnable cleanupRunnable = <span class="keyword">new</span> Runnable() &#123;</div><div class="line">    <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line">      <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</div><div class="line">        <span class="keyword">long</span> waitNanos = cleanup(System.nanoTime());</div><div class="line">        <span class="keyword">if</span> (waitNanos == -<span class="number">1</span>) <span class="keyword">return</span>;</div><div class="line">        <span class="keyword">if</span> (waitNanos &gt; <span class="number">0</span>) &#123;</div><div class="line">          <span class="keyword">long</span> waitMillis = waitNanos / <span class="number">1000000L</span>;</div><div class="line">          waitNanos -= (waitMillis * <span class="number">1000000L</span>);</div><div class="line">          <span class="keyword">synchronized</span> (ConnectionPool.<span class="keyword">this</span>) &#123;</div><div class="line">            <span class="keyword">try</span> &#123;</div><div class="line">              ConnectionPool.<span class="keyword">this</span>.wait(waitMillis, (<span class="keyword">int</span>) waitNanos);</div><div class="line">            &#125; <span class="keyword">catch</span> (InterruptedException ignored) &#123;</div><div class="line">            &#125;</div><div class="line">          &#125;</div><div class="line">        &#125;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">  &#125;;</div><div class="line"></div><div class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Deque&lt;RealConnection&gt; connections = <span class="keyword">new</span> ArrayDeque&lt;&gt;();</div><div class="line">  <span class="keyword">final</span> RouteDatabase routeDatabase = <span class="keyword">new</span> RouteDatabase();</div><div class="line">  <span class="keyword">boolean</span> cleanupRunning;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="title">ConnectionPool</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">this</span>(<span class="number">5</span>, <span class="number">5</span>, TimeUnit.MINUTES);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="title">ConnectionPool</span><span class="params">(<span class="keyword">int</span> maxIdleConnections, <span class="keyword">long</span> keepAliveDuration, TimeUnit timeUnit)</span> </span>&#123;</div><div class="line">    <span class="keyword">this</span>.maxIdleConnections = maxIdleConnections;</div><div class="line">    <span class="keyword">this</span>.keepAliveDurationNs = timeUnit.toNanos(keepAliveDuration);</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (keepAliveDuration &lt;= <span class="number">0</span>) &#123;</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"keepAliveDuration &lt;= 0: "</span> + keepAliveDuration);</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">int</span> <span class="title">idleConnectionCount</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">int</span> total = <span class="number">0</span>;</div><div class="line">    <span class="keyword">for</span> (RealConnection connection : connections) &#123;</div><div class="line">      <span class="keyword">if</span> (connection.allocations.isEmpty()) total++;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> total;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">int</span> <span class="title">connectionCount</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">return</span> connections.size();</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="comment">// 返回符合要求的可重用连接，如果没有返回NULL</span></div><div class="line">  <span class="meta">@Nullable</span> </div><div class="line">  <span class="function">RealConnection <span class="title">get</span><span class="params">(Address address, StreamAllocation streamAllocation, Route route)</span> </span>&#123;</div><div class="line">    <span class="keyword">assert</span> (Thread.holdsLock(<span class="keyword">this</span>));</div><div class="line">    <span class="keyword">for</span> (RealConnection connection : connections) &#123;</div><div class="line">      <span class="keyword">if</span> (connection.isEligible(address, route)) &#123;</div><div class="line">        streamAllocation.acquire(connection);</div><div class="line">        <span class="keyword">return</span> connection;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="comment">// 去除重复连接。主要针对多路复用场景下一个address只需要一个连接</span></div><div class="line">  <span class="meta">@Nullable</span> </div><div class="line">  <span class="function">Socket <span class="title">deduplicate</span><span class="params">(Address address, StreamAllocation streamAllocation)</span> </span>&#123;</div><div class="line">    <span class="keyword">assert</span> (Thread.holdsLock(<span class="keyword">this</span>));</div><div class="line">    <span class="keyword">for</span> (RealConnection connection : connections) &#123;</div><div class="line">      <span class="keyword">if</span> (connection.isEligible(address, <span class="keyword">null</span>)</div><div class="line">          &amp;&amp; connection.isMultiplexed()</div><div class="line">          &amp;&amp; connection != streamAllocation.connection()) &#123;</div><div class="line">        <span class="keyword">return</span> streamAllocation.releaseAndAcquire(connection);</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 将连接加入连接池</span></div><div class="line">  <span class="function"><span class="keyword">void</span> <span class="title">put</span><span class="params">(RealConnection connection)</span> </span>&#123;</div><div class="line">    <span class="keyword">assert</span> (Thread.holdsLock(<span class="keyword">this</span>));</div><div class="line">    <span class="keyword">if</span> (!cleanupRunning) &#123;</div><div class="line">      cleanupRunning = <span class="keyword">true</span>;</div><div class="line">      executor.execute(cleanupRunnable);</div><div class="line">    &#125;</div><div class="line">    connections.add(connection);</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 当前连接空闲时唤醒cleanup线程清理连接池</span></div><div class="line">  <span class="function"><span class="keyword">boolean</span> <span class="title">connectionBecameIdle</span><span class="params">(RealConnection connection)</span> </span>&#123;</div><div class="line">    <span class="keyword">assert</span> (Thread.holdsLock(<span class="keyword">this</span>));</div><div class="line">    <span class="keyword">if</span> (connection.noNewStreams || maxIdleConnections == <span class="number">0</span>) &#123;</div><div class="line">      connections.remove(connection);</div><div class="line">      <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">      notifyAll(); </div><div class="line">      <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  </div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">evictAll</span><span class="params">()</span> </span>&#123;</div><div class="line">    List&lt;RealConnection&gt; evictedConnections = <span class="keyword">new</span> ArrayList&lt;&gt;();</div><div class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</div><div class="line">      <span class="keyword">for</span> (Iterator&lt;RealConnection&gt; i = connections.iterator(); i.hasNext(); ) &#123;</div><div class="line">        RealConnection connection = i.next();</div><div class="line">        <span class="keyword">if</span> (connection.allocations.isEmpty()) &#123;</div><div class="line">          connection.noNewStreams = <span class="keyword">true</span>;</div><div class="line">          evictedConnections.add(connection);</div><div class="line">          i.remove();</div><div class="line">        &#125;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">for</span> (RealConnection connection : evictedConnections) &#123;</div><div class="line">      closeQuietly(connection.socket());</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 扫描连接池，清除空闲连接</span></div><div class="line">  <span class="function"><span class="keyword">long</span> <span class="title">cleanup</span><span class="params">(<span class="keyword">long</span> now)</span> </span>&#123;</div><div class="line">    <span class="keyword">int</span> inUseConnectionCount = <span class="number">0</span>;</div><div class="line">    <span class="keyword">int</span> idleConnectionCount = <span class="number">0</span>;</div><div class="line">    RealConnection longestIdleConnection = <span class="keyword">null</span>;</div><div class="line">    <span class="keyword">long</span> longestIdleDurationNs = Long.MIN_VALUE;</div><div class="line"></div><div class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</div><div class="line">      <span class="keyword">for</span> (Iterator&lt;RealConnection&gt; i = connections.iterator(); i.hasNext(); ) &#123;</div><div class="line">        RealConnection connection = i.next();</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (pruneAndGetAllocationCount(connection, now) &gt; <span class="number">0</span>) &#123;</div><div class="line">          inUseConnectionCount++;</div><div class="line">          <span class="keyword">continue</span>;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        idleConnectionCount++;</div><div class="line"></div><div class="line">        <span class="keyword">long</span> idleDurationNs = now - connection.idleAtNanos;</div><div class="line">        <span class="keyword">if</span> (idleDurationNs &gt; longestIdleDurationNs) &#123;</div><div class="line">          longestIdleDurationNs = idleDurationNs;</div><div class="line">          longestIdleConnection = connection;</div><div class="line">        &#125;</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      <span class="keyword">if</span> (longestIdleDurationNs &gt;= <span class="keyword">this</span>.keepAliveDurationNs</div><div class="line">          || idleConnectionCount &gt; <span class="keyword">this</span>.maxIdleConnections) &#123;</div><div class="line">        connections.remove(longestIdleConnection);</div><div class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (idleConnectionCount &gt; <span class="number">0</span>) &#123;</div><div class="line">        <span class="keyword">return</span> keepAliveDurationNs - longestIdleDurationNs;</div><div class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (inUseConnectionCount &gt; <span class="number">0</span>) &#123;</div><div class="line">        <span class="keyword">return</span> keepAliveDurationNs;</div><div class="line">      &#125; <span class="keyword">else</span> &#123;</div><div class="line">        cleanupRunning = <span class="keyword">false</span>;</div><div class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    closeQuietly(longestIdleConnection.socket());</div><div class="line"></div><div class="line">    <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 标记泄漏连接</span></div><div class="line">  <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">pruneAndGetAllocationCount</span><span class="params">(RealConnection connection, <span class="keyword">long</span> now)</span> </span>&#123;</div><div class="line">    List&lt;Reference&lt;StreamAllocation&gt;&gt; references = connection.allocations;</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; references.size(); ) &#123;</div><div class="line">      Reference&lt;StreamAllocation&gt; reference = references.get(i);</div><div class="line"></div><div class="line">      <span class="keyword">if</span> (reference.get() != <span class="keyword">null</span>) &#123;</div><div class="line">        i++;</div><div class="line">        <span class="keyword">continue</span>;</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      StreamAllocation.StreamAllocationReference streamAllocRef =</div><div class="line">          (StreamAllocation.StreamAllocationReference) reference;</div><div class="line">      String message = <span class="string">"A connection to "</span> + connection.route().address().url()</div><div class="line">          + <span class="string">" was leaked. Did you forget to close a response body?"</span>;</div><div class="line">      Platform.get().logCloseableLeak(message, streamAllocRef.callStackTrace);</div><div class="line"></div><div class="line">      references.remove(i);</div><div class="line">      connection.noNewStreams = <span class="keyword">true</span>;</div><div class="line"></div><div class="line">      <span class="keyword">if</span> (references.isEmpty()) &#123;</div><div class="line">        connection.idleAtNanos = now - keepAliveDurationNs;</div><div class="line">        <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> references.size();</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>Call：对Http请求的封装</li>
+<li>Connection / RealConnection：物理连接的封装，其内部有List &lt; Reference &lt; StreamAllocation &gt; &gt; 的引用计数</li>
+<li>StreamAllocation：OkHttp中引入了RealConnection负责管理一个连接上，同时在connection中也通过一个StreamAllocation的引用列表来管理一个连接的流，从而使得连接与流之间解耦。</li>
+<li>connections：Deque双端队列，用于维护连接的容器</li>
+<li>routeDatabase：用来记录连接失败的Route的黑名单，当连接失败的时候就会把失败的路线加进去</li>
+</ul>
+<p><strong>ConnectionPool实例化过程</strong></p>
+<p>一个OkHttpClient只包含一个ConnectionPool，其实例化过程也在OkHttpClient的实例化过程中实现，ConnectionPool各个方法并没有被直接对外暴露，而是通过OkHttpClient地Internal接口统一对外暴露。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">OkHttpClient</span> <span class="keyword">implements</span> <span class="title">Cloneable</span>, <span class="title">Call</span>.<span class="title">Factory</span>, <span class="title">WebSocket</span>.<span class="title">Factory</span> </span>&#123;</div><div class="line">  	...</div><div class="line">    <span class="keyword">static</span> &#123;</div><div class="line">    Internal.instance = <span class="keyword">new</span> Internal() &#123;</div><div class="line">      <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addLenient</span><span class="params">(Headers.Builder builder, String line)</span> </span>&#123;</div><div class="line">        builder.addLenient(line);</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addLenient</span><span class="params">(Headers.Builder builder, String name, String value)</span> </span>&#123;</div><div class="line">        builder.addLenient(name, value);</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setCache</span><span class="params">(OkHttpClient.Builder builder, InternalCache internalCache)</span> </span>&#123;</div><div class="line">        builder.setInternalCache(internalCache);</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">connectionBecameIdle</span><span class="params">(</span></span></div><div class="line">          ConnectionPool pool, RealConnection connection) &#123;</div><div class="line">        <span class="keyword">return</span> pool.connectionBecameIdle(connection);</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> RealConnection <span class="title">get</span><span class="params">(ConnectionPool pool, Address address,</span></span></div><div class="line">          StreamAllocation streamAllocation, Route route) &#123;</div><div class="line">        <span class="keyword">return</span> pool.get(address, streamAllocation, route);</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">equalsNonHost</span><span class="params">(Address a, Address b)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> a.equalsNonHost(b);</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> Socket <span class="title">deduplicate</span><span class="params">(</span></span></div><div class="line">          ConnectionPool pool, Address address, StreamAllocation streamAllocation) &#123;</div><div class="line">        <span class="keyword">return</span> pool.deduplicate(address, streamAllocation);</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">put</span><span class="params">(ConnectionPool pool, RealConnection connection)</span> </span>&#123;</div><div class="line">        pool.put(connection);</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> RouteDatabase <span class="title">routeDatabase</span><span class="params">(ConnectionPool connectionPool)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> connectionPool.routeDatabase;</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">code</span><span class="params">(Response.Builder responseBuilder)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> responseBuilder.code;</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      <span class="meta">@Override</span></div><div class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">apply</span><span class="params">(ConnectionSpec tlsConfiguration, SSLSocket sslSocket, <span class="keyword">boolean</span> isFallback)</span> 		</span>&#123;</div><div class="line">        tlsConfiguration.apply(sslSocket, isFallback);</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> HttpUrl <span class="title">getHttpUrlChecked</span><span class="params">(String url)</span></span></div><div class="line">          <span class="keyword">throws</span> MalformedURLException, UnknownHostException &#123;</div><div class="line">        <span class="keyword">return</span> HttpUrl.getChecked(url);</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> StreamAllocation <span class="title">streamAllocation</span><span class="params">(Call call)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> ((RealCall) call).streamAllocation();</div><div class="line">      &#125;</div><div class="line"></div><div class="line">      <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> Call <span class="title">newWebSocketCall</span><span class="params">(OkHttpClient client, Request originalRequest)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">new</span> RealCall(client, originalRequest, <span class="keyword">true</span>);</div><div class="line">      &#125;</div><div class="line">    &#125;;</div><div class="line">  &#125;</div><div class="line">  ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h4 id="连接池维护"><a href="#连接池维护" class="headerlink" title="连接池维护"></a>连接池维护</h4><p>ConnectionPool内部通过一个双端队列（dequeue）来维护当前所有连接，主要涉及的操作包括：</p>
+<ul>
+<li>put：放入新连接</li>
+<li>get：从连接池中获取连接</li>
+<li>evictAll：关闭所有连接</li>
+<li>connectionBecameIdle：连接变空闲后调用清理线程</li>
+<li>deduplicate：清除重复的多路复用线程</li>
+</ul>
+<p><em>StreamAllocation.findConnection</em></p>
+<p>StreamAllocation在其findConnection方法内部通过调用get方法为其找到stream合适的连接，如果没有则新建一个连接。首先来看一下findConnection的逻辑。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> RealConnection <span class="title">findConnection</span><span class="params">(<span class="keyword">int</span> connectTimeout, <span class="keyword">int</span> readTimeout, <span class="keyword">int</span> writeTimeout,</span></span></div><div class="line">    <span class="keyword">boolean</span> connectionRetryEnabled) <span class="keyword">throws</span> IOException &#123;</div><div class="line">  Route selectedRoute;</div><div class="line">  <span class="keyword">synchronized</span> (connectionPool) &#123;</div><div class="line">    <span class="keyword">if</span> (released) <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"released"</span>);</div><div class="line">    <span class="keyword">if</span> (codec != <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"codec != null"</span>);</div><div class="line">    <span class="keyword">if</span> (canceled) <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">"Canceled"</span>);</div><div class="line"> <span class="comment">// 一个StreamAllocation刻画的是一个Call的数据流动，一个Call可能存在多次请求(重定向，Authenticate  		等)，所以当发生类似重定向等事件时优先使用原有的连接</span></div><div class="line">    RealConnection allocatedConnection = <span class="keyword">this</span>.connection;</div><div class="line">    <span class="keyword">if</span> (allocatedConnection != <span class="keyword">null</span> &amp;&amp; !allocatedConnection.noNewStreams) &#123;</div><div class="line">      <span class="keyword">return</span> allocatedConnection;</div><div class="line">    &#125;</div><div class="line"> <span class="comment">// 试图从连接池中找到可复用的连接</span></div><div class="line">    Internal.instance.get(connectionPool, address, <span class="keyword">this</span>, <span class="keyword">null</span>);</div><div class="line">    <span class="keyword">if</span> (connection != <span class="keyword">null</span>) &#123;</div><div class="line">      <span class="keyword">return</span> connection;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    selectedRoute = route;</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 获取路由配置，所谓路由其实就是代理，ip地址等参数的一个组合</span></div><div class="line">  <span class="keyword">if</span> (selectedRoute == <span class="keyword">null</span>) &#123;</div><div class="line">    selectedRoute = routeSelector.next();</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  RealConnection result;</div><div class="line">  <span class="keyword">synchronized</span> (connectionPool) &#123;</div><div class="line">    <span class="keyword">if</span> (canceled) <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">"Canceled"</span>);</div><div class="line"> <span class="comment">//拿到路由后可以尝试重新从连接池中获取连接，这里主要针对http2协议下清除域名碎片机制</span></div><div class="line">    Internal.instance.get(connectionPool, address, <span class="keyword">this</span>, selectedRoute);</div><div class="line">    <span class="keyword">if</span> (connection != <span class="keyword">null</span>) <span class="keyword">return</span> connection;</div><div class="line"> <span class="comment">//新建连接</span></div><div class="line">    route = selectedRoute;</div><div class="line">    refusedStreamCount = <span class="number">0</span>;</div><div class="line">    result = <span class="keyword">new</span> RealConnection(connectionPool, selectedRoute);</div><div class="line">    <span class="comment">//修改result连接stream计数，方便connection标记清理</span></div><div class="line">    acquire(result);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  result.connect(connectTimeout, readTimeout, writeTimeout, connectionRetryEnabled);</div><div class="line">  routeDatabase().connected(result.route());</div><div class="line"></div><div class="line">  Socket socket = <span class="keyword">null</span>;</div><div class="line">  <span class="keyword">synchronized</span> (connectionPool) &#123;</div><div class="line"> <span class="comment">// 将新建的连接放入到连接池中</span></div><div class="line">    Internal.instance.put(connectionPool, result);</div><div class="line"> <span class="comment">// 如果同时存在多个连向同一个地址的多路复用连接，则关闭多余连接，只保留一个</span></div><div class="line">    <span class="keyword">if</span> (result.isMultiplexed()) &#123;</div><div class="line">      socket = Internal.instance.deduplicate(connectionPool, address, <span class="keyword">this</span>);</div><div class="line">      result = connection;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  closeQuietly(socket);</div><div class="line"></div><div class="line">  <span class="keyword">return</span> result;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>其主要逻辑大致分为以下几个步骤：</p>
+<ul>
+<li>查看当前streamAllocation是否有之前已经分配过的连接，有则直接使用</li>
+<li>从连接池中查找可复用的连接，有则返回该连接</li>
+<li>配置路由，配置后再次从连接池中查找是否有可复用连接，有则直接返回</li>
+<li>新建一个连接，并修改其StreamAllocation标记计数，将其放入连接池中</li>
+<li>查看连接池是否有重复的多路复用连接，有则清除</li>
+</ul>
+<p><em>ConnectionPool.get</em></p>
+<p>接下来再来看get的源码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Nullable</span> </div><div class="line"><span class="function">RealConnection <span class="title">get</span><span class="params">(Address address, StreamAllocation streamAllocation, Route route)</span> </span>&#123;</div><div class="line">    <span class="keyword">assert</span> (Thread.holdsLock(<span class="keyword">this</span>));</div><div class="line">    <span class="keyword">for</span> (RealConnection connection : connections) &#123;</div><div class="line">      <span class="keyword">if</span> (connection.isEligible(address, route)) &#123;</div><div class="line">        streamAllocation.acquire(connection);</div><div class="line">        <span class="keyword">return</span> connection;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>其逻辑比较简单，遍历当前连接池，如果有符合条件的连接则修改标记计数，然后返回。主要判断逻辑是connection.isEligible(address, route)代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isEligible</span><span class="params">(Address address, @Nullable Route route)</span> </span>&#123;</div><div class="line">    <span class="comment">// If this connection is not accepting new streams, we're done.</span></div><div class="line">    <span class="keyword">if</span> (allocations.size() &gt;= allocationLimit || noNewStreams) <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line"></div><div class="line">    <span class="comment">// If the non-host fields of the address don't overlap, we're done.</span></div><div class="line">    <span class="keyword">if</span> (!Internal.instance.equalsNonHost(<span class="keyword">this</span>.route.address(), address)) <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line"></div><div class="line">    <span class="comment">// If the host exactly matches, we're done: this connection can carry the address.</span></div><div class="line">    <span class="keyword">if</span> (address.url().host().equals(<span class="keyword">this</span>.route().address().url().host())) &#123;</div><div class="line">      <span class="keyword">return</span> <span class="keyword">true</span>; <span class="comment">// This connection is a perfect match.</span></div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">// At this point we don't have a hostname match. But we still be able to carry the request if</span></div><div class="line">    <span class="comment">// our connection coalescing requirements are met. See also:</span></div><div class="line">    <span class="comment">// https://hpbn.co/optimizing-application-delivery/#eliminate-domain-sharding</span></div><div class="line">    <span class="comment">// https://daniel.haxx.se/blog/2016/08/18/http2-connection-coalescing/</span></div><div class="line"></div><div class="line">    <span class="comment">// 1. This connection must be HTTP/2.</span></div><div class="line">    <span class="keyword">if</span> (http2Connection == <span class="keyword">null</span>) <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line"></div><div class="line">    <span class="comment">// 2. The routes must share an IP address. This requires us to have a DNS address for both</span></div><div class="line">    <span class="comment">// hosts, which only happens after route planning. We can't coalesce connections that use a</span></div><div class="line">    <span class="comment">// proxy, since proxies don't tell us the origin server's IP address.</span></div><div class="line">    <span class="keyword">if</span> (route == <span class="keyword">null</span>) <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">    <span class="keyword">if</span> (route.proxy().type() != Proxy.Type.DIRECT) <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.route.proxy().type() != Proxy.Type.DIRECT) <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">    <span class="keyword">if</span> (!<span class="keyword">this</span>.route.socketAddress().equals(route.socketAddress())) <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line"></div><div class="line">    <span class="comment">// 3. This connection's server certificate's must cover the new host.</span></div><div class="line">    <span class="keyword">if</span> (route.address().hostnameVerifier() != OkHostnameVerifier.INSTANCE) <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">    <span class="keyword">if</span> (!supportsUrl(address.url())) <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line"></div><div class="line">    <span class="comment">// 4. Certificate pinning must match the host.</span></div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line">      address.certificatePinner().check(address.url().host(), handshake().peerCertificates());</div><div class="line">    &#125; <span class="keyword">catch</span> (SSLPeerUnverifiedException e) &#123;</div><div class="line">      <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> <span class="keyword">true</span>; <span class="comment">// The caller's address can be carried by this connection.</span></div><div class="line">  &#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>连接没有达到共享上限</li>
+<li>非host域必须完全一样</li>
+<li>如果此时host域也相同，则符合条件，可以被复用</li>
+<li>如果host不相同，在HTTP / 2的域名切片场景下一样可以复用</li>
+</ul>
+<p><em>deduplicate</em></p>
+<p>deduplicate方法主要是针对在HTTP / 2场景下多个多路复用连接清除的场景。如果当前连接是HTTP / 2，那么所有指向该站点的请求都应该基于同一个TCP连接。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Nullable</span> <span class="function">Socket <span class="title">deduplicate</span><span class="params">(Address address, StreamAllocation streamAllocation)</span> </span>&#123;</div><div class="line">  <span class="keyword">assert</span> (Thread.holdsLock(<span class="keyword">this</span>));</div><div class="line">  <span class="keyword">for</span> (RealConnection connection : connections) &#123;</div><div class="line">    <span class="keyword">if</span> (connection.isEligible(address, <span class="keyword">null</span>)</div><div class="line">        &amp;&amp; connection.isMultiplexed()</div><div class="line">        &amp;&amp; connection != streamAllocation.connection()) &#123;</div><div class="line">      <span class="keyword">return</span> streamAllocation.releaseAndAcquire(connection);</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><em>自动回收</em></p>
+<p>连接池中有socket回收，而这个回收是以RealConnection的弱引用List &lt; Reference &lt; StreamAllocation &gt; &gt;是否为0来依据的。ConnectionPool有一个独立的线程cleanupRunnable来清理连接池，其触发时机有两个：</p>
+<ul>
+<li>当连接池中put新的连接时</li>
+<li>当connectionBecameIdle接口被调用时</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">final</span> Runnable cleanupRunnable = <span class="keyword">new</span> Runnable() &#123;</div><div class="line">  <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</div><div class="line">      <span class="comment">//执行清理并返回下场需要清理的时间</span></div><div class="line">      <span class="keyword">long</span> waitNanos = cleanup(System.nanoTime());</div><div class="line">      <span class="keyword">if</span> (waitNanos == -<span class="number">1</span>) <span class="keyword">return</span>;</div><div class="line">      <span class="keyword">if</span> (waitNanos &gt; <span class="number">0</span>) &#123;</div><div class="line">        <span class="keyword">long</span> waitMillis = waitNanos / <span class="number">1000000L</span>;</div><div class="line">        waitNanos -= (waitMillis * <span class="number">1000000L</span>);</div><div class="line">        <span class="keyword">synchronized</span> (ConnectionPool.<span class="keyword">this</span>) &#123;</div><div class="line">          <span class="keyword">try</span> &#123;</div><div class="line">            <span class="comment">//在timeout内释放锁与时间片</span></div><div class="line">            ConnectionPool.<span class="keyword">this</span>.wait(waitMillis, (<span class="keyword">int</span>) waitNanos);</div><div class="line">          &#125; <span class="keyword">catch</span> (InterruptedException ignored) &#123;</div><div class="line">          &#125;</div><div class="line">        &#125;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p>该死循环实际上是一个阻塞的清理任务，首先进行清理，并返回下次需要清理的间隔时间，然后调用个wait(timeout)进行等待以释放锁与时间片，当等待时间到了后，再次进行清理，并返回下次要清理的间隔时间。</p>
+<p>接下里看一下cleanup方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">long</span> <span class="title">cleanup</span><span class="params">(<span class="keyword">long</span> now)</span> </span>&#123;</div><div class="line">    <span class="keyword">int</span> inUseConnectionCount = <span class="number">0</span>;</div><div class="line">    <span class="keyword">int</span> idleConnectionCount = <span class="number">0</span>;</div><div class="line">    RealConnection longestIdleConnection = <span class="keyword">null</span>;</div><div class="line">    <span class="keyword">long</span> longestIdleDurationNs = Long.MIN_VALUE;</div><div class="line">    <span class="comment">//遍历`Deque`中所有的`RealConnection`，标记泄漏的连接</span></div><div class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</div><div class="line">      <span class="keyword">for</span> (Iterator&lt;RealConnection&gt; i = connections.iterator(); i.hasNext(); ) &#123;</div><div class="line">        RealConnection connection = i.next();</div><div class="line">	    <span class="comment">// 查询此连接内部StreamAllocation的引用数量</span></div><div class="line">        <span class="keyword">if</span> (pruneAndGetAllocationCount(connection, now) &gt; <span class="number">0</span>) &#123;</div><div class="line">          inUseConnectionCount++;</div><div class="line">          <span class="keyword">continue</span>;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        idleConnectionCount++;</div><div class="line">		<span class="comment">//选择排序法，标记出空闲连接</span></div><div class="line">        <span class="keyword">long</span> idleDurationNs = now - connection.idleAtNanos;</div><div class="line">        <span class="keyword">if</span> (idleDurationNs &gt; longestIdleDurationNs) &#123;</div><div class="line">          longestIdleDurationNs = idleDurationNs;</div><div class="line">          longestIdleConnection = connection;</div><div class="line">        &#125;</div><div class="line">      &#125;</div><div class="line">      <span class="keyword">if</span> (longestIdleDurationNs &gt;= <span class="keyword">this</span>.keepAliveDurationNs</div><div class="line">          || idleConnectionCount &gt; <span class="keyword">this</span>.maxIdleConnections) &#123;</div><div class="line">        <span class="comment">//如果(`空闲socket连接超过5个`</span></div><div class="line">        <span class="comment">//且`keepalive时间大于5分钟`)</span></div><div class="line">        <span class="comment">//就将此泄漏连接从`Deque`中移除</span></div><div class="line">        connections.remove(longestIdleConnection);</div><div class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (idleConnectionCount &gt; <span class="number">0</span>) &#123;</div><div class="line">        <span class="comment">//返回此连接即将到期的时间，供下次清理</span></div><div class="line">        <span class="comment">//这里依据是在上文`connectionBecameIdle`中设定的计时</span></div><div class="line">        <span class="keyword">return</span> keepAliveDurationNs - longestIdleDurationNs;</div><div class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (inUseConnectionCount &gt; <span class="number">0</span>) &#123;</div><div class="line">        <span class="comment">//全部都是活跃的连接，5分钟后再次清理</span></div><div class="line">        <span class="keyword">return</span> keepAliveDurationNs;</div><div class="line">      &#125; <span class="keyword">else</span> &#123;</div><div class="line">        <span class="comment">//没有任何连接，跳出循环</span></div><div class="line">        cleanupRunning = <span class="keyword">false</span>;</div><div class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="comment">//关闭连接，返回`0`，也就是立刻再次清理</span></div><div class="line">    closeQuietly(longestIdleConnection.socket());</div><div class="line">    <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">  &#125;</div></pre></td></tr></table></figure>
+<p>其基本逻辑如下：</p>
+<ul>
+<li>遍历连接池中所有连接，标记泄漏连接</li>
+<li>如果被标记的连接满足（空闲socket连接超过5个 &amp; keep-alive时间大于5分钟），就将次连接从Deque中移除，并关闭连接，返回0，也就是将要执行wait(0)，提醒立刻再次扫描</li>
+<li>如果（目前还可以塞下5个连接，但是有可能泄漏的连接即空闲时间即将到达5分钟），就返回次连接即将到期的剩余时间，供下次清理</li>
+<li>如果（全部都是活跃的连接），就返回默认的keep-alive时间，也就是5分钟后再执行清理</li>
+</ul>
+<p>而pruneAndGetAllocationCount负责标记并找到不活跃连接，类似于引用计数法，如果引用全部为空，返回立刻清理。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">pruneAndGetAllocationCount</span><span class="params">(RealConnection connection, <span class="keyword">long</span> now)</span> </span>&#123;</div><div class="line">  <span class="comment">// 虚引用列表</span></div><div class="line">  List&lt;Reference&lt;StreamAllocation&gt;&gt; references = connection.allocations;</div><div class="line">  <span class="comment">// 遍历弱引用列表</span></div><div class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; references.size(); ) &#123;</div><div class="line">    Reference&lt;StreamAllocation&gt; reference = references.get(i);</div><div class="line"> <span class="comment">// 如果正在被使用，跳过，接着循环</span></div><div class="line">    <span class="comment">// 是否置空是在上文`connectionBecameIdle`的`release`控制的</span></div><div class="line">    <span class="keyword">if</span> (reference.get() != <span class="keyword">null</span>) &#123;</div><div class="line">      <span class="comment">// 引用计数</span></div><div class="line">      i++;</div><div class="line">      <span class="keyword">continue</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    StreamAllocation.StreamAllocationReference streamAllocRef =</div><div class="line">        (StreamAllocation.StreamAllocationReference) reference;</div><div class="line">    String message = <span class="string">"A connection to "</span> + connection.route().address().url()</div><div class="line">        + <span class="string">" was leaked. Did you forget to close a response body?"</span>;</div><div class="line">    Platform.get().logCloseableLeak(message, streamAllocRef.callStackTrace);</div><div class="line">    <span class="comment">// 否则移除引用</span></div><div class="line">    references.remove(i);</div><div class="line">    connection.noNewStreams = <span class="keyword">true</span>;</div><div class="line"></div><div class="line">    <span class="comment">// 如果所有分配的流均没了，标记为已经距离现在空闲了5分钟</span></div><div class="line">    <span class="keyword">if</span> (references.isEmpty()) &#123;</div><div class="line">      connection.idleAtNanos = now - keepAliveDurationNs;</div><div class="line">      <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">return</span> references.size();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>OkHttp的连接池通过引用计数 + 标记清理的机制来管理连接池，使得无用连接可以被回收，并保持多个健康的keep-alive连接，这也是OkHttp的连接池能保持高效的关键原因。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android框架源码解析/" rel="tag"># android框架源码解析</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/01/26/OkHttp框架源码解析（四）/" rel="next" title="OkHttp框架源码解析——缓存策略">
+                <i class="fa fa-chevron-left"></i> OkHttp框架源码解析——缓存策略
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">37</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/sufushi" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#连接池实现背景"><span class="nav-number">2.</span> <span class="nav-text">连接池实现背景</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#连接池的使用与分析"><span class="nav-number">3.</span> <span class="nav-text">连接池的使用与分析</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#连接池维护"><span class="nav-number">4.</span> <span class="nav-text">连接池维护</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#小结"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>
