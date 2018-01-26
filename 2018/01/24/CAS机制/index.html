@@ -79,34 +79,31 @@
 
 
 
-<meta name="description" content="概要泛型在Java中有很重要的地位，在面向对象编程及各种设计模式中有非常广泛的应用。
+<meta name="description" content="前言在jdk 5 之前，在多线程编程的时候，为了保证多个线程对一个对象同时进行访问，我们需要加同步锁synchronized，保证对象在使用时的正确性，但是加锁机制会导致如下几个问题：
 
-泛型的定义
-泛型，即“参数化类型”。一提到参数，最熟悉的就是定义方法时有形参，然后调用此方法时传递实参，而顾名思义，参数化类型就是将类型有原来的具体的类型参数化，类似于方法中的变量参数，此时类型也定义成参数形式（可以称之为类型形参），然后在使用/调用时传入具体的类型（类型实参）。
-
-为什么使用泛型
-泛型的本质是">
+在多线程竞争下，加锁和释放锁会导致较多的上下文切换，引起性能问题
+多线程可以导致死锁的问题
+多线程持有的锁会导致其他需要此锁的线程挂起
+如果一个优先级较高的线程等待一个优先级较低的线程释放锁会导致优先级倒置，引起">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Java泛型">
-<meta property="og:url" content="sufushi.github.io/2018/01/05/Java泛型/index.html">
+<meta property="og:title" content="CAS机制">
+<meta property="og:url" content="sufushi.github.io/2018/01/24/CAS机制/index.html">
 <meta property="og:site_name" content="苏富仕的博客">
-<meta property="og:description" content="概要泛型在Java中有很重要的地位，在面向对象编程及各种设计模式中有非常广泛的应用。
+<meta property="og:description" content="前言在jdk 5 之前，在多线程编程的时候，为了保证多个线程对一个对象同时进行访问，我们需要加同步锁synchronized，保证对象在使用时的正确性，但是加锁机制会导致如下几个问题：
 
-泛型的定义
-泛型，即“参数化类型”。一提到参数，最熟悉的就是定义方法时有形参，然后调用此方法时传递实参，而顾名思义，参数化类型就是将类型有原来的具体的类型参数化，类似于方法中的变量参数，此时类型也定义成参数形式（可以称之为类型形参），然后在使用/调用时传入具体的类型（类型实参）。
-
-为什么使用泛型
-泛型的本质是">
-<meta property="og:updated_time" content="2018-01-05T15:09:03.513Z">
+在多线程竞争下，加锁和释放锁会导致较多的上下文切换，引起性能问题
+多线程可以导致死锁的问题
+多线程持有的锁会导致其他需要此锁的线程挂起
+如果一个优先级较高的线程等待一个优先级较低的线程释放锁会导致优先级倒置，引起">
+<meta property="og:updated_time" content="2018-01-26T07:53:48.885Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Java泛型">
-<meta name="twitter:description" content="概要泛型在Java中有很重要的地位，在面向对象编程及各种设计模式中有非常广泛的应用。
+<meta name="twitter:title" content="CAS机制">
+<meta name="twitter:description" content="前言在jdk 5 之前，在多线程编程的时候，为了保证多个线程对一个对象同时进行访问，我们需要加同步锁synchronized，保证对象在使用时的正确性，但是加锁机制会导致如下几个问题：
 
-泛型的定义
-泛型，即“参数化类型”。一提到参数，最熟悉的就是定义方法时有形参，然后调用此方法时传递实参，而顾名思义，参数化类型就是将类型有原来的具体的类型参数化，类似于方法中的变量参数，此时类型也定义成参数形式（可以称之为类型形参），然后在使用/调用时传入具体的类型（类型实参）。
-
-为什么使用泛型
-泛型的本质是">
+在多线程竞争下，加锁和释放锁会导致较多的上下文切换，引起性能问题
+多线程可以导致死锁的问题
+多线程持有的锁会导致其他需要此锁的线程挂起
+如果一个优先级较高的线程等待一个优先级较低的线程释放锁会导致优先级倒置，引起">
 
 
 
@@ -136,13 +133,13 @@
 
 
 
-  <link rel="canonical" href="sufushi.github.io/2018/01/05/Java泛型/"/>
+  <link rel="canonical" href="sufushi.github.io/2018/01/24/CAS机制/"/>
 
 
 
 
 
-  <title>Java泛型 | 苏富仕的博客</title>
+  <title>CAS机制 | 苏富仕的博客</title>
   
 
 
@@ -289,7 +286,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2018/01/05/Java泛型/">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2018/01/24/CAS机制/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="sufushi">
@@ -306,7 +303,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Java泛型</h1>
+          <h1 class="post-title" itemprop="name headline">CAS机制</h1>
         
 
         <div class="post-meta">
@@ -318,8 +315,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-05T22:02:16+08:00">
-                2018-01-05
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-24T15:19:11+08:00">
+                2018-01-24
               </time>
             
 
@@ -356,26 +353,25 @@
       
 
       
-        <h4 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h4><p>泛型在Java中有很重要的地位，在面向对象编程及各种设计模式中有非常广泛的应用。</p>
+        <h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>在jdk 5 之前，在多线程编程的时候，为了保证多个线程对一个对象同时进行访问，我们需要加同步锁synchronized，保证对象在使用时的正确性，但是加锁机制会导致如下几个问题：</p>
 <ul>
-<li><p>泛型的定义</p>
-<p>泛型，即“参数化类型”。一提到参数，最熟悉的就是定义方法时有形参，然后调用此方法时传递实参，而顾名思义，参数化类型就是将类型有原来的具体的类型参数化，类似于方法中的变量参数，此时类型也定义成参数形式（可以称之为类型形参），然后在使用/调用时传入具体的类型（类型实参）。</p>
-</li>
-<li><p>为什么使用泛型</p>
-<p>泛型的本质是为了参数化类型（在不创建新的类型的情况下，通过泛型指定的不同类型来控制具体限制的类型）。也就是说在泛型使用过程中，操作的数据类型被指定为一个参数，这种参数可以用砖砌类、接口和方法中，分别被称为泛型类、泛型接口、泛型方法。</p>
-</li>
+<li>在多线程竞争下，加锁和释放锁会导致较多的上下文切换，引起性能问题</li>
+<li>多线程可以导致死锁的问题</li>
+<li>多线程持有的锁会导致其他需要此锁的线程挂起</li>
+<li>如果一个优先级较高的线程等待一个优先级较低的线程释放锁会导致优先级倒置，引起性能风险</li>
 </ul>
-<h4 id="类型擦除"><a href="#类型擦除" class="headerlink" title="类型擦除"></a>类型擦除</h4><p>Java中的泛型基本上都是在编译器这个层次来实现的，在生成的Java字节码中是不包含泛型中的类型信息的。使用泛型的时候加上的类型参数，会被编译器在编译的时候去掉，这个过程就称为类型擦除。如在代码中出现的List<object>和List<string>等类型，在编译之后都会变成List。JVM看到的只是List，而由泛型附加的类型信息对JVM来说是不可见的。Java编译器会在编译时尽可能地发现可能出错的地方，但是仍然无法避免在运行时刻出现类型转换异常的情况。</string></object></p>
-<p>很多泛型的奇怪特性都与这个类型才擦除的存在有关，包括：</p>
-<ul>
-<li>泛型类并没有自己独有的Class类对象。比如不存在List<string>.class，而只有List.class</string></li>
-<li>静态变量是被泛型类的所有实例所共享的。对于声明为AClass<t>的类，访问其中的静态变量定位方法仍然是AClass.staticFun()。不管是通过AClass<string>还是AClass<integer>创建的对象，都是共享一个静态变量</integer></string></t></li>
-<li>泛型的类型参数不能用在Java异常处理的catch语句中。因为异常处理是由JVM在运行时刻来进行的。由于类型信息被擦除，JVM是无法区分两个异常类型MyExpection<string>和MyExpection<integer>的。对于JVM来说，它们都是MyExpection类型的，也就无法执行与异常对应的catch语句。</integer></string></li>
-</ul>
-<p>类型擦除的基本过程也比较简单，首先是找到用来替换类型参数的具体类。这个具体类一般是Object，如果指定了类型参数的上界，则使用这个上界。把代码中的类型参数都替换成具体的类。同时去掉出现的类型声明，即去掉&lt;&gt;的内容。比如T get()方法声明就变成Object get()，List<string>就变成了List。接下来就可能生成一些桥接方法。这是由于擦除了类型之后的类可能缺少某些必须的方法。比如考虑下面的代码。</string></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyString</span> <span class="keyword">implements</span> <span class="title">Comparable</span>&lt;<span class="title">String</span>&gt; </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compareTo</span><span class="params">(String str)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>当类型信息被擦除之后，上述类的声明变成了class MyString implements Comparable。但是这样的话，类MyString就会有编译错误，因为没有实现接口Comparable声明的int compareTo(Object) 方法。这个时候就由编译器来动态生成这个方法。</p>
-<h4 id="通配符"><a href="#通配符" class="headerlink" title="通配符"></a>通配符</h4><p>在使用泛型类的时候，既可以指定一个具体的类型，如List<string>就声明了具体的类型是String，也可以用通配符？来表示未知类型。正因为类型未知，就不能通过new ArrayList()方法来创建一个新的ArrayList对象。因为编译器无法知道具体的类型是什么。但是对于List中的元素却总是可以用Object来引用的，因为虽然类型未知，但肯定是Object及其子类。因为对于List&lt;?&gt;中的元素只能用Object来引用，在有些情况下不是很方便。在这些情况下，可以使用上下界来限制未知类型的范围。如List&lt;? extends SuperClass&gt; 说明List中可能包含的元素类型是SuperClass及其子类，而List&lt;? super ChildClass&gt;则说明List中包含的是ChildClass及其父类。当引入上下界之后，在使用类型的时候就可以使用上下界    中定义的方法。</string></p>
+<p>volative不能保证原子性，因此同步还是需要用到锁。</p>
+<blockquote>
+<p>锁的分类：独占锁（悲观锁），乐观锁</p>
+<p>独占锁：synchronized就是一种独占锁，它会导致所有需要此锁的线程挂起，等待锁的释放</p>
+<p>乐观锁：每次不加锁去完成操作，如果因为冲突失败就重试，知道成功，本质上不算锁，所以很多地方也称之为自旋，乐观锁用到的主要机制就是CAS（compare and swap）</p>
+</blockquote>
+<p>CAS机制就相当于这种（非阻塞算法），CAS是由CPU硬件实现，所以执行相当块。CAS有三个操作参数，内存地址，期望值，要修改的新值，当期望值和内存当中的值进行比较不相等的时候，表示内存中的值已经被别的线程改动过，这时候失败返回，当相等的时候，将内存中的值改为新的值，并返回成功。</p>
+<h4 id="举个栗子——AtomicInteger"><a href="#举个栗子——AtomicInteger" class="headerlink" title="举个栗子——AtomicInteger"></a>举个栗子——AtomicInteger</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AtomicInteger</span> <span class="keyword">extends</span> <span class="title">Number</span> <span class="keyword">implements</span> <span class="title">java</span>.<span class="title">io</span>.<span class="title">Serializable</span> </span>&#123;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">6214790243416807050L</span>;</div><div class="line"></div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();</div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> VALUE;</div><div class="line"></div><div class="line">    <span class="keyword">static</span> &#123;</div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            VALUE = U.objectFieldOffset</div><div class="line">                (AtomicInteger.class.getDeclaredField(<span class="string">"value"</span>));</div><div class="line">        &#125; <span class="keyword">catch</span> (ReflectiveOperationException e) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> Error(e);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">int</span> value;</div><div class="line">  </div><div class="line">  	...</div><div class="line">      </div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">getAndAdd</span><span class="params">(<span class="keyword">int</span> delta)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> U.getAndAddInt(<span class="keyword">this</span>, VALUE, delta);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">incrementAndGet</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> U.getAndAddInt(<span class="keyword">this</span>, VALUE, <span class="number">1</span>) + <span class="number">1</span>;</div><div class="line">    &#125;</div><div class="line">  </div><div class="line">  	...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">Unsafe</span> </span>&#123;</div><div class="line">    ...</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">getAndAddInt</span><span class="params">(Object var1, <span class="keyword">long</span> var2, <span class="keyword">int</span> var4)</span> </span>&#123;</div><div class="line">        <span class="keyword">int</span> var5;</div><div class="line">        <span class="keyword">do</span> &#123;</div><div class="line">            var5 = <span class="keyword">this</span>.getIntVolatile(var1, var2);</div><div class="line">        &#125; <span class="keyword">while</span>(!<span class="keyword">this</span>.compareAndSwapInt(var1, var2, var5, var5 + var4));</div><div class="line"></div><div class="line">        <span class="keyword">return</span> var5;</div><div class="line">    &#125;</div><div class="line">  </div><div class="line">  	...</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">native</span> <span class="keyword">boolean</span> <span class="title">compareAndSwapInt</span><span class="params">(Object var1, <span class="keyword">long</span> var2, <span class="keyword">int</span> var4, <span class="keyword">int</span> var5)</span></span>;</div><div class="line">  	...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这里显然采用了CAS机制，每次从内存中读取数据都需要和+1后的数据进行一次CAS操作，如果成功返回结果，否则就失败重试，知道重试成功为止。其中，compareAndSwapInt是利用JNI来完成CPU指令的操作。</p>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>利用CPU的CAS机制，同时借助JNI来完成Java的非阻塞算法，基本上Java中的原子类都是使用类似的机制来保证数据对策原子操作的。</p>
+<p>尽管CAS机制使得我们可以不依赖同步，不影响和挂起线程实现原子性操作，能大大提升运行时的性能，但是会导致一个ABA的问题。如线程一和线程二都取出了主存中的数据为A，这时候线程二将数据修改为B，然后又修改为A，此时线程一再次去进行compareAndSwapInt的时候仍然能够匹配成功，而实际对数据已经发生了变更，只不过发生了两次将对应的值修改为原始的数据了，并不代表实际数据没有发生变化。</p>
 
       
     </div>
@@ -406,8 +402,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/01/05/Java与C++/" rel="next" title="Java与C++">
-                <i class="fa fa-chevron-left"></i> Java与C++
+              <a href="/2018/01/23/Glide框架源码解析/" rel="next" title="Glide框架源码解析">
+                <i class="fa fa-chevron-left"></i> Glide框架源码解析
               </a>
             
           </div>
@@ -416,8 +412,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2018/01/06/了解Web及网络基础/" rel="prev" title="了解Web及网络基础">
-                了解Web及网络基础 <i class="fa fa-chevron-right"></i>
+              <a href="/2018/01/24/android中的序列化机制原理/" rel="prev" title="android中的序列化机制原理">
+                android中的序列化机制原理 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -555,7 +551,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#概要"><span class="nav-number">1.</span> <span class="nav-text">概要</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#类型擦除"><span class="nav-number">2.</span> <span class="nav-text">类型擦除</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#通配符"><span class="nav-number">3.</span> <span class="nav-text">通配符</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#举个栗子——AtomicInteger"><span class="nav-number">2.</span> <span class="nav-text">举个栗子——AtomicInteger</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#小结"><span class="nav-number">3.</span> <span class="nav-text">小结</span></a></li></ol></div>
             
 
           </div>
