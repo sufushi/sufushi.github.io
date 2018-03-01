@@ -97,7 +97,7 @@
 <meta property="og:image" content="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/0a7e20cbfa732fc661e88eb670aa4aa9.png">
 <meta property="og:image" content="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/03c77355f41162f738505e202ac7860d.png">
 <meta property="og:image" content="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/a0b6775e83c2c1a24ed85e06ffa514fe.png">
-<meta property="og:updated_time" content="2018-01-26T07:02:18.034Z">
+<meta property="og:updated_time" content="2018-02-28T02:42:03.648Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="OkHttp框架源码解析——多路复用">
 <meta name="twitter:description" content="前言OkHttp的连接池管理部分也是其核心部分，通过维护连接池，最大限度重用现有连接，减少网络连接的创建开销，以此提升网络请求效率。
@@ -360,7 +360,7 @@
 <p>在HTTP1.0中HTTP的请求流程如下：</p>
 <p><img src="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/59d08a51c67491151da84524ea04ce7b.png" alt=""></p>
 <p>这种方法的好处是简单，各个请求互不干扰。但在复杂的网络请求场景下这种方式几乎不可用。例如：浏览器加载一个HTML网页，HTML中可能需要加载数十个资源，典型场景下这些资源中大部分来自同一个站点。按照HTTP1.0的做法，这需要建立数十个TCP连接，每个连接负责一个资源请求。创建一个TCP连接需要3次握手，而释放连接则需要4次挥手。重复的创建和释放连接极大地影响了网络效率，同时也增加了系统开销。</p>
-<p>为了有效地解决这一问题，HTTP / 1.1提出了keep-alive机制，当一个HTTP请求的数据传输结束够，TCP连接不立即释放，如果此时有新的HTTP请求，且其请求的Host同上次请求相同，则可以直接复用为释放TCP连接，从而省去了TCP的释放和再次创建的开销，减少了网络延时。</p>
+<p>为了有效地解决这一问题，HTTP / 1.1提出了keep-alive机制，当一个HTTP请求的数据传输结束后，TCP连接不立即释放，如果此时有新的HTTP请求，且其请求的Host同上次请求相同，则可以直接复用为释放TCP连接，从而省去了TCP的释放和再次创建的开销，减少了网络延时。</p>
 <p><img src="http://ata2-img.cn-hangzhou.img-pub.aliyun-inc.com/0a7e20cbfa732fc661e88eb670aa4aa9.png" alt=""></p>
 <p>在现代浏览器中，一般同时开启6~8个keep-alive connection的socket连接，并保持一定的链路生命，当不需要时再关闭。而在服务器中，一般是由软件根据负载情况（比如FD最大值、Socket内存、超时时间、栈内存、栈数量等）决定是否主动关闭。</p>
 <p><strong>多路复用机制</strong></p>
@@ -494,6 +494,10 @@
 
           <div class="post-nav-prev post-nav-item">
             
+              <a href="/2018/01/27/android内存泄漏原因分析/" rel="prev" title="android内存泄漏原因分析">
+                android内存泄漏原因分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
           </div>
         </div>
       
@@ -573,7 +577,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-count">44</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>

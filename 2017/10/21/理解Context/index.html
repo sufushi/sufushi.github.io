@@ -91,7 +91,7 @@
 在android系统中，如果要访问一些特定的类或资源，就必须通过Context来完成，如调用Context的getAssets()和getResource()方法访问资源。又比如，在应用程序开">
 <meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/Context%E6%95%B4%E4%BD%93%E6%A1%86%E6%9E%B6.png">
 <meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/Application%20Context%E5%85%B3%E7%B3%BB%E5%9B%BE.png">
-<meta property="og:updated_time" content="2017-10-22T06:37:33.787Z">
+<meta property="og:updated_time" content="2018-01-31T03:47:23.037Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="理解Context">
 <meta name="twitter:description" content="前言
@@ -366,9 +366,8 @@
 <li><p>Context是基类，是一个abstract类，Activity、Service、Application都是间接地继承它</p>
 </li>
 <li><p>ContextImpl类继承了Context，它是Context的真正实现</p>
-<ul>
-<li>ContextWrapper类只是一个包装而已，ContextWrapper构造函数中必须包含一个真正的Context引用，即mBase，ContextWrapper类中的变量mBase是一个ContextImpl对象，同时ContextWrapper中提供了attachBaseContext()用于给ContextWrapper对象中指定真正的Context对象，调用ContextWrapper的方法都会被转向其所包含的真正的Context对象，而ContextImpl的变量mOuterContext是一个Context对象</li>
-</ul>
+</li>
+<li><p>ContextWrapper类只是一个包装而已，ContextWrapper构造函数中必须包含一个真正的Context引用，即mBase，ContextWrapper类中的变量mBase是一个ContextImpl对象，同时ContextWrapper中提供了attachBaseContext()用于给ContextWrapper对象中指定真正的Context对象，调用ContextWrapper的方法都会被转向其所包含的真正的Context对象，而ContextImpl的变量mOuterContext是一个Context对象</p>
 </li>
 <li><p>当我们在应用程序中调用Context的方法时，实际是进入框架层之后通过使用mBase对象来调用相应的方法。由于mBase是一个ContextImpl对象，ContextImpl类真正实现了Context中的所有函数，所以这个调用就会进入ContextImpl类里的相应方法，这里用到了代理模式。当在ContextImpl类的方法工作结束之后，又通过mOuterContext对象的方法来回调应用程序。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Context</span> </span>&#123;</div><div class="line">  	<span class="comment">// 获取AssetManager对象</span></div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> AssetManager <span class="title">getAssets</span><span class="params">()</span></span>;</div><div class="line">  	<span class="comment">// 获取Resource对象</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> Resources <span class="title">getResources</span><span class="params">()</span></span>;</div><div class="line">  	<span class="comment">// 获取ContentResolver对象</span></div><div class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> ContentResolver <span class="title">getContentResolver</span><span class="params">()</span></span>;</div><div class="line">  	<span class="comment">// 获取Application Context对象</span></div><div class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> Context <span class="title">getApplicationContext</span><span class="params">()</span></span>;</div><div class="line">  	<span class="comment">// 启动Service</span></div><div class="line">  	<span class="meta">@Nullable</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> ComponentName <span class="title">startService</span><span class="params">(Intent service)</span></span>;</div><div class="line">  	<span class="comment">// 启动Activity</span></div><div class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">startActivity</span><span class="params">(@RequiresPermission Intent intent)</span></span>;</div><div class="line">  	...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
@@ -611,7 +610,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-count">44</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>

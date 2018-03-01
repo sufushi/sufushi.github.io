@@ -100,7 +100,7 @@ android是基于Linux内核的系统平台。启动的时候，首先通过bootl
 init进程
 android的init进程对各种设备进行初始化，运行and">
 <meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/android%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B.png">
-<meta property="og:updated_time" content="2018-01-16T03:34:44.337Z">
+<meta property="og:updated_time" content="2018-01-29T13:56:35.324Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="android启动过程分析——init进程">
 <meta name="twitter:description" content="概要android启动过程包含从Linux内核加载到Home应用程序启动的整个过程。
@@ -390,7 +390,7 @@ android的init进程对各种设备进行初始化，运行and">
 <li><p>system server</p>
 <p>system server是android系统的一个核心进程，它是由zygote进程创建的，在android启动过程中位于zygote之后。在system server中可以看到它建立的android中的大部分服务，如activity manager service（管理应用程序的生命周期）、location manager service（提供终端的地理位置信息）等。</p>
 <p>为了将运行在system server中Java系统服务提供给android应用程序或framework内部模块使用，需要将它们先注册到context manager中。</p>
-<p>在通过binder IPC 将Java系统服务注册到基于C语言的服务管理器时，需要使用JNI本地编程接口。JNI允许Java与其他编程语言（如C、C++、汇编语言）编写地1应用程序和库进行交互操作。</p>
+<p>在通过binder IPC 将Java系统服务注册到基于C语言的服务管理器时，需要使用JNI本地编程接口。JNI允许Java与其他编程语言（如C、C++、汇编语言）编写的应用程序和库进行交互操作。</p>
 </li>
 </ul>
 <p>以上就是对android启动过程的简单介绍，这仅仅是android启动过程的一部分，当所有Java系统服务加载完毕后，activity manager service会运行HOME应用，启动过程继续进行。</p>
@@ -676,7 +676,7 @@ service flash_recovery /system/bin/install-recovery.sh
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-count">44</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>

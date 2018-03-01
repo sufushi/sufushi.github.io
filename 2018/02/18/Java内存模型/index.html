@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="JVM," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言Java内存模型即Java Memory Model，简称JMM。JMM定义了Java虚拟机在计算机内存中的工作方式。JVM是整个计算机虚拟模型，所以JMM是隶属于JVM的。
+Java内存模型定义了多线程之间共享变量的可见性以及如何在需要的时候对共享变量进行同步。
+Java虚拟机规范试图定义一种Java内存模型来屏蔽掉各种硬件和操作系统的内存访问差异，以实现让Java程序在各种平台下都能达到一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java内存模型">
+<meta property="og:url" content="sufushi.github.io/2018/02/18/Java内存模型/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="前言Java内存模型即Java Memory Model，简称JMM。JMM定义了Java虚拟机在计算机内存中的工作方式。JVM是整个计算机虚拟模型，所以JMM是隶属于JVM的。
+Java内存模型定义了多线程之间共享变量的可见性以及如何在需要的时候对共享变量进行同步。
+Java虚拟机规范试图定义一种Java内存模型来屏蔽掉各种硬件和操作系统的内存访问差异，以实现让Java程序在各种平台下都能达到一">
+<meta property="og:image" content="http://img.blog.csdn.net/20170608140321198?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvamF2YXplamlhbg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
+<meta property="og:image" content="http://img.blog.csdn.net/20170608221857890?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvamF2YXplamlhbg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
+<meta property="og:image" content="http://img.blog.csdn.net/20170609093435508?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvamF2YXplamlhbg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
+<meta property="og:image" content="http://img.blog.csdn.net/20170611211802727?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvamF2YXplamlhbg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
+<meta property="og:image" content="http://img.blog.csdn.net/20170608094427710?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvamF2YXplamlhbg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
+<meta property="og:image" content="http://img.blog.csdn.net/20170611230502297?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvamF2YXplamlhbg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
+<meta property="og:updated_time" content="2018-02-28T13:01:50.038Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java内存模型">
+<meta name="twitter:description" content="前言Java内存模型即Java Memory Model，简称JMM。JMM定义了Java虚拟机在计算机内存中的工作方式。JVM是整个计算机虚拟模型，所以JMM是隶属于JVM的。
+Java内存模型定义了多线程之间共享变量的可见性以及如何在需要的时候对共享变量进行同步。
+Java虚拟机规范试图定义一种Java内存模型来屏蔽掉各种硬件和操作系统的内存访问差异，以实现让Java程序在各种平台下都能达到一">
+<meta name="twitter:image" content="http://img.blog.csdn.net/20170608140321198?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvamF2YXplamlhbg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2018/02/18/Java内存模型/"/>
+
+
+
+
+
+  <title>Java内存模型 | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2018/02/18/Java内存模型/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Java内存模型</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-18T14:40:28+08:00">
+                2018-02-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>Java内存模型即Java Memory Model，简称JMM。JMM定义了Java虚拟机在计算机内存中的工作方式。JVM是整个计算机虚拟模型，所以JMM是隶属于JVM的。</p>
+<p>Java内存模型定义了多线程之间共享变量的可见性以及如何在需要的时候对共享变量进行同步。</p>
+<p>Java虚拟机规范试图定义一种Java内存模型来屏蔽掉各种硬件和操作系统的内存访问差异，以实现让Java程序在各种平台下都能达到一致的内存访问效果。</p>
+<h4 id="Java内存区域"><a href="#Java内存区域" class="headerlink" title="Java内存区域"></a>Java内存区域</h4><p><img src="http://img.blog.csdn.net/20170608140321198?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvamF2YXplamlhbg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt=""></p>
+<p>Java虚拟机在运行程序时会把其自动管理的内存划分为以上几个区域，每个区域都有各自的用途以及创建销毁的时机。其中方法区和堆是所有线程共享的数据区域，而虚拟机栈、本地方法栈和程序计数器收每个线程的私有数据区域。</p>
+<ul>
+<li><p>方法区</p>
+<p>主要用于存储已被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据，根据Java虚拟机规范的规定，当方法区无法满足内存分配需求时，将抛出OOM异常。在方法区中存在一个运行时常量池，它主要用于存放编译器生成的各种字面量和符号引用，这些内容将在类加载后存放在运行时常量池中，以便后续使用。</p>
+</li>
+<li><p>堆</p>
+<p>Java堆在虚拟机启动时创建，是Java虚拟机所管理的内存中最大的一块，主要用于存放对象实例，几乎所用的对象实例都是在这里分配内存，Java堆是垃圾收集器管理的主要区域，因此很多时候也被称为GC堆，如果在堆中没有内存完成实例分配，并且堆也无法再扩展时，将会抛出OOM异常。</p>
+</li>
+<li><p>程序计数器</p>
+<p>是一小块内存空间，主要代表当前线程所执行的字节码行号指示器。字节码解释器工作时，通过改变这个计数器的值来选取下一条需要执行的字节码指令，分支、循环、跳转、异常处理、线程恢复等基础功能都需要依赖于这个计数器来完成。</p>
+</li>
+<li><p>虚拟机栈</p>
+<p>与线程同时创建，总数与线程关联，代表Java方法执行的内存模型。每个方法执行都会创建一个栈帧来存储方法的变量表、操作数栈、动态链接方法、返回值、返回地址等信息。每个方法从调用直到结束就对于一个栈帧在虚拟机中地入栈和出栈过程。</p>
+</li>
+<li><p>本地方法栈</p>
+<p>这部分主要与虚拟机用到的native方法有关，一般情况下，我们无需关心此区域。</p>
+</li>
+</ul>
+<h4 id="Java内存模型概述"><a href="#Java内存模型概述" class="headerlink" title="Java内存模型概述"></a>Java内存模型概述</h4><p>Java内存模型本身是一种抽象的概念，并不是真实存在的，它描述的是一种规则或者规范，通过这组规范定义了程序中各个变量（包括实例字段、静态变量和构成数组对象的元素）的访问方式。由于JVM运行程序的实体是线程，而每个线程创建时JVM都会为其创建一个工作内存（也称为栈空间），用于存储线程私有的数据，而Java内存模型中规定所有变量都存储在主内存，主内存是共享内存区域，所有线程都可以访问，但线程对变量的操作（读取复赋值等）必须在工作内存中进行，首先要将变量从内存拷贝到自己的工作内存空间，然后对变量进行操作，操作完成之后再将变量写回主内存，不能直接操作主内存中的变量，工作内存中存储着主内存中的变量副本拷贝，工作内存是每个线程的私有数据区域，因此不同的线程间无法访问对方的工作内存，线程间的通信必须通过主内存来完成，其简要访问过程如下所示。</p>
+<p><img src="http://img.blog.csdn.net/20170608221857890?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvamF2YXplamlhbg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt=""></p>
+<p>1、JMM中的主内存和工作内存说明如下。</p>
+<ul>
+<li><p>主内存</p>
+<p>主要存储的是Java实例对象，所有线程创建的实例对象都存放在主内存中，不管该实例对象是成员变量还是方法中的局部变量，当然也包括了共享的类信息、常量、静态变量。由于是共享数据区域，多条线程对同一个变量进行访问时可能会发生线程安全问题。</p>
+</li>
+<li><p>工作内存</p>
+<p>主要存储当前方法的所有变量信息（工作内存中存储着主内存中的变量副本拷贝），每个线程只能访问自己的工作内存，即线程中的本地变量对其他线程是不可见的，就算是两个线程执行的是同一段代码，它们也会在各自的工作内存中创建属于当前线程的本地变量，当然也包括了字节码行号指示器、相关native方法的信息。由于工作内存是每个线程的私有数据，线程间无法互相访问工作内存，因此存储在工作内存的数据不存在线程安全问题。</p>
+</li>
+</ul>
+<p>Java内存模型与Java内存区域的划分是不同的概念层次，JMM描述的一组规则，通过这组规则控制程序中各个变量在共享数据区域和私有数据区域的访问方式，JMM是围绕原子性、有序性、可见性展开的。JMM与Java内存区域唯一相似点在于，都存在共享数据区域和私有数据区域，在JMM中主内存属于共享数据区域，从某种程度上将应该包括了堆和方法区，而工作内存属于线程私有区域，从某种程度上将则应该包括程序计数器、虚拟机栈以及本地方法栈。</p>
+<p>接下来来了解一下主内存与工作内存的数据存储类型以及操作方式，根据虚拟机规范，对于一个实例对象中的成员方法而言，如果方法中包含本地变量是基本数据类型，将直接存储在工作内存的栈帧结构中，但若本地变量是引用类型，那么该变量的引用会存储在工作内存的栈帧中，而对象实例将存储在主内存（共享数据区域、堆）中。但对于实例对象的成员变量，不管是基本数据类型还是引用类型，都会被存储到堆区。至于static变量以及类本身相关信息将会存储在主内存中。</p>
+<p><img src="http://img.blog.csdn.net/20170609093435508?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvamF2YXplamlhbg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt=""></p>
+<p>2、内存间交互操作</p>
+<p>关于主内存与工作内存间的交互协议，即一个变量如何从主内存拷贝到工作内存中，如何从工作内存同步回主内存。Java内存模型定义了以下8种操作。</p>
+<ul>
+<li>lock（锁定）：作用于主内存的变量，它把一个变量标识为一条线程独占的状态</li>
+<li>unlock（解锁）：作用于主内存的变量，它把一个处于锁定的变量释放出来，释放后的变量才可以被其他线程锁定</li>
+<li>read（读取）：作用于主内存的变量，它把一个变量的值从主内存传输到线程的工作线程中，以便随后的load动作使用</li>
+<li>load（载入）：作用于工作内存的变量，它把read操作主内存得到的变量放入到工作内存中变量副本中</li>
+<li>use（使用）：作用于工作内存的变量，它把工作内存中得到的值传递给执行引擎，每当虚拟机遇到一个需要使用到变量的值的字节码指令时将会执行这个操作</li>
+<li>assign（赋值）：作用于工作内存的变量，它把一个从执行引擎接收到的值赋给工作内存的变量，每当虚拟机遇到一个给变量赋值的字节码指令时执行这个操作</li>
+<li>store（存储）：作用于工作内的变量，它把工作内存中一个变量的值送到主内存中，以便随后的write操作使用</li>
+<li>write（写入）：作用于主内存的变量，它把store操作从工作内存得到的值放入到主内存中的变量中</li>
+</ul>
+<p><strong>相关操作</strong></p>
+<ul>
+<li>把变量从主内存复制到工作内存：顺序执行read和load操作（目的地是工作内存）</li>
+<li>把变量从工作内存同步回主内存：顺序执行store和write操作（目的地是主内存）</li>
+<li>Java内存模型只要求上述两个操作必须按顺序执行，没有保证是连续执行，即read和load之间，store和write之间可以插入其他指令</li>
+</ul>
+<p><strong>Java内存模型还规定了上述8种基本操作时必须满足如下规则：</strong></p>
+<ul>
+<li>不允许read和load，store和write操作之一单独出现，即不允许一个变量从主内存读取了但是工作内存不接受，或者从工作内存发起回写了但是主内存不接受的情况出现</li>
+<li>不允许一个线程丢弃它的最近的assign操作，即变量在工作内存中改变了之后必须把该变化同步回主内存</li>
+<li>不允许一个线程无原因把数据从线程的工作内存同步回主内存中</li>
+<li>一个新变量在同一时刻只允许一个线程对其进行lock操作，但lock操作可以被同一个线程重复执行多次，多次执行lock后，只有执行相同次数的unlock操作，变量才会被解锁</li>
+<li>如果对一个变量执行lock操作，那将会清空工作内存中此变量的值，在执行引擎使用这个变量前，需要重新执行load或assign操作初始化变量的值</li>
+<li>如果一个变量事先没有被lock操作锁定，那将不允许对它执行unlock操作，也不允许去unlock一个被其他线程锁定住的变量</li>
+<li>对一个变量执行unlock变量前，必须先把此变量同步回主内存中（执行store、write操作）</li>
+</ul>
+<h4 id="硬件内存架构与Java内存模型"><a href="#硬件内存架构与Java内存模型" class="headerlink" title="硬件内存架构与Java内存模型"></a>硬件内存架构与Java内存模型</h4><p>1、硬件内存架构</p>
+<p><img src="http://img.blog.csdn.net/20170611211802727?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvamF2YXplamlhbg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt=""></p>
+<p>就目前计算机而言，一般拥有多个CPU并且每个CPU可能存在多个核心，多核是指在一枚处理器（CPU）中集成两个或多个完整的计算引擎，这样就可以支持多任务并行执行，从多线程的调度来说，每个线程都会映射到各个CPU核心中并行运行。在CPU内部有一组CPU寄存器，寄存器是CPU直接访问和处理的数据，是一个临时存放数据的空间。一般CPU都会从内存取数据到寄存器，然后进行处理，但由于内存的处理速度远远低于CPU，导致CPU在处理指令时往往花费很多时间在等待内存做准备工作，如果CPU总是操作主内存中的同地址的数据，很容易影响CPU执行速度，此时CPU缓存就可以把从主内存中提取出来的数据暂时保存起来，如果寄存器要取内存中同一位置的数据，直接从缓存中提取，无需每次都从主内存中提取。万一不是同一内存地址中的数据，那寄存器还必须绕过缓存从内存中取数据。所以并不是每次都得到缓存中取数据，这种现象有个专业名称叫做缓存的命中率，缓存的命中率高低会影响CPU的性能，这就是CPU、缓存以及主内存间的简要交互过程。</p>
+<p>2、Java线程与硬件处理器</p>
+<p>了解完硬件的内存架构后，接下来了解一下JVM中线程的实现原理。在Windows系统和Linux系统上，Java线程的实现是基于一对一的线程模型。所谓的一对一模型，实际上就是通过语言级别层面程序去间接调用系统内核的线程模型，即我们在使用Java线程时，Java虚拟机内部是转而调用当前操作系统的内核线程来完成当前任务，即所谓的内核线程，它是由操作系统内核支持的线程，并将线程的任务映射到各个处理器上。每个内核线程可以视为内核的一个分身，这也就是操作系统可以同时处理多任务的原因。</p>
+<p><img src="http://img.blog.csdn.net/20170608094427710?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvamF2YXplamlhbg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt=""></p>
+<p>如上图所示，每个线程最终会映射到CPU中进行处理，如果CPU存在多核，那么一个CPU将可以并行执行多个线程任务。</p>
+<p>3、Java内存模型与硬件内存架构的关系</p>
+<p>通过前面的硬件内存架构、Java内存模型以及Java多线程的实现原理的了解，我们应该已经意识到，多线程的执行最终都会映射到硬件处理器上进行执行，但Java内存模型和硬件内存架构并不完全一致。对于硬件内存来说只有寄存器、缓存内存、主内存的概念，并没有工作内存和主内存之分，也就是说Java内存模型对内存的划分对硬件内存并没有任何影响，因为JMM只是一种抽象的概念，是一组规则，并不实际存在，不管是工作内存的数据还是主内存的数据，对于计算机硬件来说都会存储在计算机主内存中，当然也有可能存储在CPU缓存或者寄存器中，因此从总体上说，Java内存模型和计算机内存架构是一个相互交叉的关系，是一种抽象概念划分与真实物理硬件的交叉。</p>
+<p><img src="http://img.blog.csdn.net/20170611230502297?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvamF2YXplamlhbg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt=""></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/JVM/" rel="tag"># JVM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/01/27/android内存泄漏原因分析/" rel="next" title="android内存泄漏原因分析">
+                <i class="fa fa-chevron-left"></i> android内存泄漏原因分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/02/26/Java对象头/" rel="prev" title="Java对象头">
+                Java对象头 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">44</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/sufushi" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Java内存区域"><span class="nav-number">2.</span> <span class="nav-text">Java内存区域</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Java内存模型概述"><span class="nav-number">3.</span> <span class="nav-text">Java内存模型概述</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#硬件内存架构与Java内存模型"><span class="nav-number">4.</span> <span class="nav-text">硬件内存架构与Java内存模型</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>

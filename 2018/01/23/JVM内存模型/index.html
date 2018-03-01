@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="JVM," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述JVM会将Java进程所管理的内存划分为若干个不同的数据区域。这些区域有各自的用途、创建 、销毁时间。
+
+对象和类的数据存储在3个不同的内存区域，堆、方法区、本地区。
+堆内存存放对象以及数组的数据，方法区存放类的信息（包括类名、方法、字段）、静态变量、编译器编译后的代码，本地区包含线程栈、本地方法栈等存放线程。所有对象在实例化后的整个运行周期内，都被存放在堆内存中，堆内存又被划分为不同的部分：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM内存模型">
+<meta property="og:url" content="sufushi.github.io/2018/01/23/JVM内存模型/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="概述JVM会将Java进程所管理的内存划分为若干个不同的数据区域。这些区域有各自的用途、创建 、销毁时间。
+
+对象和类的数据存储在3个不同的内存区域，堆、方法区、本地区。
+堆内存存放对象以及数组的数据，方法区存放类的信息（包括类名、方法、字段）、静态变量、编译器编译后的代码，本地区包含线程栈、本地方法栈等存放线程。所有对象在实例化后的整个运行周期内，都被存放在堆内存中，堆内存又被划分为不同的部分：">
+<meta property="og:image" content="http://7xrgh9.com1.z0.glb.clouddn.com/16-10-18/10813208.jpg">
+<meta property="og:image" content="http://7xrgh9.com1.z0.glb.clouddn.com/16-10-18/33846098.jpg">
+<meta property="og:image" content="http://7xrgh9.com1.z0.glb.clouddn.com/16-10-19/94175572.jpg">
+<meta property="og:image" content="http://7xrgh9.com1.z0.glb.clouddn.com/16-10-19/31427095.jpg">
+<meta property="og:updated_time" content="2018-01-27T06:11:15.605Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JVM内存模型">
+<meta name="twitter:description" content="概述JVM会将Java进程所管理的内存划分为若干个不同的数据区域。这些区域有各自的用途、创建 、销毁时间。
+
+对象和类的数据存储在3个不同的内存区域，堆、方法区、本地区。
+堆内存存放对象以及数组的数据，方法区存放类的信息（包括类名、方法、字段）、静态变量、编译器编译后的代码，本地区包含线程栈、本地方法栈等存放线程。所有对象在实例化后的整个运行周期内，都被存放在堆内存中，堆内存又被划分为不同的部分：">
+<meta name="twitter:image" content="http://7xrgh9.com1.z0.glb.clouddn.com/16-10-18/10813208.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2018/01/23/JVM内存模型/"/>
+
+
+
+
+
+  <title>JVM内存模型 | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2018/01/23/JVM内存模型/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">JVM内存模型</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-23T09:49:14+08:00">
+                2018-01-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h4><p>JVM会将Java进程所管理的内存划分为若干个不同的数据区域。这些区域有各自的用途、创建 、销毁时间。</p>
+<p><img src="http://7xrgh9.com1.z0.glb.clouddn.com/16-10-18/10813208.jpg" alt=""></p>
+<p>对象和类的数据存储在3个不同的内存区域，堆、方法区、本地区。</p>
+<p>堆内存存放对象以及数组的数据，方法区存放类的信息（包括类名、方法、字段）、静态变量、编译器编译后的代码，本地区包含线程栈、本地方法栈等存放线程。所有对象在实例化后的整个运行周期内，都被存放在堆内存中，堆内存又被划分为不同的部分：Eden，Survivor，老年代。方法的执行都是伴随这线程的。原始类型的本地变量以及引用都存放在线程栈中，而引用关联的对象存放在堆中。</p>
+<h4 id="线程私有区域"><a href="#线程私有区域" class="headerlink" title="线程私有区域"></a>线程私有区域</h4><blockquote>
+<p>线程私有数据区域生命周期与线程相同，依赖用户线程的启动/结束而创建/销毁（在Hotspot VM内，每个线程都与操作系统的本地变量直接映射，因此这部分内存区域的存/否跟随本地线程的生/死）。</p>
+</blockquote>
+<p>1、Program Counter Register（程序计数器）</p>
+<p>一块较小的内存空间，作用是当前线程锁执行字节码的行号指示器（类似于传统CPU模型中的PC），PC在每次指令执行后自增，维护下一个将要执行指令的地址。在JVM模型中，字节码解释器就是通过改变PC值来选取下一条需要执行的字节码指令、分支、循环、跳转、异常处理、线程恢复等基础功能都需要依赖PC完成（仅限于Java方法，native方法该计数器值为undefined）。</p>
+<p>不同于OS以进程为单位调度，JVM中的并发是通过线程切换并分配时间片执行来实现的。在任何一个时刻，一个处理器内核只会执行一条线程中的指令。因此，为了线程切换后能恢复到正确位置，每条线程都需要一个独立的程序计数器，这类内存被称为“线程私有”内存。</p>
+<p>2、Java Stack（虚拟机栈）</p>
+<p>虚拟机栈描述的是Java方法执行的内存模型。每个方法被执行时会创建一个栈帧用于存储局部变量表，操作数栈、动态链接、方法出口等信息。每个方法被调用至返回的过程，就对应一个栈帧在虚拟机栈中从入栈到出栈的过程。</p>
+<ul>
+<li><p>局部变量表</p>
+<p>存放了编译期可知的各种数据类型、对象引用（可能是一个指向对象起始地址的指针，也可能指向一个代表对象的句柄或其他对象相关的位置）和returnAddress类型（指向一条字节码的地址）。</p>
+</li>
+<li><p>运行环境区</p>
+<p>在运行环境中包含的信息可以实现动态链接、正常的方法返回与异常和错误传播。</p>
+<ul>
+<li><p>动态链接</p>
+<p>运行环境包括对指向当前类和当前方法的解释器符号表的指针，用于支持方法代码的动态链接。方法的class文件代码在引用要调用的方法和要访问的变量时使用符号。动态链接把符号形式的方法调用翻译成实际方法调用，装载必要的类以解释还没有定义的符号，并把变量访问翻译成与这些变量运行时的存储结构相应的偏移地址。动态链接方法和变量使得方法中使用的其他类的变化不会影响到本程序的代码。</p>
+</li>
+<li><p>正常的方法返回</p>
+<p>如果当前方法正常地结束了，在执行了一条具有正确类型的返回指令时，调用的方法会得到一个返回值。执行环境在正常返回的情况下用于恢复调用者的寄存器，并把调用者的程序计数器增加一个适当的数值，以跳过已执行过的方法调用指令，然后在调用者的执行环境中继续执行下去。</p>
+</li>
+<li><p>异常和错误传播</p>
+<p>异常情况在Java中被称为Error（错误）或Expection（异常），是Throwable类的子类，在程序中的原因主要是动态链接错或运行时错造成。</p>
+<p>当发生异常时，Java虚拟机采用如下措施解决：</p>
+<ul>
+<li>检查当前方法相联系的catch子句表。每个catch子句包含其有效指令范围，能够处理异常类型，以及处理异常的代码块地址。</li>
+<li>与异常相匹配的catch子句应该符合下面条件：造成异常的指令在其指令范围内，发生的异常类型是其能处理的异常类型的子类型。如果找到了匹配的catch子句，那么系统将转移到指定的异常处理块处执行。如果没有找到异常代码块，则重复寻找匹配的catch子句的过程，直到当前方法的所有嵌套的catch子句都被检查过。</li>
+<li>由于虚拟机从第一个匹配的catch子句处继续执行，所以catch子句表中的顺序是很重要的。因为Java代码是结构化的，因此总可以把某个方法中所有的异常处理器都按顺序列到一个表中，对任意可能的程序计数器的值，都可以用线性的顺序找到合适的异常处理块，以处理在该程序计数器值下发生的异常情况。</li>
+<li>如果找不到匹配的catch子句，那么当前方法得到一个“未截获异常”的结果并返回到当前方法的调用者，好像异常刚刚在其调用者中发生一样。如果在调用者中仍然没有找到相应的异常处理块，那么这种错误传播将被继续下去。如果错误被传播到最顶层，那么系统将调用一个缺省的异常代码块。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p>操作数栈区</p>
+<p>机器指令只能从操作数栈中取操作数，对它们进行操作，并把结果返回到栈中。选择栈结构的原因：在只有少量寄存器或非通用寄存器的机器上，也能够高效地模范虚拟机的行为。操作数栈是32位的，用于给方法传递参数，并从方法接收结果，也用于支持操作的参数，并保存操作的结果。</p>
+</li>
+</ul>
+<p>3、Native Method Stack（本地方法栈）</p>
+<p>与Java Stack作用类似，区别是Java Stack为执行Java方法服务，而本地方法栈则为native方法服务，如果一个VM实现使用C-linkage模型来支持native调用，那么该栈将会是一个C栈。</p>
+<h4 id="线程共享区域"><a href="#线程共享区域" class="headerlink" title="线程共享区域"></a>线程共享区域</h4><blockquote>
+<p>线程共享数据区域生命周期与虚拟机相同，随着虚拟机的启动/关闭而创建/销毁。</p>
+</blockquote>
+<p>1、Heap（Java堆）</p>
+<p>几乎所有对象实例和数组都要在堆上分配（栈上分配、标量替换除外），因此是VM管理的最大的一块内存，也是垃圾收集器的主要活动区域。由于现代VM采用分代收集算法，因此Java堆从GC的角度还可以细分为：新生代和老年代；而从内存分配的角度来看，线程共享的Java堆还可以划分出多个线程私有的分配缓冲区。而进一步划分的目的是为了更好地回收内存和更好地分配内存。</p>
+<p>2、Method Area（方法区）</p>
+<p>即我们常说的永久代，用于存储被JVM加载的类信息、常量、静态变量、即时编译器编译后的代码等数据。Hotspot VM把GC分代收集扩展至方法区，即使用Java堆的永久代来实现方法区，这样Hotspot的垃圾收集器就可以向管理Java堆一样管理这部分内存，而不必为方法区开发专门的内存管理器（永久代的内存回收的主要目标是对常量池的回收和类型的卸载，因此收益一般很小）。</p>
+<p><img src="http://7xrgh9.com1.z0.glb.clouddn.com/16-10-18/33846098.jpg" alt=""></p>
+<p>在Java1.7时已经将放在永久代的字符串常量池移出，而在Java1.8中，永久代已经被彻底移除，取而代之的是元数据区Meta Space，与永久代不同，如果不指定Meta Space大小，如果方法区持续增长，VM会默认消耗所有系统内存。</p>
+<p><strong>运行时常量池</strong></p>
+<p>方法区的一部分。Class文件中除了有类的版本、字段、方法、接口等描述信息外，还有一项常量池用于存放编译期生成的各种字面量和符号引用。这部分内容会存放到方法区的运行时常量池。但Java语言并不要求常量一定只能在编译期产生，即并非预置入Class文件中常量池的内容才能进入方法区运行时常量池，运行期间也可能将新的常量放入池中。</p>
+<h4 id="对象存储布局"><a href="#对象存储布局" class="headerlink" title="对象存储布局"></a>对象存储布局</h4><p>Hotspot VM内，对象在内存中的存储布局可以划分为3块区域：对象头、实例数据和对齐填充。</p>
+<ul>
+<li><p>对象头包括两部分：</p>
+<ul>
+<li><p>一部分是指针类型，即是对象指向它的类元数据的指针：VM通过该指针确定该对象属于哪个类实例。另外，如果对象是一个数组，那在对象头中还必须有一块数据用于记录数组长度。</p>
+</li>
+<li><p>另一部分用于存储对象自身的运行时数据：HashCode、GC分代年龄、锁状态标志、线程持有的锁、偏向线程ID、偏向时间戳等，这部分数据的长度在32位和64位的VM中分别为32bit和64bit，官方称之为“Mark Word”，其存储格式如下：</p>
+<p>| 状态        | 标志位  | 存储内容                |<br>| ——— | —- | ——————- |<br>| 未锁定       | 01   | 对象哈希吗、对象分代年龄        |<br>| 轻量级锁定     | 00   | 指向锁记录的指针            |<br>| 膨胀（重量级锁定） | 10   | 执行重量级锁定的指针          |<br>| GC标志      | 11   | 空（不需要记录信息）          |<br>| 可偏向       | 01   | 偏向线程ID、偏向时间戳、对象分代年龄 |</p>
+</li>
+</ul>
+</li>
+<li><p>实例数据部分是对象真正存储的有效信息，也就是我们在代码里所定义的各种类型的字段内容（无论是从父类继承下来的，还是在子类中定义的都需要记录下来）。这部分的存储顺序会收到虚拟机分配策略参数和字段在Java源码中定义顺序的影响。Hotspot默认的分配策略为longs / doubles、ints、shorts / chars、bytes / booleans、oops相同宽度的字段总是被分配到一起，在满足这个前提条件下，在父类中定义的变量会出现在子类之前。如果CompactFields参数值为true（默认），那子类中较窄的变量也可能会插入到父类变量的空隙中。</p>
+</li>
+<li><p>对齐填充部分并不是必然存在的，仅起到占位符的作用，原因是Hotspot自动内存管理系统要求对象起始地址必须是8字节的整数倍，即对象的大小必须是8字节的整数倍。</p>
+</li>
+</ul>
+<h4 id="对象定位"><a href="#对象定位" class="headerlink" title="对象定位"></a>对象定位</h4><p>建立对象是为了使用对象，Java程序需要通过栈上的reference来操作堆上的具体对象。主流的有句柄和直接指针两种方式去定位和访问堆上的对象。</p>
+<ul>
+<li><p>句柄：Java堆中将会划分出一块内存来作为句柄池，reference中存储对象的句柄地址，而句柄中包含了对象实例数据与类型数据的具体各自的地址信息。</p>
+<p><img src="http://7xrgh9.com1.z0.glb.clouddn.com/16-10-19/94175572.jpg" alt=""></p>
+</li>
+<li><p>直接指针：该方式Java堆对象的布局中就必须考虑如何放置访问类型数据的相关信息，reference中存储的直接就是对象地址。</p>
+<p><img src="http://7xrgh9.com1.z0.glb.clouddn.com/16-10-19/31427095.jpg" alt=""></p>
+</li>
+</ul>
+<p>这两种对象访问方式各有优势：使用句柄来访问的最大好处是reference中存储的是稳定句柄地址，在对象被移动（垃圾收集时移动对象是非常普遍的行为）时只会改变句柄中的实例数据指针，而reference本身不变。而使用直接指针最大的好处就是速度更快，它节省了一次指针定位的时间开销，由于对象访问非常频繁，因此这类开销积小成多也是一项非常可观的执行成本。</p>
+<h4 id="对象创建"><a href="#对象创建" class="headerlink" title="对象创建"></a>对象创建</h4><p>当我们new一个Java Object（包括数组和Class对象），在JVM会发生如下步骤：</p>
+<ul>
+<li>VM遇到new指令：首先去检查该指令的参数是否能在常量池中定位到一个类的符号引用，并检查这个符号引用代表的类是否已被加载、解析和初始化，如果没有，必须先执行相应的类加载过程</li>
+<li>类加载检查通过后：VM将为新生对象分配内存（对象所需的内存的大小是在类加载完成后便可以完全确定），VM采用指针碰撞或空闲链表方式将一块确定大小的内存从Java堆中划分出来</li>
+<li>除了考虑如何划分可用空间外，由于在VM上创建对象的行为比较频繁，因此需要考虑内存分配的并发问题，解决方案有两个：<ul>
+<li>对分配内存空间的动作进行同步。即采用CAS配上失败重试方式保证在更新操作的原子性</li>
+<li>把内存分配的动作按照线程划分在不同的空间之中进行。每个线程在Java堆中预先分配一小块内存，称为本地线程分配缓冲TLAB，各线程首先在TLAB上分配，只有TLAB用完，分配新的TLAB时才需要同步锁定</li>
+</ul>
+</li>
+<li>接下来将分配到内存空间初始化为0值。这一步保证了对象的实例字段可以不赋初值就直接使用</li>
+<li>然后要对对象进行必要的设置：如该对象所属的类实例、如何能访问到类的元数据信息、对象的哈希码、对象的GC分代年龄等，这部分信息放在对象头中</li>
+<li>上面工作都完成之后，在虚拟机角度一个新对象已产生，但在Java视角对象的创建才刚刚开始（&lt; init &gt;方法尚未执行，所有字段还都为0）。所以new指令之后一般会接着执行&lt; init &gt;方法，把对象按照程序员的意愿进行初始化，这样一个真正可用的对象才算完全产生出来</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/JVM/" rel="tag"># JVM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/01/16/ThreadLocal原理/" rel="next" title="ThreadLocal原理">
+                <i class="fa fa-chevron-left"></i> ThreadLocal原理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/01/23/Glide框架源码解析/" rel="prev" title="Glide框架源码解析">
+                Glide框架源码解析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">44</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/sufushi" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#线程私有区域"><span class="nav-number">2.</span> <span class="nav-text">线程私有区域</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#线程共享区域"><span class="nav-number">3.</span> <span class="nav-text">线程共享区域</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#对象存储布局"><span class="nav-number">4.</span> <span class="nav-text">对象存储布局</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#对象定位"><span class="nav-number">5.</span> <span class="nav-text">对象定位</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#对象创建"><span class="nav-number">6.</span> <span class="nav-text">对象创建</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>

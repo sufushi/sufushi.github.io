@@ -87,7 +87,7 @@
 <meta property="og:site_name" content="苏富仕的博客">
 <meta property="og:description" content="前言在许多程序设计语言中，比如Java、C#。依赖注入是一种比较流行的设计模式，在android开发中也有很多实用的依赖注入框架，可以帮助我们少些一些样板代码，达到各个类之间解耦的目的。
 注解从JDK 5开始，Java增加了注解，注解就是代码里的特殊标记，这些标记可以在编译、类加载、运行时被读取，并执行相应的处理。通过使用注解，开发人员可以在不改变原有逻辑的情况下，在源文件中嵌入一些补充的信息。代">
-<meta property="og:updated_time" content="2017-11-28T14:22:15.167Z">
+<meta property="og:updated_time" content="2018-02-28T03:34:43.918Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="注解与依赖注入框架">
 <meta name="twitter:description" content="前言在许多程序设计语言中，比如Java、C#。依赖注入是一种比较流行的设计模式，在android开发中也有很多实用的依赖注入框架，可以帮助我们少些一些样板代码，达到各个类之间解耦的目的。
@@ -458,7 +458,7 @@
 <p>⑤ 使用android-apt插件</p>
 <p>我们在主工程项目（app）中引用了processor库，但注解处理器只在编译处理期间需要用到，编译处理完后就没有实际作用了，而在主工程项目添加了这个库会引入很多不必要的文件。为了处理这个问题我们需要引入插件android-apt。它主要有两个作用：</p>
 <ul>
-<li>仅仅在编译时期去依赖注解处理器所在·1函数库并进行工作，但不会打包到APK中。</li>
+<li>仅仅在编译时期去依赖注解处理器所在函数库并进行工作，但不会打包到APK中。</li>
 <li>为注解处理器生成的代码设置好路径，以便android studio能够找到它。</li>
 </ul>
 <p>接下来介绍如何使用它。首先需要在整个工程（project）的build.gradle中添加如下语句。</p>
@@ -535,8 +535,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2018/01/05/Java与C++/" rel="prev" title="Java与C++">
-                Java与C++ <i class="fa fa-chevron-right"></i>
+              <a href="/2018/01/01/JVM类加载机制/" rel="prev" title="JVM类加载机制">
+                JVM类加载机制 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -618,7 +618,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-count">44</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>

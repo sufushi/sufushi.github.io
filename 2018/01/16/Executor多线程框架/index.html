@@ -97,7 +97,7 @@ new Thread()的缺点
 <meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/Executor%E5%85%B3%E9%94%AE%E5%AE%9E%E7%8E%B0%E7%B1%BB.png">
 <meta property="og:image" content="https://images2015.cnblogs.com/blog/926638/201704/926638-20170420102909977-1095081386.png">
 <meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/Executor%E6%A1%86%E6%9E%B6%E7%9A%84%E4%BD%BF%E7%94%A8.png">
-<meta property="og:updated_time" content="2018-01-16T12:22:52.028Z">
+<meta property="og:updated_time" content="2018-02-28T06:06:25.139Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Executor多线程框架">
 <meta name="twitter:description" content="前言在Java中，使用线程来异步执行任务。Java线程的创建与销毁需要一定的开销，如果我们为每一个任务创建一个新线程来执行，这些线程的创建与销毁将消耗大量的计算资源。同时，为每一个任务创建一个新线程来执行，这种策略可能会使处于高负荷状态的应用最终奔溃。Java线程既是工作单元，也是执行单元。
@@ -369,7 +369,7 @@ new Thread()的缺点
 <li>提供定时执行、定期执行、单线程、并发控制等功能</li>
 </ul>
 <p>从JDK1.5开始，并发编程引入了一堆新的启动、调整和管理线程的API，把工作单元与执行单元机制分离开来，工作单元包括Runnable和Callable，而执行机制由Executor框架提供。</p>
-<p>Executor内部使用了线程池机制，它在java.util.concurrent包下，通过该框架来控制线程的启动、执行和关闭，可以简化并发编程的操作。因此，在Java1.5之后，通过Executor了亲爱启动线程比使用Thread的start方法更好，除了更易管理，效率更好（用线程池实现，借阅开销）外，还有关键的一点：有助于避免this逃逸问题。</p>
+<p>Executor内部使用了线程池机制，它在java.util.concurrent包下，通过该框架来控制线程的启动、执行和关闭，可以简化并发编程的操作。因此，在Java1.5之后，通过Executor来启动线程比使用Thread的start方法更好，除了更易管理，效率更好（用线程池实现，借阅开销）外，还有关键的一点：有助于避免this逃逸问题。</p>
 <p>Executor框架包括：线程池、Executor、Executors、ExecutorSeivice、CompletionService、Future、Callable等。</p>
 <h4 id="Executor框架的两级调度模型"><a href="#Executor框架的两级调度模型" class="headerlink" title="Executor框架的两级调度模型"></a>Executor框架的两级调度模型</h4><p>在HotSpot VM的线程模型中，Java线程被一对一映射为本地操作系统线程。Java线程启动时会创建一个本地操作系统线程；当Java线程终止后，这个操作系统线程也会被回收。操作系统会调用所有线程并将它们分配给可用的CPU。可以将此种模式分为两层，在上层，Java多线程程序通常把应用程序分解为若干个任务，然后使用用户级的调度器（Executor框架）将这些任务映射为固定数量的线程；在底层，操作系统内核将这些线程映射到硬件处理器上。</p>
 <p><img src="http://oxsxuoiqx.bkt.clouddn.com/Executor%E6%A1%86%E6%9E%B6%E4%B8%A4%E7%BA%A7%E8%B0%83%E5%BA%A6%E6%A8%A1%E5%9E%8B.png" alt=""></p>
@@ -411,7 +411,7 @@ new Thread()的缺点
 <p>Executor可以创建3种类型的ThreadPoolExecutor线程池。</p>
 <ul>
 <li><p>FixedThreadPool</p>
-<p>创建固定长度的线程池，每次提交任务创建一个线程，知道达到线程池的最大数量，线程池的大小不再变化。</p>
+<p>创建固定长度的线程池，每次提交任务创建一个线程，直到达到线程池的最大数量，线程池的大小不再变化。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newFixedThreadPool</span><span class="params">(<span class="keyword">int</span> nThreads, ThreadFactory threadFactory)</span> </span>&#123;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(nThreads, nThreads,</div><div class="line">                                  <span class="number">0L</span>, TimeUnit.MILLISECONDS,</div><div class="line">                                  <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;(),</div><div class="line">                                  threadFactory);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <ul>
 <li>FixedThreadPool的corePoolSize和maxiumPoolSize都被设置为创建FixedThreadPool时指定的参数nThreads</li>
@@ -578,7 +578,7 @@ new Thread()的缺点
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-count">44</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>

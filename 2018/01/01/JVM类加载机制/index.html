@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="JVM," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述Java虚拟机通过装载、连接和初始化一个类型，使类型可以被正在执行的Java程序使用。
+
+装载：把二进制形式的Java类型读入Java虚拟机中
+连接：把装载的二进制形式的类型数据合并到虚拟机的运行时状态中去
+验证：确保Java类型数据格式正确并且适合于Java虚拟机使用
+准备：负责为该类型分配它所需内存
+解析：把常量池中的符号引用转换为直接引用
+初始化：为类变量赋适当的初始值
+
+所有Java虚">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM类加载机制">
+<meta property="og:url" content="sufushi.github.io/2018/01/01/JVM类加载机制/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="概述Java虚拟机通过装载、连接和初始化一个类型，使类型可以被正在执行的Java程序使用。
+
+装载：把二进制形式的Java类型读入Java虚拟机中
+连接：把装载的二进制形式的类型数据合并到虚拟机的运行时状态中去
+验证：确保Java类型数据格式正确并且适合于Java虚拟机使用
+准备：负责为该类型分配它所需内存
+解析：把常量池中的符号引用转换为直接引用
+初始化：为类变量赋适当的初始值
+
+所有Java虚">
+<meta property="og:updated_time" content="2018-01-27T05:53:20.609Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JVM类加载机制">
+<meta name="twitter:description" content="概述Java虚拟机通过装载、连接和初始化一个类型，使类型可以被正在执行的Java程序使用。
+
+装载：把二进制形式的Java类型读入Java虚拟机中
+连接：把装载的二进制形式的类型数据合并到虚拟机的运行时状态中去
+验证：确保Java类型数据格式正确并且适合于Java虚拟机使用
+准备：负责为该类型分配它所需内存
+解析：把常量池中的符号引用转换为直接引用
+初始化：为类变量赋适当的初始值
+
+所有Java虚">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2018/01/01/JVM类加载机制/"/>
+
+
+
+
+
+  <title>JVM类加载机制 | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2018/01/01/JVM类加载机制/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">JVM类加载机制</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-01T11:28:22+08:00">
+                2018-01-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h4><p>Java虚拟机通过装载、连接和初始化一个类型，使类型可以被正在执行的Java程序使用。</p>
+<ul>
+<li>装载：把二进制形式的Java类型读入Java虚拟机中</li>
+<li>连接：把装载的二进制形式的类型数据合并到虚拟机的运行时状态中去</li>
+<li>验证：确保Java类型数据格式正确并且适合于Java虚拟机使用</li>
+<li>准备：负责为该类型分配它所需内存</li>
+<li>解析：把常量池中的符号引用转换为直接引用</li>
+<li>初始化：为类变量赋适当的初始值</li>
+</ul>
+<p>所有Java虚拟机实现必须在每个类或接口首次主动使用时初始化。以下6种情况符合主动使用的要求：</p>
+<ul>
+<li>当创建某个类的新实例时（new、反射、clone、反序列化）</li>
+<li>调用某个类的静态方法</li>
+<li>使用某个类或接口的静态字段，或对该字段赋值（用final修饰的静态字段除外，他被初始化为一个编译时常量表达式）</li>
+<li>当调用Java API的某些反射方法</li>
+<li>初始化某个类的子类时</li>
+<li>当虚拟机启动时被标明为启动类的类</li>
+</ul>
+<h4 id="类加载机制步骤"><a href="#类加载机制步骤" class="headerlink" title="类加载机制步骤"></a>类加载机制步骤</h4><p>1、装载</p>
+<ul>
+<li>通过该类型的全限定名，产生一个代表该类型的二进制数据流</li>
+<li>解析这个二进制数据流为方法内的内部数据结构</li>
+<li>创建一个表示该类型的java.lang.Class类的实例</li>
+</ul>
+<p>Java虚拟机在识别Java class文件时，产生了类型的二进制数据后，Java虚拟机必须把这些二进制数据解析为与实现相关的内部数据结构。装载的最终产品就是Class实例，它被称为Java程序与内部数据结构之间的接口。要访问关于该类型的信息（存储在内部数据结构中），程序就要调用该类型对应的Class实例的方法。这样一个过程，就是把一个类型的二进制数据解析为方法区中的内部数据结构，并在堆上建立一个Class对象的过程，这被称为“创建”类型。</p>
+<p>2、验证</p>
+<p>确认装载后的类型符合Java语言的语义，并且不会危及虚拟机的完整性。</p>
+<ul>
+<li>装载时验证：检查二进制数据以确保数据全部是预期格式、确保除Object之外的每个类都有父类、确保该类的所有父类都已经被装载</li>
+<li>正式验证阶段：检查final类不能有子类、确保final方法不被覆盖、确保在类型和超类型之间没有不兼容的方法声明（比如拥有两个名字相同的方法，参数在数量、顺序、类型上都相同，但返回类型不同）</li>
+<li>符号引用的验证：当虚拟机搜寻一个被符号引用的元素（类型、字段和方法）时，必须首先确认该元素存在。如果虚拟机发现元素存在，则必须进一步检查引用类型有访问该元素的权限</li>
+</ul>
+<p>3、准备</p>
+<p>当Java虚拟机装载一个类，并执行了一些验证之后，类就可以进入准备阶段。在准备阶段，Java虚拟机为类变量分配内存，设置默认初始值。但在到达初始化之前，类变量都没有被初始化为真正的初始值。</p>
+<p>4、解析</p>
+<p>类型经过连接的两个阶段 验证和准备 之后，就可以进入第三阶段 解析。解析的过程就是在类型的常量池中寻找类、接口、字段和方法的符号引用，把这些符号引用替换为直接引用的过程</p>
+<ul>
+<li>类或接口的解析：判断所要转化为的直接引用是对数组类型，还是普通的对象类型的引用，从而进行不同的解析</li>
+<li>字段解析：对字段进行解析时，会先在本类中查找是否包含哟简单名称和字段描述符都与目标向匹配的字段，如果有，则查找结束；如果没有，则会按照继承关系从上往下递归搜索该类所实现的各个接口和它们的父接口，还没有，则按照继承关系从上往下递归搜索其父类，直至查找结束</li>
+</ul>
+<p>5、初始化</p>
+<p>为类变量赋予“正确”的初始值。这里的“正确”的初始值是指程序员希望这个类变量所具备的初始值。所有的类变量（即静变量）初始化语句和类型的静态初始化器都被Java编译器收集在一起，放在一个特殊的方法中。对于类来说，这个方法被称作类初始化方法，对于接口来说，它被称为接口初始化方法。在类和接口的class文件中，这个方法被称为&lt; clinit &gt;。</p>
+<p><strong>初始化类的步骤</strong></p>
+<ul>
+<li>如果存在直接父类，且直接父类没有被初始化，先初始化直接父类</li>
+<li>如果类存在一个类初始化方法，执行此方法</li>
+</ul>
+<p>这个步骤是递归执行的，即第一个初始化的类一定是Object。初始化接口并不需要初始化它的父接口。</p>
+<p>Java虚拟机必须确保初始化过程被正确地同步。如果多个线程需要初始化一个类，仅仅允许一个线程来进行初始化，其他线程需等待。</p>
+<p><strong>&lt; clinit &gt;() 方法</strong></p>
+<ul>
+<li>对于静态变量和静态初始化语句来说，执行的顺序和它们在类或接口中出现的顺序有关</li>
+<li>并非所有的类都需要在它们的class文件中拥有&lt; clinit &gt;()方法，如果类没有声明任何变量，也没有静态初始化语句，那么它就不会有&lt; clinit &gt;()方法。如果类声明了类变量，但没有明确的使用类变量初始化语句或静态代码来初始化它们，也不会有&lt; clinit &gt;()方法。如果类仅包括静态final常量的类变量初始化语句，而且这些类变量初始化语句采用编译时常量表达式，类也不会有&lt; clinit &gt;()方法。只有那些需要执行Java代码类赋值的类才会有&lt; clinit &gt;()方法</li>
+<li>final常量：Java虚拟机在使用它们的任何类的常量池或字节码中直接存放的是它们表示的常量值</li>
+</ul>
+<h4 id="类加载器"><a href="#类加载器" class="headerlink" title="类加载器"></a>类加载器</h4><p>Java类加载器是Java运行环境的一部分，负责动态加载Java类到Java虚拟机的内存空间中，类通常是按需加载，即第一次使用该类时才加载。由于有了类加载器，Java运行时系统不需要知道文件与文件系统。每个Java类必须由某个类加载器装入到内存。</p>
+<p>类加载器子系统涉及Java虚拟机的其它几个组成部分，以及几个来自java.lang库的类。比如，用户自定义的类加载器只是普通的Java对象，它的类必须派生自java.lang.ClassLoader。ClassLoader中定义的方法为程序提供了访问类装载器机制的接口。此外，对于每个被装载的类型，Java虚拟机都会为它创建一个java.lang.Class类的实例来代表该类型。和所有其他对象一样，用户自定义的类加载器以及Class类的实例都放在内存中的堆区，而装载的类型信息都位于方法区。</p>
+<p>在Java虚拟机中存在多个类装载器，Java应用程序可以使用两种类装载器：</p>
+<ul>
+<li>启动（bootstrap）类装载器：此装载器是Java虚拟机实现的一部分。由原生代码（如C语言）编写，不继承自java.lang.ClassLoader。负责加载核心Java库，存储在&lt; JAVA_HOME&gt; / jre / lib目录中。启动类加载器通常使用某种默认的方式从本地磁盘中加载类，包括Java API。</li>
+<li>用户自定义类装载器：（包含但不止，扩展类加载器以及系统加载器），继承自Java中的java.lang.ClassLoader类，Java应用程序能在运行时安装用户自定义类装载器，这种类装载器使用自定义的方法类装载类。用户定义的类装载器能用Java编写，能够被编译为Class文件，能被虚拟机装载，还能像其他对象一样实例化。它们实际上只是运行中的Java程序可执行代码的一部分。一般JVM都会提供一些基本实现。应用程序的开发人员也可以根据需要编写自己的类加载器。JVM中最常使用的是系统类加载器，它用来启动Java应用程序的加载。通过java.lang.ClassLoader.getSystemClassLoader()可以获取到该类加载器对象。该类由sun.misc.Launcher$AppClassLoader实现。</li>
+</ul>
+<p><strong>全盘负责双亲委派机制</strong></p>
+<p>全盘负责是指当一个ClassLoader装载一个类时，除非显式地使用另一个ClassLoader，该类所依赖及引用的类也由这个ClassLoader载入，双亲委派机制是指委托父装载器寻找目标类，只有在找不到的情况下才从自己的类路径中查找并装载目标类。这一点是从安全角度考虑的，这样当有人编写一个恶意的基础类并装载到JVM中时，全盘负责双亲委派机制 就可以让根装载器来装载，这样就避免了可怕的后果。</p>
+<p>类加载器需要完成的最终功能是定义一个Java类，即把Java字节码转换成JVM中的java.lng.Class类的对象。但是类加载的过程并不是这么简单。Java类加载器有两个比较重要的特征：</p>
+<ul>
+<li>层次组织结构指的是每个类加载器都有一个父类加载器，通过getParent()方法可以获取到。类加载器通过这种父亲-后代的方式组织在一起，形成树状层次结构</li>
+<li>代理模式则指的是一个类加载器既可以自己完成Java类的定义工作，也可以代理给其他的类加载器来完成。由于代理模式的存在，启动一个类的加载过程和最终定义这个类的类加载器可能并不是一个。前者称为初始化类加载器，而后者成为定义类加载器</li>
+</ul>
+<p>两者的关联在于：在每个类被装载的时候，Java虚拟机都护监视这个类，看它到底是被启动类装载器还是被用户自定义类装载器装载。当被装载的类引用了另外一个类的时候，虚拟机就会使用装载第一个类的类装载器装载被引用的类。</p>
+<p>一般的类加载器在尝试自己去加载某个Java类之前，会首先代理给其父类加载器。当父类加载器找不到的时候，才会尝试自己加载。这个逻辑是封装在java.lang.ClassLoader类的loadClass()方法中的。一般来说，父类优先的策略就足够好了。在某些情况下，可能需要采取相反的策略，即先尝试自己加载，找不到的时候再代理给父类加载器。这种做法是Java的Web容器中比较常见，也是Servlet规范推荐的做法。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/JVM/" rel="tag"># JVM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/11/28/注解与依赖注入框架/" rel="next" title="注解与依赖注入框架">
+                <i class="fa fa-chevron-left"></i> 注解与依赖注入框架
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/01/05/Java与C++/" rel="prev" title="Java与C++">
+                Java与C++ <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">44</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/sufushi" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#类加载机制步骤"><span class="nav-number">2.</span> <span class="nav-text">类加载机制步骤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#类加载器"><span class="nav-number">3.</span> <span class="nav-text">类加载器</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>

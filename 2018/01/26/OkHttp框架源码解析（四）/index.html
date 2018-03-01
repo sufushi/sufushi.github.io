@@ -101,7 +101,7 @@ Expires
 
 Cache-Control
 相对值，单位为秒，表示当前资">
-<meta property="og:updated_time" content="2018-01-26T04:58:08.917Z">
+<meta property="og:updated_time" content="2018-03-01T03:05:08.973Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="OkHttp框架源码解析——缓存策略">
 <meta name="twitter:description" content="前言合理利用本地缓存可以有效地减少网络开销，减少响应延迟。
@@ -370,7 +370,7 @@ Cache-Control
 <p>超时时间，一般用在服务器的response报头中用于告知客户端对应资源的过期时间。当客户端需要再次请求相同资源时先比较其过期时间，如果尚未超过过期时间则直接返回缓存结果，如果已经超过则重新请求</p>
 </li>
 <li><p>Cache-Control</p>
-<p>相对值，单位为秒，表示当前资源的有效期Cache-Control比Expires优先级更高</p>
+<p>相对值，单位为秒，表示当前资源的有效期，Cache-Control比Expires优先级更高</p>
 </li>
 <li><p>条件GET请求</p>
 <ul>
@@ -402,7 +402,7 @@ Cache-Control
 <li><p>CacheStrategy：缓存策略，其内部维护一个request和response，通过指定request和response来描述是通过网络还是缓存获取response，抑或二者同时使用</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">CacheStrategy</span> </span>&#123;</div><div class="line">  <span class="keyword">public</span> <span class="keyword">final</span> <span class="meta">@Nullable</span> Request networkRequest;</div><div class="line">  <span class="keyword">public</span> <span class="keyword">final</span> <span class="meta">@Nullable</span> Response cacheResponse;</div><div class="line">  ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 </li>
-<li><p>CacheStrategy.Factory：缓存·1策略工厂类，根据实际请求返回对应的缓存策略</p>
+<li><p>CacheStrategy.Factory：缓存策略工厂类，根据实际请求返回对应的缓存策略</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"> <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Factory</span> </span>&#123;</div><div class="line">   <span class="keyword">final</span> <span class="keyword">long</span> nowMillis;</div><div class="line">   <span class="keyword">final</span> Request request;</div><div class="line">   <span class="keyword">final</span> Response cacheResponse;</div><div class="line">...</div><div class="line"> &#125;</div></pre></td></tr></table></figure>
 </li>
 </ul>
@@ -599,7 +599,7 @@ Cache-Control
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-count">44</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>

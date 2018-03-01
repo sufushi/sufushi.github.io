@@ -92,7 +92,7 @@
 <meta property="og:image" content="http://images2015.cnblogs.com/blog/616953/201603/616953-20160307083939100-667798859.png">
 <meta property="og:image" content="http://images2015.cnblogs.com/blog/616953/201603/616953-20160307085938194-117935380.png">
 <meta property="og:image" content="http://images.cnitblog.com/blog/497634/201401/280030194375782.jpg">
-<meta property="og:updated_time" content="2017-11-18T15:20:56.861Z">
+<meta property="og:updated_time" content="2018-02-27T11:13:17.077Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java集合框架——Map接口">
 <meta name="twitter:description" content="Map接口Map接口与List、Set接口不同，它是由一系列键值对组成的集合，提供了key到value的映射，在Map中，它保证了key和value之间的一一对应关系。Map接口定义了一个类似于“字典”的规范，让我们能够根据键快速检索到它所关联的值。
@@ -352,8 +352,8 @@
 <p>Map接口的具体实现类主要有HashMap，LinkedHashMap，TreeMap，HashTable，AbstractMap，EnumMap。</p>
 <p><img src="http://images2015.cnblogs.com/blog/249993/201701/249993-20170117144843208-531675510.png" alt=""></p>
 <ul>
-<li><p>HashMapt实现原理</p>
-<p>以哈希表数据结构实现，查找对象时通过哈希函数计算其位置，它是为快速查询而设计的，其内部定义了一个hash表数组（Entry[] table），元素会通过哈希转换函数将元素的哈希地址转换成数组中存放的索引，如果有冲突，则使用散列链表的形式将所有相同哈希地址的元素串起来，可能通过查看HashMap.Entry的源码它是一个单链表结构。</p>
+<li><p>HashMap实现原理</p>
+<p>以哈希表数据结构实现，查找对象时通过哈希函数计算其位置，它是为快速查询而设计的，其内部定义了一个hash表数组（Entry[] table），元素会通过哈希转换函数将元素的哈希地址转换成数组中存放的索引，如果有冲突，则使用散列链表的形式将所有相同哈希地址的元素串起来，可以通过查看HashMap.Entry的源码它是一个单链表结构。</p>
 <p>HashMap实际上是一个链表散列的数据结构，即数组和链表的结构，但是在jdk1.8里加入了红黑树的实现，当链表的长度大于8的时候，就会转换为红黑树的结构。HashMap的数据结构如下图所示。</p>
 <p><img src="http://img.blog.csdn.net/20161222113920705?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvZmpzZTUx/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt=""></p>
 <p>从上图中可以知道，Java中HashMap采用了链地址法，即数组加链表的结合，在每个数组元素上都是一个链表结构，当数据被hash后，得到数组下标，把数据放在对应下标元素的链表上。下面是HashMap数据结构的源码实现。</p>
@@ -558,7 +558,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-count">44</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
