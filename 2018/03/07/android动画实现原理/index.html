@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android基础篇," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概要android的动画可以分为三种：补间动画、帧动画和属性动画。
+
+补间动画（Tween Animation）
+通过对场景里的对象不断做图像变换（平移、缩放、旋转、透明度）从而产生动画效果，它是一种渐进式动画，并且支持自定义。
+
+帧动画（Drawable Animation）
+通过顺序播放一些列图像从而产生动画效果，可以简单理解为图片切换动画，但是在图片过多过大时会导致OOM。
+
+属性动画（Pr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="android动画实现原理——补间动画">
+<meta property="og:url" content="sufushi.github.io/2018/03/07/android动画实现原理/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="概要android的动画可以分为三种：补间动画、帧动画和属性动画。
+
+补间动画（Tween Animation）
+通过对场景里的对象不断做图像变换（平移、缩放、旋转、透明度）从而产生动画效果，它是一种渐进式动画，并且支持自定义。
+
+帧动画（Drawable Animation）
+通过顺序播放一些列图像从而产生动画效果，可以简单理解为图片切换动画，但是在图片过多过大时会导致OOM。
+
+属性动画（Pr">
+<meta property="og:updated_time" content="2018-03-08T03:00:56.564Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="android动画实现原理——补间动画">
+<meta name="twitter:description" content="概要android的动画可以分为三种：补间动画、帧动画和属性动画。
+
+补间动画（Tween Animation）
+通过对场景里的对象不断做图像变换（平移、缩放、旋转、透明度）从而产生动画效果，它是一种渐进式动画，并且支持自定义。
+
+帧动画（Drawable Animation）
+通过顺序播放一些列图像从而产生动画效果，可以简单理解为图片切换动画，但是在图片过多过大时会导致OOM。
+
+属性动画（Pr">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2018/03/07/android动画实现原理/"/>
+
+
+
+
+
+  <title>android动画实现原理——补间动画 | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2018/03/07/android动画实现原理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">android动画实现原理——补间动画</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-07T11:43:43+08:00">
+                2018-03-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h4><p>android的动画可以分为三种：补间动画、帧动画和属性动画。</p>
+<ul>
+<li><p>补间动画（Tween Animation）</p>
+<p>通过对场景里的对象不断做图像变换（平移、缩放、旋转、透明度）从而产生动画效果，它是一种渐进式动画，并且支持自定义。</p>
+</li>
+<li><p>帧动画（Drawable Animation）</p>
+<p>通过顺序播放一些列图像从而产生动画效果，可以简单理解为图片切换动画，但是在图片过多过大时会导致OOM。</p>
+</li>
+<li><p>属性动画（Property Animation）</p>
+<p>通过动态改变对象的属性从而达到动画效果，属性动画是API 11的新特性，在低版本需要通过兼容库来使用它。</p>
+</li>
+</ul>
+<h4 id="补间动画的实现原理"><a href="#补间动画的实现原理" class="headerlink" title="补间动画的实现原理"></a>补间动画的实现原理</h4><p>1、基础使用</p>
+<p>补间动画的作用对象是View，他支持四种动画效果，分别是平移动画、缩放动画、旋转动画和透明度动画。补间动画的四种变换效果对应这Animation的四个子类：TranslateAnimation、ScaleAnimation、RotateAnimation和AlphaAnimation，这四种动画既可以通过XML来定义，也可以通过代码来动态创建。</p>
+<p><strong>补间动画的使用步骤</strong></p>
+<ul>
+<li>创建一个animationSet对象</li>
+<li>增加需要创建对应的animation对象</li>
+<li>根据项目的需求，为animation对象设置相应的数据</li>
+<li>将animation对象添加到animationSet中</li>
+<li>View控件开始执行animation</li>
+</ul>
+<p>2、自定义补间动画</p>
+<p>自定义补间动画是一件既简单又复杂的事情，派生一种新动画只需要继承Animation这个抽象类，然后重写它的initialize和applyTransformation方法，在initialize方法中做一些初始化工作，在applyTransformation中进行相应的矩阵变换即可，很多时候需要采用Canvas来简化矩阵变换的过程，而自定义补间动画的过程主要是矩阵变化的过程，矩阵是数学上的概念。</p>
+<p>3、工作原理</p>
+<p>android的补间动画中最重要的类是Animation类，一个抽象类，是所有动画的基类，它定义了Animation的公共属性和方法。属性中最重要的是：AnimationListener和Transformation，AnimationListener是动画监听器，监听动画的开始，执行过程，结束，可以实现一些自己的逻辑，Transformation是每一帧动画中包含的信息（平移、旋转、缩放、透明度），在Transformation类中最重要的属性就是alpha和Matrix，这两个是真正存放一帧动画的所有信息的载体。方法中最重要的是：getTransformation()和applyTransformation()，第一个方法是由系统调用，根据动画当前时间计算出此时的Transformation信息，不必重写次方法，第二个方法是必须重写的，根据系统由第一个方法计算出的Transformation进行实际的动画实现。</p>
+<p>首先来看Animation对象，当要设置动画的时候，一般都是先构建好Animation对象，然后使用下列形式的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">View.startAnimation(animation);</div></pre></td></tr></table></figure>
+<p>追踪View的startAnimation()方法，可以发现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">startAnimation</span><span class="params">(Animation animation)</span> </span>&#123;</div><div class="line">    animation.setStartTime(Animation.START_ON_FIRST_FRAME);</div><div class="line">    setAnimation(animation);</div><div class="line">    invalidateParentCaches();</div><div class="line">    invalidate(<span class="keyword">true</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看到先是调用了View的setAnimation()方法给自己设置一个Animation对象，这个对象是View类中的一个名为mCurrentAnimation的成员变量，然后调用invalidate()来重绘自己。既然View给自己设置了Animation对象，就会有需要拿出来使用，在View.draw(Canvas, ViewGroup, long)方法中发现了它的调用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">draw</span><span class="params">(Canvas canvas, ViewGroup parent, <span class="keyword">long</span> drawingTime)</span> </span>&#123;</div><div class="line">	...</div><div class="line"></div><div class="line">    Transformation transformToApply = <span class="keyword">null</span>;</div><div class="line">    <span class="keyword">boolean</span> concatMatrix = <span class="keyword">false</span>;</div><div class="line">    <span class="keyword">final</span> <span class="keyword">boolean</span> scalingRequired = mAttachInfo != <span class="keyword">null</span> &amp;&amp; mAttachInfo.mScalingRequired;</div><div class="line">    <span class="keyword">final</span> Animation a = getAnimation();</div><div class="line">    <span class="keyword">if</span> (a != <span class="keyword">null</span>) &#123;</div><div class="line">        more = applyLegacyAnimation(parent, drawingTime, a, scalingRequired);</div><div class="line">        concatMatrix = a.willChangeTransformationMatrix();</div><div class="line">        <span class="keyword">if</span> (concatMatrix) &#123;</div><div class="line">            mPrivateFlags3 |= PFLAG3_VIEW_IS_ANIMATING_TRANSFORM;</div><div class="line">        &#125;</div><div class="line">        transformToApply = parent.getChildTransformation();</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        <span class="keyword">if</span> ((mPrivateFlags3 &amp; PFLAG3_VIEW_IS_ANIMATING_TRANSFORM) != <span class="number">0</span>) &#123;</div><div class="line"></div><div class="line">            mRenderNode.setAnimationMatrix(<span class="keyword">null</span>);</div><div class="line">            mPrivateFlags3 &amp;= ~PFLAG3_VIEW_IS_ANIMATING_TRANSFORM;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span> (!drawingWithRenderNode</div><div class="line">                &amp;&amp; (parentFlags &amp; ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != <span class="number">0</span>) &#123;</div><div class="line">            <span class="keyword">final</span> Transformation t = parent.getChildTransformation();</div><div class="line">            <span class="keyword">final</span> <span class="keyword">boolean</span> hasTransform = parent.getChildStaticTransformation(<span class="keyword">this</span>, t);</div><div class="line">            <span class="keyword">if</span> (hasTransform) &#123;</div><div class="line">                <span class="keyword">final</span> <span class="keyword">int</span> transformType = t.getTransformationType();</div><div class="line">                transformToApply = transformType != Transformation.TYPE_IDENTITY ? t : <span class="keyword">null</span>;</div><div class="line">                concatMatrix = (transformType &amp; Transformation.TYPE_MATRIX) != <span class="number">0</span>;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在View中有两个draw方法，一个有一个参数，另一个有三个参数，分别是：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">public void draw(Canvas canvas) &#123;</div><div class="line">  	...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">draw</span><span class="params">(Canvas canvas, ViewGroup parent, <span class="keyword">long</span> drawingTime)</span> </span>&#123;</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>其中第一个参数的draw方法是具体的绘制过程（绘制背景、绘制内容、绘制前景……），含有三个参数的draw方法是由父布局调用的（ViewGroup.drawChild），因为android绘制的过程是从根布局开始的，子View是否能够绘制由父布局决定，这个方法就是提前处理绘制的地方，补间动画也是在此进行了处理以实现动画的效果。</p>
+<p>从View三个参数的方法中可以看到首先是通过getAnimation()方法获取之前设置的animation对象，然后用它作为参数调用了applyLegacyAnimation()方法，接下里看看applyLegacyAnimation的实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">applyLegacyAnimation</span><span class="params">(ViewGroup parent, <span class="keyword">long</span> drawingTime,</span></span></div><div class="line">        Animation a, <span class="keyword">boolean</span> scalingRequired) &#123;</div><div class="line">    Transformation invalidationTransform;</div><div class="line">    <span class="keyword">final</span> <span class="keyword">int</span> flags = parent.mGroupFlags;</div><div class="line">    <span class="keyword">final</span> <span class="keyword">boolean</span> initialized = a.isInitialized();</div><div class="line">    <span class="keyword">if</span> (!initialized) &#123;</div><div class="line">        a.initialize(mRight - mLeft, mBottom - mTop, parent.getWidth(), parent.getHeight());</div><div class="line">        a.initializeInvalidateRegion(<span class="number">0</span>, <span class="number">0</span>, mRight - mLeft, mBottom - mTop);</div><div class="line">        <span class="keyword">if</span> (mAttachInfo != <span class="keyword">null</span>) a.setListenerHandler(mAttachInfo.mHandler);</div><div class="line">        onAnimationStart();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">final</span> Transformation t = parent.getChildTransformation();</div><div class="line">    <span class="keyword">boolean</span> more = a.getTransformation(drawingTime, t, <span class="number">1f</span>);</div><div class="line">  </div><div class="line">    <span class="keyword">if</span> (scalingRequired &amp;&amp; mAttachInfo.mApplicationScale != <span class="number">1f</span>) &#123;</div><div class="line">        <span class="keyword">if</span> (parent.mInvalidationTransformation == <span class="keyword">null</span>) &#123;</div><div class="line">            parent.mInvalidationTransformation = <span class="keyword">new</span> Transformation();</div><div class="line">        &#125;</div><div class="line">        invalidationTransform = parent.mInvalidationTransformation;</div><div class="line">      	<span class="comment">// 获取变换</span></div><div class="line">        a.getTransformation(drawingTime, invalidationTransform, <span class="number">1f</span>);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        invalidationTransform = t;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (more) &#123;</div><div class="line">        <span class="keyword">if</span> (!a.willChangeBounds()) &#123;</div><div class="line">            <span class="keyword">if</span> ((flags &amp; (ViewGroup.FLAG_OPTIMIZE_INVALIDATE | ViewGroup.FLAG_ANIMATION_DONE))  					==ViewGroup.FLAG_OPTIMIZE_INVALIDATE) &#123;</div><div class="line">                parent.mGroupFlags |= ViewGroup.FLAG_INVALIDATE_REQUIRED;</div><div class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> ((flags &amp; ViewGroup.FLAG_INVALIDATE_REQUIRED) == <span class="number">0</span>) &#123;</div><div class="line">                parent.mPrivateFlags |= PFLAG_DRAW_ANIMATION;</div><div class="line">                parent.invalidate(mLeft, mTop, mRight, mBottom);</div><div class="line">            &#125;</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            <span class="keyword">if</span> (parent.mInvalidateRegion == <span class="keyword">null</span>) &#123;</div><div class="line">                parent.mInvalidateRegion = <span class="keyword">new</span> RectF();</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">final</span> RectF region = parent.mInvalidateRegion;</div><div class="line">          	<span class="comment">// 获取绘制无效区域</span></div><div class="line">            a.getInvalidateRegion(<span class="number">0</span>, <span class="number">0</span>, mRight - mLeft, mBottom - mTop, region,</div><div class="line">                    invalidationTransform);</div><div class="line"></div><div class="line">            parent.mPrivateFlags |= PFLAG_DRAW_ANIMATION;</div><div class="line"></div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> left = mLeft + (<span class="keyword">int</span>) region.left;</div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> top = mTop + (<span class="keyword">int</span>) region.top;</div><div class="line">            parent.invalidate(left, top, left + (<span class="keyword">int</span>) (region.width() + .<span class="number">5f</span>),</div><div class="line">                    top + (<span class="keyword">int</span>) (region.height() + .<span class="number">5f</span>));</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> more;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>其中主要调用了Animation的getTransformation()方法，这个三个参数的方法最后会调用重载它的两个参数的方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">getTransformation</span><span class="params">(<span class="keyword">long</span> currentTime, Transformation outTransformation)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (mStartTime == -<span class="number">1</span>) &#123;</div><div class="line">        mStartTime = currentTime;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">final</span> <span class="keyword">long</span> startOffset = getStartOffset();</div><div class="line">    <span class="keyword">final</span> <span class="keyword">long</span> duration = mDuration;</div><div class="line">    <span class="keyword">float</span> normalizedTime;</div><div class="line">    <span class="keyword">if</span> (duration != <span class="number">0</span>) &#123;</div><div class="line">        normalizedTime = ((<span class="keyword">float</span>) (currentTime - (mStartTime + startOffset))) /</div><div class="line">                (<span class="keyword">float</span>) duration;</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        normalizedTime = currentTime &lt; mStartTime ? <span class="number">0.0f</span> : <span class="number">1.0f</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">final</span> <span class="keyword">boolean</span> expired = normalizedTime &gt;= <span class="number">1.0f</span> || isCanceled();</div><div class="line">    mMore = !expired;</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (!mFillEnabled) normalizedTime = Math.max(Math.min(normalizedTime, <span class="number">1.0f</span>), <span class="number">0.0f</span>);</div><div class="line"></div><div class="line">    <span class="keyword">if</span> ((normalizedTime &gt;= <span class="number">0.0f</span> || mFillBefore) &amp;&amp; (normalizedTime &lt;= <span class="number">1.0f</span> || mFillAfter)) &#123;</div><div class="line">        <span class="keyword">if</span> (!mStarted) &#123;</div><div class="line">            fireAnimationStart();</div><div class="line">            mStarted = <span class="keyword">true</span>;</div><div class="line">            <span class="keyword">if</span> (NoImagePreloadHolder.USE_CLOSEGUARD) &#123;</div><div class="line">                guard.open(<span class="string">"cancel or detach or getTransformation"</span>);</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (mFillEnabled) normalizedTime = Math.max(Math.min(normalizedTime, <span class="number">1.0f</span>), <span class="number">0.0f</span>);</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (mCycleFlip) &#123;</div><div class="line">            normalizedTime = <span class="number">1.0f</span> - normalizedTime;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">final</span> <span class="keyword">float</span> interpolatedTime = mInterpolator.getInterpolation(normalizedTime);</div><div class="line">        applyTransformation(interpolatedTime, outTransformation);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">	...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这个方法先将参数currentTime处理成一个float表示当前动画进度，然后将进度值传入插值器得到新的进度值，前者是均匀的，随着时间是一个直线的线性关系，而通过插值器计算后得到的是一个曲线的关系，然后将新的进度值和Transformation对象传入applyTransformation()方法中，接下来看看applyTransformation()方法的实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">applyTransformation</span><span class="params">(<span class="keyword">float</span> interpolatedTime, Transformation t)</span> </span>&#123;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看到Animation的applyTransformation方法是空实现，具体实现它的是Animation的四个子类，而该方法正是真正的处理动画变化的过程。下面看一下四个子类的applyTransformation()方法的具体实现：</p>
+<ul>
+<li><p>ScaleAnimation</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">applyTransformation</span><span class="params">(<span class="keyword">float</span> interpolatedTime, Transformation t)</span> </span>&#123;</div><div class="line">    <span class="keyword">float</span> sx = <span class="number">1.0f</span>;</div><div class="line">    <span class="keyword">float</span> sy = <span class="number">1.0f</span>;</div><div class="line">    <span class="keyword">float</span> scale = getScaleFactor();</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (mFromX != <span class="number">1.0f</span> || mToX != <span class="number">1.0f</span>) &#123;</div><div class="line">        sx = mFromX + ((mToX - mFromX) * interpolatedTime);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (mFromY != <span class="number">1.0f</span> || mToY != <span class="number">1.0f</span>) &#123;</div><div class="line">        sy = mFromY + ((mToY - mFromY) * interpolatedTime);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (mPivotX == <span class="number">0</span> &amp;&amp; mPivotY == <span class="number">0</span>) &#123;</div><div class="line">        t.getMatrix().setScale(sx, sy);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        t.getMatrix().setScale(sx, sy, scale * mPivotX, scale * mPivotY);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>AlphaAnimation</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">applyTransformation</span><span class="params">(<span class="keyword">float</span> interpolatedTime, Transformation t)</span> </span>&#123;</div><div class="line">    <span class="keyword">final</span> <span class="keyword">float</span> alpha = mFromAlpha;</div><div class="line">    t.setAlpha(alpha + ((mToAlpha - alpha) * interpolatedTime));</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>RotateAnimation</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">applyTransformation</span><span class="params">(<span class="keyword">float</span> interpolatedTime, Transformation t)</span> </span>&#123;</div><div class="line">    <span class="keyword">float</span> degrees = mFromDegrees + ((mToDegrees - mFromDegrees) * interpolatedTime);</div><div class="line">    <span class="keyword">float</span> scale = getScaleFactor();</div><div class="line">    </div><div class="line">    <span class="keyword">if</span> (mPivotX == <span class="number">0.0f</span> &amp;&amp; mPivotY == <span class="number">0.0f</span>) &#123;</div><div class="line">        t.getMatrix().setRotate(degrees);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        t.getMatrix().setRotate(degrees, mPivotX * scale, mPivotY * scale);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>TranslateAnimation</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">applyTransformation</span><span class="params">(<span class="keyword">float</span> interpolatedTime, Transformation t)</span> </span>&#123;</div><div class="line">    <span class="keyword">float</span> dx = mFromXDelta;</div><div class="line">    <span class="keyword">float</span> dy = mFromYDelta;</div><div class="line">    <span class="keyword">if</span> (mFromXDelta != mToXDelta) &#123;</div><div class="line">        dx = mFromXDelta + ((mToXDelta - mFromXDelta) * interpolatedTime);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (mFromYDelta != mToYDelta) &#123;</div><div class="line">        dy = mFromYDelta + ((mToYDelta - mFromYDelta) * interpolatedTime);</div><div class="line">    &#125;</div><div class="line">    t.getMatrix().setTranslate(dx, dy);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>如此一来，动画的变化，就隐藏在Transformation之中了，既然已经知道了如何变化，就需要系统使用这种变化即应用到绘制中了。回到View的draw(Canvas canvas, ViewGroup parent, long drawingTime)方法，其中applyLegacyAnimation方法是用来获取变换的，其中有两个部分需要注意：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">a.getTransformation(drawingTime, invalidationTransform, <span class="number">1f</span>);</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">a.getInvalidateRegion(<span class="number">0</span>, <span class="number">0</span>, mRight - mLeft, mBottom - mTop, region,</div><div class="line">                       invalidationTransform);</div></pre></td></tr></table></figure>
+<p>第一个是获取变换，第二个是获取绘制无效区域。</p>
+<p>在View的draw方法中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (transformToApply != <span class="keyword">null</span>) &#123;</div><div class="line">    <span class="keyword">if</span> (concatMatrix) &#123;</div><div class="line">        <span class="keyword">if</span> (drawingWithRenderNode) &#123;</div><div class="line">            renderNode.setAnimationMatrix(transformToApply.getMatrix());</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            canvas.translate(-transX, -transY);</div><div class="line">            canvas.concat(transformToApply.getMatrix());</div><div class="line">            canvas.translate(transX, transY);</div><div class="line">        &#125;</div><div class="line">        parent.mGroupFlags |= ViewGroup.FLAG_CLEAR_TRANSFORMATION;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">float</span> transformAlpha = transformToApply.getAlpha();</div><div class="line">    <span class="keyword">if</span> (transformAlpha &lt; <span class="number">1</span>) &#123;</div><div class="line">        alpha *= transformAlpha;</div><div class="line">        parent.mGroupFlags |= ViewGroup.FLAG_CLEAR_TRANSFORMATION;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在这里分别从硬件加速和软件绘制上，对canvas进行矩阵变换。</p>
+<p>可见applyTransformation()方法就是动画具体的实现，系统会以一个比较高的频率来调用这个方法，一般情况下是60FPS，是一个非常流畅的画面了，也就是16ms。而系统是怎样高频率调用这个方法的，就要得益于Choreographer机制了。下面来看Choreographer类，其是在ViewRootImpl的构造方法中被调用，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">ViewRootImpl</span><span class="params">(Context context, Display display)</span> </span>&#123;</div><div class="line">	...</div><div class="line">    mChoreographer = Choreographer.getInstance();</div><div class="line">	...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>再看到ViewRootImpl的scheduleTraversals()方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">scheduleTraversals</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (!mTraversalScheduled) &#123;</div><div class="line">        mTraversalScheduled = <span class="keyword">true</span>;</div><div class="line">        mTraversalBarrier = mHandler.getLooper().getQueue().postSyncBarrier();</div><div class="line">        mChoreographer.postCallback(</div><div class="line">                Choreographer.CALLBACK_TRAVERSAL, mTraversalRunnable, <span class="keyword">null</span>);</div><div class="line">        <span class="keyword">if</span> (!mUnbufferedInputDispatch) &#123;</div><div class="line">            scheduleConsumeBatchedInput();</div><div class="line">        &#125;</div><div class="line">        notifyRendererOfFramePending();</div><div class="line">        pokeDrawLockIfNeeded();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看到调用了mChoreographer.postCallback(Choreographer.CALLBACK_TRAVERSAL, mTraversalRunnable, null)，该方法辗转调用了两个内部方法，最终调用了postCallbackDelayedInternal()方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">postCallbackDelayedInternal</span><span class="params">(<span class="keyword">int</span> callbackType,</span></span></div><div class="line">        Object action, Object token, <span class="keyword">long</span> delayMillis) &#123;</div><div class="line">    <span class="keyword">if</span> (DEBUG_FRAMES) &#123;</div><div class="line">        Log.d(TAG, <span class="string">"PostCallback: type="</span> + callbackType</div><div class="line">                + <span class="string">", action="</span> + action + <span class="string">", token="</span> + token</div><div class="line">                + <span class="string">", delayMillis="</span> + delayMillis);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">synchronized</span> (mLock) &#123;</div><div class="line">        <span class="keyword">final</span> <span class="keyword">long</span> now = SystemClock.uptimeMillis();</div><div class="line">        <span class="keyword">final</span> <span class="keyword">long</span> dueTime = now + delayMillis;</div><div class="line">        mCallbackQueues[callbackType].addCallbackLocked(dueTime, action, token);</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (dueTime &lt;= now) &#123;</div><div class="line">            scheduleFrameLocked(now);</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            Message msg = mHandler.obtainMessage(MSG_DO_SCHEDULE_CALLBACK, action);</div><div class="line">            msg.arg1 = callbackType;</div><div class="line">            msg.setAsynchronous(<span class="keyword">true</span>);</div><div class="line">            mHandler.sendMessageAtTime(msg, dueTime);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这个方法中，首先拿到当前的时间，然后将要执行的内容加入到一个mCallbackQueues中，再执行scheduleFrameLocked()方法或者发送一个Message。先看scheduleFrameLocked()方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">scheduleFrameLocked</span><span class="params">(<span class="keyword">long</span> now)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (!mFrameScheduled) &#123;</div><div class="line">        mFrameScheduled = <span class="keyword">true</span>;</div><div class="line">        <span class="keyword">if</span> (USE_VSYNC) &#123;</div><div class="line">            <span class="keyword">if</span> (DEBUG_FRAMES) &#123;</div><div class="line">                Log.d(TAG, <span class="string">"Scheduling next frame on vsync."</span>);</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">if</span> (isRunningOnLooperThreadLocked()) &#123;</div><div class="line">                scheduleVsyncLocked();</div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                Message msg = mHandler.obtainMessage(MSG_DO_SCHEDULE_VSYNC);</div><div class="line">                msg.setAsynchronous(<span class="keyword">true</span>);</div><div class="line">                mHandler.sendMessageAtFrontOfQueue(msg);</div><div class="line">            &#125;</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            <span class="keyword">final</span> <span class="keyword">long</span> nextFrameTime = Math.max(</div><div class="line">                    mLastFrameTimeNanos / TimeUtils.NANOS_PER_MS + sFrameDelay, now);</div><div class="line">            <span class="keyword">if</span> (DEBUG_FRAMES) &#123;</div><div class="line">                Log.d(TAG, <span class="string">"Scheduling next frame in "</span> + (nextFrameTime - now) + <span class="string">" ms."</span>);</div><div class="line">            &#125;</div><div class="line">            Message msg = mHandler.obtainMessage(MSG_DO_FRAME);</div><div class="line">            msg.setAsynchronous(<span class="keyword">true</span>);</div><div class="line">            mHandler.sendMessageAtTime(msg, nextFrameTime);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>if判断进去的部分是否使用垂直同步，暂时不考虑，else进去的部分还是把消息发送到mHandler对象中，接下来就看看mHandler对象，mHandler实例的类型是FrameHandler，它的定义就在Choreographer类中，源码实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">FrameHandler</span> <span class="keyword">extends</span> <span class="title">Handler</span> </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">FrameHandler</span><span class="params">(Looper looper)</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>(looper);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</div><div class="line">        <span class="keyword">switch</span> (msg.what) &#123;</div><div class="line">            <span class="keyword">case</span> MSG_DO_FRAME:</div><div class="line">                doFrame(System.nanoTime(), <span class="number">0</span>);</div><div class="line">                <span class="keyword">break</span>;</div><div class="line">            <span class="keyword">case</span> MSG_DO_SCHEDULE_VSYNC:</div><div class="line">                doScheduleVsync();</div><div class="line">                <span class="keyword">break</span>;</div><div class="line">            <span class="keyword">case</span> MSG_DO_SCHEDULE_CALLBACK:</div><div class="line">                doScheduleCallback(msg.arg1);</div><div class="line">                <span class="keyword">break</span>;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>它的处理方法中有三个分支，但最终都会调用这个doFrame()方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">doFrame</span><span class="params">(<span class="keyword">long</span> frameTimeNanos, <span class="keyword">int</span> frame)</span> </span>&#123;</div><div class="line">    ...</div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line">        Trace.traceBegin(Trace.TRACE_TAG_VIEW, <span class="string">"Choreographer#doFrame"</span>);</div><div class="line">        AnimationUtils.lockAnimationClock(frameTimeNanos / TimeUtils.NANOS_PER_MS);</div><div class="line"></div><div class="line">        mFrameInfo.markInputHandlingStart();</div><div class="line">        doCallbacks(Choreographer.CALLBACK_INPUT, frameTimeNanos);</div><div class="line"></div><div class="line">        mFrameInfo.markAnimationsStart();</div><div class="line">        doCallbacks(Choreographer.CALLBACK_ANIMATION, frameTimeNanos);</div><div class="line"></div><div class="line">        mFrameInfo.markPerformTraversalsStart();</div><div class="line">        doCallbacks(Choreographer.CALLBACK_TRAVERSAL, frameTimeNanos);</div><div class="line"></div><div class="line">        doCallbacks(Choreographer.CALLBACK_COMMIT, frameTimeNanos);</div><div class="line">    &#125; <span class="keyword">finally</span> &#123;</div><div class="line">        AnimationUtils.unlockAnimationClock();</div><div class="line">        Trace.traceEnd(Trace.TRACE_TAG_VIEW);</div><div class="line">    &#125;</div><div class="line">	...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看到这个方法多次调用了doCallbacks()方法，从入参可以看出分别是CALLBACK_INPUT（输入），CALLBACK_ANIMATION（动画），CALLBACK_TRAVERSAL（遍历）等。接下来就看看doCallbacks()方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">doCallbacks</span><span class="params">(<span class="keyword">int</span> callbackType, <span class="keyword">long</span> frameTimeNanos)</span> </span>&#123;</div><div class="line">    CallbackRecord callbacks;</div><div class="line">    <span class="keyword">synchronized</span> (mLock) &#123;</div><div class="line">        <span class="keyword">final</span> <span class="keyword">long</span> now = System.nanoTime();</div><div class="line">        callbacks = mCallbackQueues[callbackType].extractDueCallbacksLocked(</div><div class="line">                now / TimeUtils.NANOS_PER_MS);</div><div class="line">        <span class="keyword">if</span> (callbacks == <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="keyword">return</span>;</div><div class="line">        &#125;</div><div class="line">        mCallbacksRunning = <span class="keyword">true</span>;</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (callbackType == Choreographer.CALLBACK_COMMIT) &#123;</div><div class="line">            <span class="keyword">final</span> <span class="keyword">long</span> jitterNanos = now - frameTimeNanos;</div><div class="line">            Trace.traceCounter(Trace.TRACE_TAG_VIEW, <span class="string">"jitterNanos"</span>, (<span class="keyword">int</span>) jitterNanos);</div><div class="line">            <span class="keyword">if</span> (jitterNanos &gt;= <span class="number">2</span> * mFrameIntervalNanos) &#123;</div><div class="line">                <span class="keyword">final</span> <span class="keyword">long</span> lastFrameOffset = jitterNanos % mFrameIntervalNanos</div><div class="line">                        + mFrameIntervalNanos;</div><div class="line">                <span class="keyword">if</span> (DEBUG_JANK) &#123;</div><div class="line">                    Log.d(TAG, <span class="string">"Commit callback delayed by "</span> + (jitterNanos * <span class="number">0.000001f</span>)</div><div class="line">                            + <span class="string">" ms which is more than twice the frame interval of "</span></div><div class="line">                            + (mFrameIntervalNanos * <span class="number">0.000001f</span>) + <span class="string">" ms!  "</span></div><div class="line">                            + <span class="string">"Setting frame time to "</span> + (lastFrameOffset * <span class="number">0.000001f</span>)</div><div class="line">                            + <span class="string">" ms in the past."</span>);</div><div class="line">                    mDebugPrintNextFrameTimeDelta = <span class="keyword">true</span>;</div><div class="line">                &#125;</div><div class="line">                frameTimeNanos = now - lastFrameOffset;</div><div class="line">                mLastFrameTimeNanos = frameTimeNanos;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line">        Trace.traceBegin(Trace.TRACE_TAG_VIEW, CALLBACK_TRACE_TITLES[callbackType]);</div><div class="line">        <span class="keyword">for</span> (CallbackRecord c = callbacks; c != <span class="keyword">null</span>; c = c.next) &#123;</div><div class="line">            <span class="keyword">if</span> (DEBUG_FRAMES) &#123;</div><div class="line">                Log.d(TAG, <span class="string">"RunCallback: type="</span> + callbackType</div><div class="line">                        + <span class="string">", action="</span> + c.action + <span class="string">", token="</span> + c.token</div><div class="line">                        + <span class="string">", latencyMillis="</span> + (SystemClock.uptimeMillis() - c.dueTime));</div><div class="line">            &#125;</div><div class="line">            c.run(frameTimeNanos);</div><div class="line">        &#125;</div><div class="line">    &#125; <span class="keyword">finally</span> &#123;</div><div class="line">        <span class="keyword">synchronized</span> (mLock) &#123;</div><div class="line">            mCallbacksRunning = <span class="keyword">false</span>;</div><div class="line">            <span class="keyword">do</span> &#123;</div><div class="line">                <span class="keyword">final</span> CallbackRecord next = callbacks.next;</div><div class="line">                recycleCallbackLocked(callbacks);</div><div class="line">                callbacks = next;</div><div class="line">            &#125; <span class="keyword">while</span> (callbacks != <span class="keyword">null</span>);</div><div class="line">        &#125;</div><div class="line">        Trace.traceEnd(Trace.TRACE_TAG_VIEW);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>先看mCallbackQueues[]这个成员变量，它是一个CallbackQueue对象数组，它的下标是指类型，参数callbackType传给了mCallbackQueues[callbackType]中，而callbackType就是前面说的常量：CALLBACK_INPUT（输入），CALLBACK_ANIMATION（动画），CALLBACK_TRAVERSAL（遍历）。只需要根据不同的callbackType，就可以从这个数组里面取出不同类型的CallbackQueue对象来。而这个CallbackQueue又是Choreographer的一个内部类，其中有两个很重要的方法，分别是：extractDueCallbacksLocked(long)和addCallbackLocked(long, Object, Object)。</p>
+<p>先来看addCallbackLocked(long, Object, Object)方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addCallbackLocked</span><span class="params">(<span class="keyword">long</span> dueTime, Object action, Object token)</span> </span>&#123;</div><div class="line">    CallbackRecord callback = obtainCallbackLocked(dueTime, action, token);</div><div class="line">    CallbackRecord entry = mHead;</div><div class="line">    <span class="keyword">if</span> (entry == <span class="keyword">null</span>) &#123;</div><div class="line">        mHead = callback;</div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (dueTime &lt; entry.dueTime) &#123;</div><div class="line">        callback.next = entry;</div><div class="line">        mHead = callback;</div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">while</span> (entry.next != <span class="keyword">null</span>) &#123;</div><div class="line">        <span class="keyword">if</span> (dueTime &lt; entry.next.dueTime) &#123;</div><div class="line">            callback.next = entry.next;</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        &#125;</div><div class="line">        entry = entry.next;</div><div class="line">    &#125;</div><div class="line">    entry.next = callback;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>首先它通过一个内部方法构建了一个CallbackRecord对象，然后在后面将参数中的对象链接在CallbackRecord尾部，其实CallbackRecord就是一个链表结构的对象。</p>
+<p>接着看extractDueCallbacksLocked(long)方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> CallbackRecord <span class="title">extractDueCallbacksLocked</span><span class="params">(<span class="keyword">long</span> now)</span> </span>&#123;</div><div class="line">    CallbackRecord callbacks = mHead;</div><div class="line">    <span class="keyword">if</span> (callbacks == <span class="keyword">null</span> || callbacks.dueTime &gt; now) &#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    CallbackRecord last = callbacks;</div><div class="line">    CallbackRecord next = last.next;</div><div class="line">    <span class="keyword">while</span> (next != <span class="keyword">null</span>) &#123;</div><div class="line">        <span class="keyword">if</span> (next.dueTime &gt; now) &#123;</div><div class="line">            last.next = <span class="keyword">null</span>;</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        &#125;</div><div class="line">        last = next;</div><div class="line">        next = next.next;</div><div class="line">    &#125;</div><div class="line">    mHead = next;</div><div class="line">    <span class="keyword">return</span> callbacks;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这个方法是根据当前的时间，选出执行链表中与该时间最近的一个操作来处理，实际上，可以通俗地理解为跳帧。</p>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>到这里，可以得出以下结论：</p>
+<ul>
+<li>控制外部输入事件处理，动画执行，UI变化都是在同一个类中做的处理，即是Choreographer，其中它规定了理想的运行间隔为10ms，因为各种操作需要花费一定的时间，所以外部执行的间隔统计出来是大约16ms。</li>
+<li>在Choreographer对象中有三条链表，分别保存着待处理的输入事件，待处理的动画事件，代处理的遍历事件。</li>
+<li>每次执行的时候，Choreographer会根据当前的时间，只处理事件链表中最后一个事件，当有耗时操作在主线程中时，事件不能及时执行，就会出现所谓的跳帧，卡顿现象。</li>
+<li>Choreographer的公有方法postCallback是往事件链表中放事件的方法，而doFrame是消耗这些事件的方法。</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android基础篇/" rel="tag"># android基础篇</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/02/26/Java锁的原理/" rel="next" title="Java锁的原理">
+                <i class="fa fa-chevron-left"></i> Java锁的原理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">45</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/sufushi" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#概要"><span class="nav-number">1.</span> <span class="nav-text">概要</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#补间动画的实现原理"><span class="nav-number">2.</span> <span class="nav-text">补间动画的实现原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#小结"><span class="nav-number">3.</span> <span class="nav-text">小结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>

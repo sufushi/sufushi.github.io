@@ -99,7 +99,7 @@
 计算机进入方法后，最终需要逐条取出指令并逐条执行。Java方法也不例外，因此JVM进入方法后，也要模拟硬件CPU，能够从Jav">
 <meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/JVM%E8%B0%83%E7%94%A8Java%E7%A8%8B%E5%BA%8Fmain%28%29%E4%B8%BB%E5%87%BD%E6%95%B0%E7%9A%84%E8%B7%AF%E7%BA%BF%E5%9B%BE.png">
 <meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/%E5%87%BD%E6%95%B0%E5%A0%86%E6%A0%88%E7%A9%BA%E9%97%B4%E5%B8%83%E5%B1%80%E9%80%9A%E7%94%A8%E6%A8%A1%E5%9E%8B.png">
-<meta property="og:updated_time" content="2017-11-14T13:18:45.293Z">
+<meta property="og:updated_time" content="2018-03-03T02:48:31.871Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java执行引擎工作原理——方法调用">
 <meta name="twitter:description" content="前言JVM作为一款虚拟机，必然要涉及计算机核心的3大功能。
@@ -384,7 +384,7 @@
 </ul>
 <p>物理机器在执行程序时，将程序划分为若干个函数，每个函数都对应有一段机器码。一段程序的机器码存放在一块连续的内存中，这块内存叫做代码段。物理机器为每一个函数分配一个方法栈，当物理机器执行到某个函数时，才会为其分别方法栈，函数通过自身的机器指令遥控其对应的方法栈，可以往里面放入数值，也可以将数值移动到其他地方，也可以需哦那个里面读取数据，也可以从调用者的方法栈里取值。通过一条条指令和一个个栈，物理机器得以运行完一整个程序。</p>
 <p>JVM是用C和C++语言编写的一款软件，当JVM执行Java函数时，实际上是执行了一段汇编代码，这中间存在一个边界，边界的一边是C程序，边界的另一边直接是机器指令，C语言要能够直接执行机器指令。</p>
-<p>Java字节码指令直接对应一段特定逻辑的本地机器码，而JVM在解释执行Java字节码指令时，会直接调用字节码指令所对应的本地机器码。JVM是使用C/C++编写而成的，因此JVM要直接执行本地机器码，便意味着必须能够从C/C++程序中直接进入机器指令。这种技术实现的关键便是使用C语言所提供的一种高级功能——函数指针。通过函数指针能够直接有C程序触发一段机器指令。在JVM内部，call_stub便是实现C程序调用字节码的第一步——例如Java主函数的调用。在JVM执行Java主函数所对应的第一条字节码指令之前，必须经过call_stub函数指针进入对应的例程，然后在目标程序中触发对Java主函数第一条字节码指令的调用。</p>
+<p>Java字节码指令直接对应一段特定逻辑的本地机器码，而JVM在解释执行Java字节码指令时，会直接调用字节码指令所对应的本地机器码。JVM是使用C/C++编写而成的，因此JVM要直接执行本地机器码，便意味着必须能够从C/C++程序中直接进入机器指令。这种技术实现的关键便是使用C语言所提供的一种高级功能——函数指针。通过函数指针能够直接用C程序触发一段机器指令。在JVM内部，call_stub便是实现C程序调用字节码的第一步——例如Java主函数的调用。在JVM执行Java主函数所对应的第一条字节码指令之前，必须经过call_stub函数指针进入对应的例程，然后在目标程序中触发对Java主函数第一条字节码指令的调用。</p>
 <h4 id="函数指针"><a href="#函数指针" class="headerlink" title="函数指针"></a>函数指针</h4><p>函数指针是C/C++语言里一种高级的变量和应用，是实现C/C++语言动态扩展能力的关键技术之一，如同Java中的反射与类动态加载技术。</p>
 <ul>
 <li><p>函数指针与指针函数</p>
@@ -413,8 +413,7 @@
 </li>
 </ul>
 <p>函数指针本质上是一种指针，不是函数，但是由于这种指针指向的并不是某个变量的内存地址，而是某个函数的内存首地址，因此C语言允许像函数一样调用函数指针。</p>
-<h4 id="CallStub函数指针定义"><a href="#CallStub函数指针定义" class="headerlink" title="CallStub函数指针定义"></a>CallStub函数指针定义</h4><p>call_stub是JVM内部的一个函数指针，对于JVM执行引擎而言，该函数指针至关重要。</p>
-<p>call_stub函数指针原型定义在stubRoutines.hpp文件中，定义如下：</p>
+<h4 id="CallStub函数指针定义"><a href="#CallStub函数指针定义" class="headerlink" title="CallStub函数指针定义"></a>CallStub函数指针定义</h4><p>call_stub是JVM内部的一个函数指针，对于JVM执行引擎而言，该函数指针至关重要。call_stub函数指针原型定义在stubRoutines.hpp文件中，定义如下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">static</span> CallStub <span class="title">call_stub</span><span class="params">()</span> </span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">return</span> CAST_TO_FN_PTR(CallStub, _call_stub_entry);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>CAST_TO_FN_PTR是一个宏，进行宏替换后可以得到下面这行展开式：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">return</span> (CallStub) (castable_address(_call_stub_entry));</div></pre></td></tr></table></figure>
@@ -728,7 +727,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">44</span>
+                  <span class="site-state-item-count">45</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
