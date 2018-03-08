@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android framework," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概要android应用程序显示的过程：android应用程序调用SurfaceFlinger服务把经过测量、布局和绘制后的Surface渲染到显示屏幕上。
+
+SurfaceFlinger：android系统服务，负责管理android系统的帧缓冲区，即显示屏幕。
+Surface：android应用的每个串口对应一个画布（Canvas），即Surface，可以理解为android应用程序的一个窗口。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="android图像显示底层远原理">
+<meta property="og:url" content="sufushi.github.io/2018/03/08/android图像显示底层远原理/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="概要android应用程序显示的过程：android应用程序调用SurfaceFlinger服务把经过测量、布局和绘制后的Surface渲染到显示屏幕上。
+
+SurfaceFlinger：android系统服务，负责管理android系统的帧缓冲区，即显示屏幕。
+Surface：android应用的每个串口对应一个画布（Canvas），即Surface，可以理解为android应用程序的一个窗口。">
+<meta property="og:image" content="http://djt.qq.com/upload/public/common/2013/12/images/13162130161.jpg?nothumb=false">
+<meta property="og:image" content="http://img.blog.csdn.net/20170113141354367">
+<meta property="og:image" content="http://djt.qq.com/upload/public/common/2013/12/images/13162327200.jpg?nothumb=false">
+<meta property="og:image" content="http://djt.qq.com/upload/public/common/2013/12/images/13162353807.jpg?nothumb=false">
+<meta property="og:image" content="http://djt.qq.com/upload/public/common/2013/12/images/13162433482.jpg?nothumb=false">
+<meta property="og:image" content="http://djt.qq.com/upload/public/common/2013/12/images/13162610595.jpg?nothumb=false">
+<meta property="og:image" content="http://djt.qq.com/upload/public/common/2013/12/images/13162647832.jpg?nothumb=false">
+<meta property="og:image" content="http://djt.qq.com/upload/public/common/2013/12/images/13162708124.jpg?nothumb=false">
+<meta property="og:updated_time" content="2018-03-08T05:53:33.909Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="android图像显示底层远原理">
+<meta name="twitter:description" content="概要android应用程序显示的过程：android应用程序调用SurfaceFlinger服务把经过测量、布局和绘制后的Surface渲染到显示屏幕上。
+
+SurfaceFlinger：android系统服务，负责管理android系统的帧缓冲区，即显示屏幕。
+Surface：android应用的每个串口对应一个画布（Canvas），即Surface，可以理解为android应用程序的一个窗口。">
+<meta name="twitter:image" content="http://djt.qq.com/upload/public/common/2013/12/images/13162130161.jpg?nothumb=false">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2018/03/08/android图像显示底层远原理/"/>
+
+
+
+
+
+  <title>android图像显示底层远原理 | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2018/03/08/android图像显示底层远原理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">android图像显示底层远原理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-08T11:03:53+08:00">
+                2018-03-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h4><p>android应用程序显示的过程：android应用程序调用SurfaceFlinger服务把经过测量、布局和绘制后的Surface渲染到显示屏幕上。</p>
+<blockquote>
+<p>SurfaceFlinger：android系统服务，负责管理android系统的帧缓冲区，即显示屏幕。</p>
+<p>Surface：android应用的每个串口对应一个画布（Canvas），即Surface，可以理解为android应用程序的一个窗口。</p>
+</blockquote>
+<p>android应用程序的显示过程包含了两个部分（应用侧绘制、系统侧渲染）、两个机制（进程间通讯机制、显示刷新机制）。</p>
+<h4 id="应用侧绘制"><a href="#应用侧绘制" class="headerlink" title="应用侧绘制"></a>应用侧绘制</h4><p>一个android应用程序窗口里面包含了很多UI元素，这些元素是以树形结构来组织的，即它们存在着父子关系，其中，子UI元素位于父UI元素里面，如下图：</p>
+<p><img src="http://djt.qq.com/upload/public/common/2013/12/images/13162130161.jpg?nothumb=false" alt=""></p>
+<p>因此，在绘制一个android应用程序窗口的UI之前，首先要确定里面的各个子UI元素在父UI元素里面的大小和位置。确定各个子UI元素在父UI元素里面的大小以及位置的过程有称为测量过程和布局过程。因此，android应用程序窗口的UI渲染过程可以分为测量、布局和绘制三个阶段。</p>
+<ul>
+<li>测量：递归（深度优先）确定所有视图的大小（宽、高）</li>
+<li>布局：递归（深度优先）确定所有视图的位置（左上角坐标）</li>
+<li>绘制：在画布canvas绘制应用程序窗口的所有视图</li>
+</ul>
+<p>android目前有两种绘制模型：基于软件的绘制模型和硬件加速的绘制模型。</p>
+<p><strong>在基于软件的绘制模型下，CPU主导绘图，视图按照两个步骤绘制：</strong></p>
+<ul>
+<li>让View层次结构失效</li>
+<li>绘制View层次结构</li>
+</ul>
+<p>当应用程序需要更新它的部分UI时，都会调用内容发生改变的View对象的invalidate方法。无效消息请求会在View对象层次结构中传递，以便计算出需要重绘的屏幕区域（脏区）。然后，android系统会在View层次结构中绘制所有的跟脏区相交的区域。这种方法有两个缺点：</p>
+<ul>
+<li>绘制了不需要重绘的视图（与脏区相交的区域）</li>
+<li>掩盖了一些应用的bug（由于会重绘与脏区相交的区域）</li>
+</ul>
+<p><strong>在基于硬件加速的绘制模式下，GPU主导绘图，绘制按照三个步骤绘制：</strong></p>
+<ul>
+<li>让View层次结构失效</li>
+<li>记录、更新显示列表</li>
+<li>绘制显示列表</li>
+</ul>
+<p>这种模式下，android系统依然会使用invalidate方法和draw方法来请求屏幕更新和展现View对象。但android系统并不是立即执行绘制命令，而是首先把这些View的绘制函数作为绘制指令记录在一个显示列表中，然后再读取显示列表中的绘制指令然后调用OpenGL相关函数完成实际绘制。另一个优化是，android系统只需要针对由invalidate方法调用锁标记的View对象的脏区进行记录和更新显示列表。没有失效的View对象则能重放先前显示列表记录的绘制指令来进行简单的重绘工作。</p>
+<p>使用显示列表的目的是，把视图的各种绘制函数翻译成绘制指令保存起来，对于没有发生改变的视图把原先保存的操作指令重新读取出来重放一次就可以了，提高了视图的显示速度。而对于需要重绘的View，则更新显示列表，以便下次重用，然后再调用OpenGL完成绘制。</p>
+<p>硬件加速提高了android系统显示和刷新的速度，但是存在三个缺陷：</p>
+<ul>
+<li>兼容性（部分绘制函数不支持或不完全硬件加速）</li>
+<li>内存消耗（OpenGL API调用就会占用8MB，而实际上会占用更多内存）</li>
+<li>电量消耗（GPU耗电）</li>
+</ul>
+<h4 id="系统侧渲染"><a href="#系统侧渲染" class="headerlink" title="系统侧渲染"></a>系统侧渲染</h4><p>android应用程序在图形缓冲区中绘制好View层次结构后，这个图形缓冲区会被交给SurfaceFlinger服务，而SurfaceFlinger服务再使用OpenGL图形库API来将这个图形缓冲区渲染到硬件帧缓冲区中。</p>
+<h4 id="android图像显示的底层原理"><a href="#android图像显示的底层原理" class="headerlink" title="android图像显示的底层原理"></a>android图像显示的底层原理</h4><p><img src="http://img.blog.csdn.net/20170113141354367" alt=""></p>
+<blockquote>
+<p>CPU：作用是计算图片的形状和文字的纹体</p>
+<p>GPU：功能是渲染图像的颜色</p>
+<p>Display：屏幕显示图像</p>
+<p>Vsync：垂直同步信号，显卡输出频率与屏幕刷新频率同步的信号</p>
+</blockquote>
+<p>android图像在绘制的时候，首先是CPU计算出图像形状，计算完成CPU会将图像交给GPU渲染出颜色，如果这一切都能够在16ms内完成，那么在下一个VSync出现时，就能显示刚刚渲染出来的那一帧图像了。但是如果CPU和GPU处理一帧图像时间超过16ms，那么这帧图像只能等到第二个VSync出现时才能刷出屏幕，呈现给用户了，这就意味着用户在32ms内所看到的是同一帧图像，这就是所谓的掉帧，也就是卡顿了。</p>
+<p><strong>CPU、GPU处理图像时间过长的因素：</strong></p>
+<ul>
+<li><p>过度绘制</p>
+<p>UI布局中存在大量重叠的部分，或者重叠背景。</p>
+</li>
+<li><p>动画使用次数过多</p>
+<p>通常情况下android需要将xml布局文件转换成GPU可以识别的绘制对象，而这些绘制对象被存放在DisplayList数组中，当View第一次绘制的时候DisplayList被创建，View第二次绘制的时候GPU就直接从DisplayList获取绘制对象，省去了测量、布局的时间，但是如果我们改变了View的绘制内容那么得重新测量、布局，DisplayList也会被重新创建，所以动画是非常消耗性能的，因为它必须多次重绘。</p>
+</li>
+<li><p>短时间内创建的对象过多</p>
+<p>android的垃圾回收机制是，当Heap被占用的空间达到一个阈值，GC就开始回收对象了，GC工作的时候大部分线程是阻塞的，所以如果GC耗时超过16ms那么也会出现失帧卡顿的现象。</p>
+</li>
+</ul>
+<h4 id="进程间通讯机制"><a href="#进程间通讯机制" class="headerlink" title="进程间通讯机制"></a>进程间通讯机制</h4><p>android应用程序为了能够将自己的UI绘制在系统的帧缓冲区上，它们就必须要与Surface服务进行通信，如图所示：</p>
+<p><img src="http://djt.qq.com/upload/public/common/2013/12/images/13162327200.jpg?nothumb=false" alt=""></p>
+<p>android应用程序与SurfaceFlinger服务是运行在不同的进程中的，因此，它们采用某种进程间通信机制来进行通信。由于android应用程序在通知SurfaceFlinger服务来绘制自己的UI的时候，需要将UI数据传递给SurfaceFlinger服务，例如，要绘制UI的区域、位置等信息。一个android应用程序可能会有很多个窗口，而每一个窗口都有自己的UI数据，因此，android系统的匿名共享内存机制就派上用场了。</p>
+<p>每一个android应用程序与SurfaceFlinger服务之间，都会通过一块匿名共享内存来传递UI数据，如下所示：</p>
+<p><img src="http://djt.qq.com/upload/public/common/2013/12/images/13162353807.jpg?nothumb=false" alt=""></p>
+<p>但是单纯的匿名共享内存在传递多个窗口数据时缺乏有效的管理，所以匿名共享内存就被抽象为一个更上流的数据结构SharedClient，如下图所示：</p>
+<p><img src="http://djt.qq.com/upload/public/common/2013/12/images/13162433482.jpg?nothumb=false" alt=""></p>
+<p>在每个SharedClient中，最多有31个SharedBufferStack，每个SharedBufferStack都对应一个Surface，即一个窗口。一个SharedClient对应一个android应用程序，而一个android应用程序可能包含多个窗口，但至多可以包含31个窗口。每个SharedBufferStack中又包含了N个缓冲区（android4.1以下，N = 2，4.1以上，N = 3），即显示刷新机制中即将提到的双缓冲和三缓冲技术。</p>
+<h4 id="显示刷新机制"><a href="#显示刷新机制" class="headerlink" title="显示刷新机制"></a>显示刷新机制</h4><p>一般我们在绘制UI的时候，都会采用一种称为“双缓冲”的技术。双缓冲意味着要使用两个缓冲区，其中一个被称为Front Buffer，另外一个被称为Back Buffer。UI总是先在Back Buffer中绘制，然后再和Front Buffer交换，渲染到显示设备中。在android4.1中引入了VSync，这类似于时钟中断，每收到VSync中断，CPU就开始处理各帧数据。</p>
+<p><img src="http://djt.qq.com/upload/public/common/2013/12/images/13162610595.jpg?nothumb=false" alt=""></p>
+<p>但是如果CPU/GPU的FPS小于Display的FPS，会出现如下情况：</p>
+<p><img src="http://djt.qq.com/upload/public/common/2013/12/images/13162647832.jpg?nothumb=false" alt=""></p>
+<p>为了解决以上问题，又引出了三重缓冲区，如下所示：</p>
+<p><img src="http://djt.qq.com/upload/public/common/2013/12/images/13162708124.jpg?nothumb=false" alt=""></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android-framework/" rel="tag"># android framework</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/03/07/android动画实现原理/" rel="next" title="android动画实现原理——补间动画">
+                <i class="fa fa-chevron-left"></i> android动画实现原理——补间动画
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">46</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/sufushi" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#概要"><span class="nav-number">1.</span> <span class="nav-text">概要</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#应用侧绘制"><span class="nav-number">2.</span> <span class="nav-text">应用侧绘制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#系统侧渲染"><span class="nav-number">3.</span> <span class="nav-text">系统侧渲染</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#android图像显示的底层原理"><span class="nav-number">4.</span> <span class="nav-text">android图像显示的底层原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#进程间通讯机制"><span class="nav-number">5.</span> <span class="nav-text">进程间通讯机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#显示刷新机制"><span class="nav-number">6.</span> <span class="nav-text">显示刷新机制</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>
