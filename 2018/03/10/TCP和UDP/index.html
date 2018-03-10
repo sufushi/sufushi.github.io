@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="计算机网络," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言
+TCP：传输控制协议，是一种面向连接的，可靠的，基于字节流的运输层通信协议。在OSI七层模型中完成了第四层传输层所指定的功能。
+UDP：数据包协议是一种无连接的传输协议，提供面向事务的简单不可靠信息传送服务。
+
+TCP编程步骤1、TCP编程的服务端一般步骤是：
+
+创建一个socket
+设置socket属性（可选）
+绑定IP地址、端口等信息到socket上
+开启监听
+接收客户端上来的连接
+收发">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP和UDP">
+<meta property="og:url" content="sufushi.github.io/2018/03/10/TCP和UDP/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="前言
+TCP：传输控制协议，是一种面向连接的，可靠的，基于字节流的运输层通信协议。在OSI七层模型中完成了第四层传输层所指定的功能。
+UDP：数据包协议是一种无连接的传输协议，提供面向事务的简单不可靠信息传送服务。
+
+TCP编程步骤1、TCP编程的服务端一般步骤是：
+
+创建一个socket
+设置socket属性（可选）
+绑定IP地址、端口等信息到socket上
+开启监听
+接收客户端上来的连接
+收发">
+<meta property="og:image" content="http://img.blog.csdn.net/20170227111849763?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvTWFyeTE5OTIwNDEw/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center">
+<meta property="og:image" content="http://img.blog.csdn.net/20140503103800703?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQveGlleXV0aWFuMTk5MA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center">
+<meta property="og:image" content="http://img.blog.csdn.net/20140503103753906?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQveGlleXV0aWFuMTk5MA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center">
+<meta property="og:updated_time" content="2018-03-10T09:41:46.095Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="TCP和UDP">
+<meta name="twitter:description" content="前言
+TCP：传输控制协议，是一种面向连接的，可靠的，基于字节流的运输层通信协议。在OSI七层模型中完成了第四层传输层所指定的功能。
+UDP：数据包协议是一种无连接的传输协议，提供面向事务的简单不可靠信息传送服务。
+
+TCP编程步骤1、TCP编程的服务端一般步骤是：
+
+创建一个socket
+设置socket属性（可选）
+绑定IP地址、端口等信息到socket上
+开启监听
+接收客户端上来的连接
+收发">
+<meta name="twitter:image" content="http://img.blog.csdn.net/20170227111849763?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvTWFyeTE5OTIwNDEw/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2018/03/10/TCP和UDP/"/>
+
+
+
+
+
+  <title>TCP和UDP | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2018/03/10/TCP和UDP/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">TCP和UDP</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-10T15:34:25+08:00">
+                2018-03-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><blockquote>
+<p>TCP：传输控制协议，是一种面向连接的，可靠的，基于字节流的运输层通信协议。在OSI七层模型中完成了第四层传输层所指定的功能。</p>
+<p>UDP：数据包协议是一种无连接的传输协议，提供面向事务的简单不可靠信息传送服务。</p>
+</blockquote>
+<h4 id="TCP编程步骤"><a href="#TCP编程步骤" class="headerlink" title="TCP编程步骤"></a>TCP编程步骤</h4><p>1、TCP编程的服务端一般步骤是：</p>
+<ul>
+<li>创建一个socket</li>
+<li>设置socket属性（可选）</li>
+<li>绑定IP地址、端口等信息到socket上</li>
+<li>开启监听</li>
+<li>接收客户端上来的连接</li>
+<li>收发数据</li>
+<li>关闭网络连接</li>
+<li>关闭监听</li>
+</ul>
+<p>2、TCP编程的客户端一般步骤是：</p>
+<ul>
+<li>创建一个socket</li>
+<li>设置socket属性（可选）</li>
+<li>绑定IP地址、端口等信息到socket上</li>
+<li>设置要连接的对方的IP地址和端口等属性</li>
+<li>连接服务器</li>
+<li>收发数据</li>
+<li>关闭网络连接</li>
+</ul>
+<h4 id="UDP编程步骤"><a href="#UDP编程步骤" class="headerlink" title="UDP编程步骤"></a>UDP编程步骤</h4><p>1、UDP编程的服务端一般步骤是：</p>
+<ul>
+<li>创建一个socket</li>
+<li>设置socket属性（可选）</li>
+<li>绑定IP地址、端口等信息到socket上</li>
+<li>循环接收数据</li>
+<li>关闭网络连接</li>
+</ul>
+<p>2、UDP编程的客户端一般步骤是：</p>
+<ul>
+<li>创建一个socket</li>
+<li>设置socket属性（可选）</li>
+<li>绑定IP地址、端口等信息到socket上</li>
+<li>设置对方的IP地址和端口等属性</li>
+<li>发送数据</li>
+<li>关闭网络连接</li>
+</ul>
+<h4 id="TCP与UDP区别"><a href="#TCP与UDP区别" class="headerlink" title="TCP与UDP区别"></a>TCP与UDP区别</h4><p>1、基本区别</p>
+<ul>
+<li>TCP面向连接，UDP是无连接的，即发送数据之前不需要建立连接</li>
+<li>TCP提供可靠的服务，通过TCP连接传送的数据，无差错，不丢失，不重复，且按序到达，UDP尽最大努力交付，即不保证可靠交付</li>
+<li>TCP面向字节流，实际上是TCP把数据看成一连串无结构的字节流，UDP是面向报文的，UDP没有拥塞控制，因此网络出现拥塞不会使源主机的发送速率降低</li>
+<li>每一条TCP连接只能是点到点的，UDP支持一对一，一对多，多对一和多对多的交互通信</li>
+<li>TCP首部开销20字节，UDP首部开销小，只有8字节</li>
+<li>TCP的逻辑通信信道是全双工的可靠信道，UDP则是不可靠信道</li>
+</ul>
+<p>2、编程区别</p>
+<ul>
+<li>socket()的参数不同</li>
+<li>UDP Server不需要调用listen和accept</li>
+<li>UDP收发数据用sendto / recvfrom函数</li>
+<li>TCP地址信息在connect / accept时确定</li>
+<li>UDP在sendto / recvfrom函数中每次均需指定地址信息</li>
+<li>UDP的shutdown函数无效</li>
+</ul>
+<h4 id="TCP与UDP报文结构"><a href="#TCP与UDP报文结构" class="headerlink" title="TCP与UDP报文结构"></a>TCP与UDP报文结构</h4><p>1、TCP报文</p>
+<p>TCP报文是TCP层传输的数据单元，也叫报文段</p>
+<p><img src="http://img.blog.csdn.net/20170227111849763?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvTWFyeTE5OTIwNDEw/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt=""></p>
+<ul>
+<li><p>端口号：用来标识同一台计算机的不同的应用程序</p>
+<ul>
+<li>源端口：源端口和IP地址的作用是标识报文的返回地址</li>
+<li>目的端口：端口指明接收方计算机上的应用程序接口</li>
+</ul>
+<p>TCP报文中的源端口号和目的端口号同IP数据报中的源IP与目的IP唯一确定一条TCP连接</p>
+</li>
+<li><p>序号和确认号：是TCP可靠传输的关键部分。序号是本报文段发送的数据组的第一个字节的序号。在TCP传送的流中，每一个字节一个序号，序号确保了TCP传输的有序性，确认号指明下一个期待接收的字节序号，表明该序号之前的所有数据已经正确无误地收到</p>
+</li>
+<li><p>数据偏移 / 首部长度：4bits。由于首部可能含有可选项内容，因此TCP报文的长度是不确定的，报文不包含任何任选字段则长度为20字节，最大长度为60字节。首部长度也叫数据偏移，是因为首部长度实际上指示了数据区在报文段中的起始偏移值</p>
+</li>
+<li><p>保留：为将来定义新的用途保留，现在一般置0</p>
+</li>
+<li><p>控制位：URG  ACK  PSH  RST  SYN  FIN，共6个，每一个标志位表示一个控制功能</p>
+<ul>
+<li>URG：紧急指针标志，为1时表示紧急指针有效，为0时则忽略紧急指针</li>
+<li>ACK：确认序号标志，为1时表示确认号有效，为0时表示报文不含确认信息，忽略确认号字段</li>
+<li>PSH：push标志，为1表示是带有push标志的数据，指示接收方在接收到该报文段以后，应尽快将这个报文段应用程序，而不是在缓冲区排队</li>
+<li>RST：重置连接标志，用于重置由于主机奔溃或其他原因而出现错误的连接，或者用于拒绝非法的报文段和拒绝连接请求</li>
+<li>SYN：finish标志，用于释放连接，为1时表示发送方已经没有数据发送了，即关闭本方数据流</li>
+</ul>
+</li>
+<li><p>窗口：滑动窗口大小，用来告知发送端接收端的缓存大小，以此控制发送端发送数据的速率，从而达到流量控制。窗口大小时一个16bit字段，因而窗口大小最大为65535</p>
+</li>
+<li><p>校验和：奇偶校验，此校验和是对整个TCP报文段，包括TCP头部和TCP数据，以16位字进行计算所得。，由发送端计算和存储，并由接收端进行验证</p>
+</li>
+<li><p>紧急指针：只有当URG标志置1时紧急指针才有效。紧急指针是一个正的偏移量，和顺序字段中的值相加表示紧急数据最后一个字节的序号，TCP的紧急方式是发送端向另一端发送紧急数据的一种方式</p>
+</li>
+<li><p>选项和填充：最常见的可选字段是最长报文大小，又称为MSS，每个连接方通常都在通信的第一个报文段（为建立连接而设置SYN标志为1的那个段）中指明这个选项，它表示本端所能接收的最大报文的长度，选项长度不一定是32位的整数倍，所以要加填充位，即在这个字段中加入额外的0，以保证TCP头是32的整数倍</p>
+</li>
+<li><p>数据部分：TCP报文段中的数据部分是可选的，在一个连接建立和一个连接终止时，双方交换的报文段仅有TCP首部，如果一方没有数据要发送，也使用没有任何数据的首部来确认收到的数据，在处理超时的许多情况下，也会发送不带任何数据的报文段</p>
+</li>
+</ul>
+<p>2、UDP报文</p>
+<ul>
+<li><p>UDP有两个字段：数据字段和首部字段</p>
+<p><strong>首部字段</strong></p>
+<p>UDP的首部字段很简单，只有8字节，有4个字段组成，每个字段的长度都是2个字节</p>
+<p><img src="http://img.blog.csdn.net/20140503103800703?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQveGlleXV0aWFuMTk5MA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt=""></p>
+<ul>
+<li>源端口：原端口号。在需要对方回信时选用，不需要时可用全0</li>
+<li>目的端口：目的端口号。这在终点交付报文时必须要使用到</li>
+<li>长度：UDP用户数据报的长度，其最小值是8（仅有首部）</li>
+<li>校验和：检测UDP用户数据在传输中是否有错，有错就丢弃</li>
+</ul>
+</li>
+<li><p>要注意的地方</p>
+<ul>
+<li>UDP首部中校验和的计算方法有些特殊，在计算校验和时，要在UDP用户数据报之前增加12个字节的伪首部</li>
+<li>伪首部既不向下传达也不向上递交，而仅仅是为了计算校验和</li>
+<li>与IP数据报的校验和只校验IP数据报的首部不同，UDP的校验和是把首部和数据部分一起都校验</li>
+</ul>
+<p><strong>伪首部</strong></p>
+<p><img src="http://img.blog.csdn.net/20140503103753906?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQveGlleXV0aWFuMTk5MA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt=""></p>
+</li>
+</ul>
+<h4 id="TCP与UDP使用场景"><a href="#TCP与UDP使用场景" class="headerlink" title="TCP与UDP使用场景"></a>TCP与UDP使用场景</h4><p>1、TCP：由于其可靠性，一般都用在一般网页、邮件、远程连接、文件传送</p>
+<p>2、UDP：是面向消息的协议，通信的时候不需要建立连接，不可靠，但是其传输的数据量大，要是不注重数据的安全，只要求流畅性，可以用在：语音广播、视频、QQ实时传送协议、路由协议等</p>
+<h4 id="TCP与UDP相关问题"><a href="#TCP与UDP相关问题" class="headerlink" title="TCP与UDP相关问题"></a>TCP与UDP相关问题</h4><p>1、安全性问题</p>
+<p>TCP协议中包含着传递保证机制，当数据接受方收到发送方传来的信息时，会自动发出确认的信息，发送方只有在接收确认消息后才继续发送其消息，否则一直等待直到接收确认信息为止。</p>
+<p>UDP在传输的过程中出现数据丢失的情况，协议本身不能做出任何的提示或是检测，两个应用程序通信不需要提前建立连接，并且不提供差错控制，不提供数据重传，因此不可靠。</p>
+<p>2、发送和接收问题</p>
+<p>TCP发送进程将流分割成数据片段序列，然后将其作为IP数据包传送。每一个TCP片段均有一个序号，它在片段的第一个字节给出流中的字节数，接收程序在将数据放入接收进程之前，使用序号对数据进行排序，只有所有编号较小的片段都已经放到了流中后，编号大的片段才能被放到流中，因此未按顺序到达的片段是必须保存在一个缓冲区内，直到它前面的数据片段到达为止。</p>
+<p>UDP并不能确保数据的发送和接收问题，在发送就有可能丢失的情况，但是只有在网络非常拥挤的情况下才会出现这样的乱序问题。</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>TCP充分实现了数据传输时各种控制功能，可以进行丢包的重发机制，还可以对次序乱掉的分包进行顺序控制。而这些在UDP中都没有。此外，TCP作为一种面向连接的协议，只有在确认通信对端存在时才会发送数据，从而可以控制通信流量的浪费。TCP通过校验和、序列号、确认应答、重发控制、连接管理以及窗口控制等机制实现可靠性传输。</p>
+<ul>
+<li>TCP流控制：发送方管理不能使接收方或是中点过载，通过片段确认机制完成</li>
+<li>重传机制：发送方记录它发送的片段序号，当它接收到一个确认信息的时候，就知道信息接收成功，并将其从缓冲区中删除掉，否则在一定时间内没有接收到确认消息后，则重新发送当前缓存区中当前序号的片段</li>
+<li>缓冲机制：接收方的接收缓冲区用于平衡发送方与接收方之间的流量及解决数据片段的顺序排序问题</li>
+<li>校验和：每一个片段都包含一个对头和片段中的数据的检验和，如果接收到的片段和校验和不匹配，则片段被丢弃</li>
+</ul>
+<p>UDP不提供复杂的控制机制，利用IP提供面向无连接的通信服务，并且它是将应用程序发来的数据在收到的那一刻，立刻按照原样发送到网络上的一种机制。即使是出现网络拥堵的情况下，UDP也无法进行流量控制等避免网络拥塞的行为。此外，传输中如果出现了丢包，UDP也不负责重发。甚至当出现包的到达顺序乱掉时也没有纠正的功能。如果需要这些细节控制，那么不得不交给由采用UDP的应用程序去处理。换句话说，UDP将部分控制转移到应用程序去处理，自己却只提供作为传输层协议的最基本功能。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/计算机网络/" rel="tag"># 计算机网络</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/03/09/Java方法调用——解析与分派/" rel="next" title="Java方法调用——解析与分派">
+                <i class="fa fa-chevron-left"></i> Java方法调用——解析与分派
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">49</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/sufushi" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TCP编程步骤"><span class="nav-number">2.</span> <span class="nav-text">TCP编程步骤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#UDP编程步骤"><span class="nav-number">3.</span> <span class="nav-text">UDP编程步骤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TCP与UDP区别"><span class="nav-number">4.</span> <span class="nav-text">TCP与UDP区别</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TCP与UDP报文结构"><span class="nav-number">5.</span> <span class="nav-text">TCP与UDP报文结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TCP与UDP使用场景"><span class="nav-number">6.</span> <span class="nav-text">TCP与UDP使用场景</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TCP与UDP相关问题"><span class="nav-number">7.</span> <span class="nav-text">TCP与UDP相关问题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#总结"><span class="nav-number">8.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>
