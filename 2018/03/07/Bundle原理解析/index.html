@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android基础篇," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言Bundle对于android开发者来说肯定非常熟悉，它经常出现在以下场合：
+
+Activity状态数据的保存与恢复涉及到的两个回调：void onSaveInstanceState (Bundle outState)、void onCreate (Bundle savedInstanceState)
+Fragment的setArguments方法：void setArguments（Bund">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Bundle原理解析">
+<meta property="og:url" content="sufushi.github.io/2018/03/07/Bundle原理解析/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="前言Bundle对于android开发者来说肯定非常熟悉，它经常出现在以下场合：
+
+Activity状态数据的保存与恢复涉及到的两个回调：void onSaveInstanceState (Bundle outState)、void onCreate (Bundle savedInstanceState)
+Fragment的setArguments方法：void setArguments（Bund">
+<meta property="og:updated_time" content="2018-03-11T13:48:35.681Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Bundle原理解析">
+<meta name="twitter:description" content="前言Bundle对于android开发者来说肯定非常熟悉，它经常出现在以下场合：
+
+Activity状态数据的保存与恢复涉及到的两个回调：void onSaveInstanceState (Bundle outState)、void onCreate (Bundle savedInstanceState)
+Fragment的setArguments方法：void setArguments（Bund">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2018/03/07/Bundle原理解析/"/>
+
+
+
+
+
+  <title>Bundle原理解析 | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2018/03/07/Bundle原理解析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Bundle原理解析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-07T20:59:45+08:00">
+                2018-03-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>Bundle对于android开发者来说肯定非常熟悉，它经常出现在以下场合：</p>
+<ul>
+<li>Activity状态数据的保存与恢复涉及到的两个回调：void onSaveInstanceState (Bundle outState)、void onCreate (Bundle savedInstanceState)</li>
+<li>Fragment的setArguments方法：void setArguments（Bundle args）</li>
+<li>消息机制中的Message的setData方法：void setData（Bundle data）</li>
+</ul>
+<p>Bundle是用来传递数据的，可以将其理解为android中用来传递数据的一个容器，官方意为Bundle封装了String值到各种Parcelable类型数据的映射。</p>
+<h4 id="Bundle源码分析"><a href="#Bundle源码分析" class="headerlink" title="Bundle源码分析"></a>Bundle源码分析</h4><p>Bundle位于android.os包中，是一个final类，这就注定了Bundle不能被继承。Bundle继承自BaseBundle并实现了Cloneable和Parcelable两个接口。</p>
+<p>由于实现了Cloneable和Parcelable接口，因此以下几个重载是必不可少的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">clone</span><span class="params">()</span></span>;</div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">describeContents</span><span class="params">()</span></span>;</div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">writeToParcel</span><span class="params">(Parcel parcel, <span class="keyword">int</span> flag)</span></span>;</div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">readFromParcel</span><span class="params">(Parcel parcel)</span></span>;</div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Parcelable.Creator&lt;Bundle&gt; CREATOR = <span class="keyword">new</span> Parcelable.Creator&lt;Bundle&gt;();</div></pre></td></tr></table></figure>
+<p><strong>Bundle的几个公有构造方法</strong></p>
+<table>
+<thead>
+<tr>
+<th>公有构造方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>public Bundle()</td>
+<td>Constructs a new, empty Bundle</td>
+</tr>
+<tr>
+<td>public Bundle(ClassLoader loader)</td>
+<td>Constructs a new, empty Bundle that uses a specific ClassLoader for instantiating Parcelable and Serializable objects.</td>
+</tr>
+<tr>
+<td>public Bundle(int capacity)</td>
+<td>Constructs a new, empty Bundle sized to hold the given number of elements.</td>
+</tr>
+<tr>
+<td>public Bundle(Bundle b)</td>
+<td>Constructs a Bundle containing a copy of the mappings from the given Bundle.</td>
+</tr>
+<tr>
+<td>public Bundle(PersistableBundle b)</td>
+<td>Constructs a Bundle containing a copy of the mappings from the given PersistableBundle.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Bundle的put与get方法族</strong></p>
+<p>Bundle的功能是用来保存数据，那么必然提供了一系列存取数据的方法，这些方法太多了，几乎能够存取任何类型的数据，具体整理为下表：</p>
+<table>
+<thead>
+<tr>
+<th>相关保存方法</th>
+<th>相关读取方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>public void putBoolean(String key, boolean value)</td>
+<td>public boolean getBoolean(String key)</td>
+</tr>
+<tr>
+<td>public void putByte(String key, byte value)</td>
+<td>public byte getByte(String key)</td>
+</tr>
+<tr>
+<td>public void putChar(String key, char value)</td>
+<td>public char getChar(String key)</td>
+</tr>
+<tr>
+<td>public void putShort(String key, short value)</td>
+<td>public short getShort(String key)</td>
+</tr>
+<tr>
+<td>public void putFloat(String key, float value)</td>
+<td>public float getFloat(String key)</td>
+</tr>
+<tr>
+<td>public void putCharSequence(String key, CharSequence value)</td>
+<td>public CharSequence getCharSequence(String key)</td>
+</tr>
+<tr>
+<td>public void putParcelable(String key, Parcelable value)</td>
+<td>public T getParcelable(String key)</td>
+</tr>
+<tr>
+<td>public void putSize(String key, Size value)</td>
+<td>public Size getSize(String key)</td>
+</tr>
+<tr>
+<td>public void putSizeF(String key, SizeF value)</td>
+<td>public SizeF getSizeF(String key)</td>
+</tr>
+<tr>
+<td>public void putParcelableArray(String key, Parcelable[] value)</td>
+<td>public Parcelable[] getParcelableArray(String key)</td>
+</tr>
+<tr>
+<td>public void putParcelableArrayList(String key, ArrayList value)</td>
+<td>public ArrayList getParcelableArrayList(String key)</td>
+</tr>
+<tr>
+<td>public void putSparseParcelableArray(String key, SparseArray value)</td>
+<td>public SparseArray getSparseParcelableArray(String key)</td>
+</tr>
+<tr>
+<td>public void putIntegerArrayList(String key, ArrayList value)</td>
+<td>public ArrayList getIntegerArrayList(String key)</td>
+</tr>
+<tr>
+<td>public void putStringArrayList(String key, ArrayList value)</td>
+<td>public ArrayList getStringArrayList(String key)</td>
+</tr>
+<tr>
+<td>public void putCharSequenceArrayList(String key, ArrayList value)</td>
+<td>public ArrayList getCharSequenceArrayList(String key)</td>
+</tr>
+<tr>
+<td>public void putSerializable(String key, Serializable value)</td>
+<td>public Serializable getSerializable(String key)</td>
+</tr>
+<tr>
+<td>public void putBooleanArray(String key, boolean[] value)</td>
+<td>public boolean[] getBooleanArray(String key)</td>
+</tr>
+<tr>
+<td>public void putByteArray(String key, byte[] value)</td>
+<td>public byte[] getByteArray(String key)</td>
+</tr>
+<tr>
+<td>public void putShortArray(String key, short[] value)</td>
+<td>public short[] getShortArray(String key)</td>
+</tr>
+<tr>
+<td>public void putCharArray(String key, char[] value)</td>
+<td>public char[] getCharArray(String key)</td>
+</tr>
+<tr>
+<td>public void putFloatArray(String key, float[] value)</td>
+<td>public float[] getFloatArray(String key)</td>
+</tr>
+<tr>
+<td>public void putCharSequenceArray(String key, CharSequence[] value)</td>
+<td>public CharSequence[] getCharSequenceArray(String key)</td>
+</tr>
+<tr>
+<td>public void putBundle(String key, Bundle value)</td>
+<td>public Bundle getBundle(String key)</td>
+</tr>
+<tr>
+<td>public void putBinder(String key, IBinder value)</td>
+<td>public IBinder getBinder(String key)</td>
+</tr>
+</tbody>
+</table>
+<p>除了上述存取数据涉及的方法外，Bundle还提供了一个clear方法：public void clear()，该方法可用于移除Bundle中的所有数据。</p>
+<p>Bundle之所以能以键值对的方式存储数据，实质上是因为它的父类BaseBundle内部维护了一个ArrayMap。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ArrayMap&lt;String, Object&gt; mMap = <span class="keyword">null</span>;</div></pre></td></tr></table></figure>
+<p><strong>Bundle存取数据的具体实现</strong></p>
+<p>下面使用布尔类型的存储源码为例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">putBoolean</span><span class="params">(@Nullable String key, <span class="keyword">boolean</span> value)</span> </span>&#123;</div><div class="line">    unparcel();</div><div class="line">    mMap.put(key, value);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这里的mMap就是ArrayMap，存储数据就是把键值对保存到ArrayMap里。</p>
+<p>布尔类型数据的读取源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">getBoolean</span><span class="params">(String key)</span> </span>&#123;</div><div class="line">    unparcel();</div><div class="line">    <span class="keyword">if</span> (DEBUG) Log.d(TAG, <span class="string">"Getting boolean in "</span></div><div class="line">            + Integer.toHexString(System.identityHashCode(<span class="keyword">this</span>)));</div><div class="line">    <span class="keyword">return</span> getBoolean(key, <span class="keyword">false</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">getBoolean</span><span class="params">(String key, <span class="keyword">boolean</span> defaultValue)</span> </span>&#123;</div><div class="line">    unparcel();</div><div class="line">    Object o = mMap.get(key);</div><div class="line">    <span class="keyword">if</span> (o == <span class="keyword">null</span>) &#123;</div><div class="line">        <span class="keyword">return</span> defaultValue;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line">        <span class="keyword">return</span> (Boolean) o;</div><div class="line">    &#125; <span class="keyword">catch</span> (ClassCastException e) &#123;</div><div class="line">        typeWarning(key, o, <span class="string">"Boolean"</span>, defaultValue, e);</div><div class="line">        <span class="keyword">return</span> defaultValue;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>读取数据的逻辑也很简单，就是通过key从ArrayMap里读出保存的数据，并转换为对应的类型返回，当没找到数据或发生类型转换异常时返回缺省值。</p>
+<p>注意到这里有一个方法：unparcel()，它的具体实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/* package */</span> <span class="function"><span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">unparcel</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</div><div class="line">        <span class="keyword">final</span> Parcel parcelledData = mParcelledData;</div><div class="line">        <span class="keyword">if</span> (parcelledData == <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="keyword">if</span> (DEBUG) Log.d(TAG, <span class="string">"unparcel "</span></div><div class="line">                    + Integer.toHexString(System.identityHashCode(<span class="keyword">this</span>))</div><div class="line">                    + <span class="string">": no parcelled data"</span>);</div><div class="line">            <span class="keyword">return</span>;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (LOG_DEFUSABLE &amp;&amp; sShouldDefuse &amp;&amp; (mFlags &amp; FLAG_DEFUSABLE) == <span class="number">0</span>) &#123;</div><div class="line">            Slog.wtf(TAG, <span class="string">"Attempting to unparcel a Bundle while in transit; this may "</span></div><div class="line">                    + <span class="string">"clobber all data inside!"</span>, <span class="keyword">new</span> Throwable());</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (isEmptyParcel()) &#123;</div><div class="line">            <span class="keyword">if</span> (DEBUG) Log.d(TAG, <span class="string">"unparcel "</span></div><div class="line">                    + Integer.toHexString(System.identityHashCode(<span class="keyword">this</span>)) + <span class="string">": empty"</span>);</div><div class="line">            <span class="keyword">if</span> (mMap == <span class="keyword">null</span>) &#123;</div><div class="line">                mMap = <span class="keyword">new</span> ArrayMap&lt;&gt;(<span class="number">1</span>);</div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                mMap.erase();</div><div class="line">            &#125;</div><div class="line">            mParcelledData = <span class="keyword">null</span>;</div><div class="line">            <span class="keyword">return</span>;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">int</span> N = parcelledData.readInt();</div><div class="line">        <span class="keyword">if</span> (DEBUG) Log.d(TAG, <span class="string">"unparcel "</span> + Integer.toHexString(System.identityHashCode(<span class="keyword">this</span>))</div><div class="line">                + <span class="string">": reading "</span> + N + <span class="string">" maps"</span>);</div><div class="line">        <span class="keyword">if</span> (N &lt; <span class="number">0</span>) &#123;</div><div class="line">            <span class="keyword">return</span>;</div><div class="line">        &#125;</div><div class="line">        ArrayMap&lt;String, Object&gt; map = mMap;</div><div class="line">        <span class="keyword">if</span> (map == <span class="keyword">null</span>) &#123;</div><div class="line">            map = <span class="keyword">new</span> ArrayMap&lt;&gt;(N);</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            map.erase();</div><div class="line">            map.ensureCapacity(N);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            parcelledData.readArrayMapInternal(map, N, mClassLoader);</div><div class="line">        &#125; <span class="keyword">catch</span> (BadParcelableException e) &#123;</div><div class="line">            <span class="keyword">if</span> (sShouldDefuse) &#123;</div><div class="line">                Log.w(TAG, <span class="string">"Failed to parse Bundle, but defusing quietly"</span>, e);</div><div class="line">                map.erase();</div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                <span class="keyword">throw</span> e;</div><div class="line">            &#125;</div><div class="line">        &#125; <span class="keyword">finally</span> &#123;</div><div class="line">            mMap = map;</div><div class="line">            parcelledData.recycle();</div><div class="line">            mParcelledData = <span class="keyword">null</span>;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span> (DEBUG) Log.d(TAG, <span class="string">"unparcel "</span> + Integer.toHexString(System.identityHashCode(<span class="keyword">this</span>))</div><div class="line">                + <span class="string">" final map: "</span> + mMap);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>先来看BaseBundle中mParcelledData的定义：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/*</span></div><div class="line"> * If mParcelledData is non-null, then mMap will be null and the</div><div class="line"> * data are stored as a Parcel containing a Bundle.  When the data</div><div class="line"> * are unparcelled, mParcelledData willbe set to null.</div><div class="line"> */</div><div class="line">Parcel mParcelledData = <span class="keyword">null</span>;</div></pre></td></tr></table></figure>
+<p>在大部分情况下mParcelledData都是null，因此unparcel()直接返回。当使用构造函数public Bundle(Bundle b)创建Bundle时，会给mParcelledData赋值，具体实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">Bundle</span><span class="params">(Bundle b)</span> </span>&#123;</div><div class="line">    <span class="keyword">super</span>(b);</div><div class="line">    mFlags = b.mFlags;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">BaseBundle(BaseBundle b) &#123;</div><div class="line">    <span class="keyword">if</span> (b.mParcelledData != <span class="keyword">null</span>) &#123;</div><div class="line">        <span class="keyword">if</span> (b.isEmptyParcel()) &#123;</div><div class="line">            mParcelledData = NoImagePreloadHolder.EMPTY_PARCEL;</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            mParcelledData = Parcel.obtain();</div><div class="line">            mParcelledData.appendFrom(b.mParcelledData, <span class="number">0</span>, b.mParcelledData.dataSize());</div><div class="line">            mParcelledData.setDataPosition(<span class="number">0</span>);</div><div class="line">        &#125;</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        mParcelledData = <span class="keyword">null</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (b.mMap != <span class="keyword">null</span>) &#123;</div><div class="line">        mMap = <span class="keyword">new</span> ArrayMap&lt;&gt;(b.mMap);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        mMap = <span class="keyword">null</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    mClassLoader = b.mClassLoader;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>从上述代码可以看出mParcelledData的取值有3种情况：</p>
+<ul>
+<li>mParcelledData = EMPTY_PARCEL</li>
+<li>mParcelledData = Parcel.obtain()</li>
+<li>mParcelledData = null</li>
+</ul>
+<p>在unparcel()方法中就对上述几种情况做了不同的处理，当mParcelledData为null时，直接返回，当mParcelledData为EMPTY_PARCEL时，会创建一个容量为1的ArrayMap对象，当mParcelledData为Parcel.obtain()时，则会将里面的数据读出，并创建一个ArrayMap，并将数据存储到ArrayMap对象里面，同时将mParcelledData回收并置为null。</p>
+<p>上面只是以布尔类型的数据分析了Bundle的存储过程，其他数据类型的存储原理类似，不再赘述。</p>
+<h4 id="Bundle容器实现原因"><a href="#Bundle容器实现原因" class="headerlink" title="Bundle容器实现原因"></a>Bundle容器实现原因</h4><p>Bundle的容器使用ArrayMap实现而不是HashMap，其原因如下：</p>
+<ul>
+<li>Bundle内部是由ArrayMap实现的，ArrayMap的内部实现是两个数组，一个int数组是存储对象数据对应下标，一个对象数组保存key和value，内部使用二分法对key进行排序，所以在添加、删除、查找数据的时候，都会使用二分法查找，只适合于小数据操作，如果在数据量比较大的情况下，它的性能将退化。而HashMap内部则是数组+链表结构，所以在数据量较少的时候，HashMap的Entry Array比ArrayMap占用更多的内存。因为使用Bundle的场景大多数为小数据量，所以相比之下，在这种情况下使用ArrayMap保存数据，在操作速度和内存占用上都具有优势，因此使用Bundle来传递数据，可以保证更快的速度和更少的内存占用。</li>
+<li>在android中如果使用Intent来携带数据的话，需要数据是基本类型或者是可序列化类型，HashMap使用Serializable进行序列化，而Bundle则是使用Parcelable进行序列化。在android平台中，更推荐Parcelable实现序列化，虽然写法复杂，但是开销更小，所以为了更加快速地进行数据的序列化和·1发序列化，系统封装了Bundle类，方便我们进行数据的传输。</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android基础篇/" rel="tag"># android基础篇</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/03/07/android动画实现原理/" rel="next" title="android动画实现原理——补间动画">
+                <i class="fa fa-chevron-left"></i> android动画实现原理——补间动画
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/03/08/android图像显示底层远原理/" rel="prev" title="android图像显示底层远原理">
+                android图像显示底层远原理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">52</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/sufushi" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Bundle源码分析"><span class="nav-number">2.</span> <span class="nav-text">Bundle源码分析</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Bundle容器实现原因"><span class="nav-number">3.</span> <span class="nav-text">Bundle容器实现原因</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>
