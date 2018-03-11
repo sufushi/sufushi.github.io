@@ -271,7 +271,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2017/10/23/WindowManagerService工作原理（一）/">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2017/10/06/hello-world/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="sufushi">
@@ -290,7 +290,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2017/10/23/WindowManagerService工作原理（一）/" itemprop="url">WindowManagerService工作原理——基本概念</a></h1>
+                <a class="post-title-link" href="/2017/10/06/hello-world/" itemprop="url">Hello World</a></h1>
         
 
         <div class="post-meta">
@@ -302,8 +302,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-23T22:53:38+08:00">
-                2017-10-23
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-06T23:00:08+08:00">
+                2017-10-06
               </time>
             
 
@@ -342,76 +342,20 @@
       
         
           
-            <h4 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h4><ul>
-<li><p>即WindowManagerService    （WMS），管理窗口的服务。主要负责窗口的创建、删除、状态等与手机交互的事情，与Ams配合使用，在SystemServer中创建，用来保持窗口层级关系方便SurfaceFlinger绘制屏幕，和传递窗口信息给InputManager调用InputDispatcher将输入消息派发到顶层窗口。</p>
-</li>
-<li><p>WMS是android中图形用户接口的引擎，它管理者所有的窗口。所谓“管理”大致包括创建、删除窗口，以及将某个窗口设置为焦点窗口，焦点窗口是指当前正在和用户交互的窗口。</p>
-</li>
-<li><p>窗口的定义（通过对比“窗口”、“Window”、“View”这三个概念）</p>
-<p>“窗口”是一种通用的描述，值一个独立的界面，比如一个对话框窗口、一个Activity交互的窗口、一个菜单窗口等。</p>
-<p>“Window”是一个类，其实现类是PhoneWindow类，Activity类实现了Window.Callback接口，从而成了具有通用操作方式的窗口，所谓的“通用的操作方式”包括，当用户按下“Menu”键会弹出一个菜单，按下“Back”键会退出当前Activity等。</p>
-<p>“View”也是一个类，通常翻译为视图，指一个独立的交互元素，比如一个按钮、一个文本框。</p>
-</li>
-<li><p>Activity、View与Window的区别与联系：View是最底层的显示控件，Activity包含一个DecorView+Window实现类引用PhoneWindow，而Window是一个接口-用来将手势动作转化为Activity可识别的信号。</p>
-</li>
-<li><p>在WMS中，窗口是由两部分内容构成的，一部分是描述该窗口的类WindowState，另一部分是该窗口在屏幕上对应的界面Surface。换句话说，如果我们闭着眼睛操作手机的话，则窗口对应的Surface就完全是多余的，Surface仅仅用于在屏幕上绘制出界面，而负责将用户输入的触摸消息及按键消息派发到正在交互的窗口与Surface一点关系都没有。</p>
-</li>
-</ul>
-<h4 id="窗口管理要解决的核心问题"><a href="#窗口管理要解决的核心问题" class="headerlink" title="窗口管理要解决的核心问题"></a>窗口管理要解决的核心问题</h4><p>对于所有窗口管理系统而言，窗口管理服务端压迫解决的核心问题如下。</p>
-<ul>
-<li><p>窗口如何布局</p>
-<p>窗口布局一般分为两种，一种是平铺式布局，另一种是层叠式布局。</p>
-<p><img src="http://oxsxuoiqx.bkt.clouddn.com/%E7%AA%97%E5%8F%A3%E5%B8%83%E5%B1%80%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F.png" alt="窗口布局的两种方式"></p>
-<p>早期的单窗口操作系统多使用平铺式布局，该布局的特点是所有的窗口都在一个平面上，设计上比较简单，但缺点是显而易见的，即当需要多个窗口时，界面很难排版。从程序设计的角度上来看，该布局一般不需要窗口管理服务端，只需要事先给每个窗口分配特定的窗口位置,然后由各个窗口内部的程序代码负责绘制该屏幕，而在消息交互时，则由输入模块直接根据触摸位置将触摸消息传递给相应的窗口程序即可。</p>
-<p>层叠式布局的特点在于允许多个窗口层叠显示，android采用的就是这种方式。该布局一般都需要一个窗口管理服务端，从程序设计的角度来看，有两种设计模式可以实现服务端。一种是采用独立进程方式，另一种是采用共享库方式。</p>
-<p><img src="http://oxsxuoiqx.bkt.clouddn.com/%E4%BD%BF%E7%94%A8%E7%8B%AC%E7%AB%8B%E8%BF%9B%E7%A8%8B%E6%96%B9%E5%BC%8F%E8%BF%9B%E8%A1%8C%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1%20.png" alt="使用独立进程方式进行进程通信"></p>
-<p><img src="http://oxsxuoiqx.bkt.clouddn.com/%E4%BD%BF%E7%94%A8%E5%85%B1%E4%BA%AB%E5%BA%93%E6%96%B9%E5%BC%8F%E8%BF%9B%E8%A1%8C%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1%20.png" alt="使用共享库方式进行进程通信"></p>
-<p>所谓独立进程方式是指，使用一个独立的进程专门用于屏幕的绘制和消息处理，所有的其他应用程序当需要创建窗口时，通过进程通信的方式请求管理服务创建窗口。比如Linux上的X-Window就是一种独立进程的方式，它使用Socket通信的方式，通知窗口管理服务进行窗口的创建以及交互消息传递。</p>
-<p>共享库方式是指，使用一段共享程序，该段共享程序中保存了所有客户端的窗口消息，共享库和每个客户端程序都运行与同一个进程之间。Windows操作系统使用的就是这种方式，很多嵌入式系统也使用这种方式。该方式的优点是窗口管理的开销比较小，尤其是窗口的交互，因为它不需要进程间通信，其缺点是任何一个客户端的不适当都可能导致窗口系统奔溃。</p>
-</li>
-<li><p>窗口尺寸受制于哪些因素</p>
-<p>在没有任何限制的情况下，窗口的尺寸应该完全由客户端自身指定，当然，指定的尺寸不应超过屏幕本身的尺寸，而针对具体的系统而言，窗口的尺寸可能还要受到一些其他的所谓“系统窗口”的影响。比如，对于Windows操作系统而言，应用窗口的大小等于屏幕的大小减去状态栏的大小，对于苹果操作系统而言，应用窗口的大小等于屏幕的大小减去菜单栏的大小。</p>
-<p>而在android系统中，所谓的系统窗口包含两个部分，一个是状态栏，位于屏幕上方，另一个是输入法窗口。由于手机应用的特殊性，输入法窗口默认都会引起应用窗口尺寸发生变化，这会导致应用窗口需要根据新的窗口尺寸重新绘制界面。</p>
-<p>为了支持这些受制因素，窗口管理系统需要定义一些特别的系统变量保存收制因素，并在计算窗口大小时使用这些变量。</p>
-</li>
-<li><p>如何寻找焦点窗口</p>
-<p>一种比较简单的寻找焦点窗口的逻辑是，一次只能有一个焦点窗口。在这种情况下，用户需要和其它窗口交互时，必须先激活目标窗口，使之成为新的焦点窗口，接下来的所有触摸消息或者按键消息都只能发送给焦点窗口。</p>
-<p>而在实际系统中，却存在两种特别的需求分别针对按键消息和触摸消息。第一种是所谓的“系统按键”，即当被预定义的系统按键消息产生时，不是由当前的焦点窗口去处理，而是由系统进程处理，为了到达这个目的，窗口管理服务必须添加额外的逻辑来处理这种情况。第二种是跨窗口操作，不仅要能根据当前焦点窗口派发消息，还要能够根据窗口的层叠顺序将非按键消息派发给非焦点窗口。在android系统中，虽然不存在这样的操作，但这的确是窗口管理服务应该考虑的一个问题。</p>
-</li>
-<li><p>窗口切换时的动画策略</p>
-<p>窗口切换时的动画是指，当新窗口显示时或者老窗口消失时，可以指定一个动画，从而提供一种友好的界面效果。</p>
-<p>在传统的PC操作系统中，窗口系统是完全的多窗口，即多个窗口可以层叠显示在屏幕上，屏幕不被任何一个应用窗口所独占，因此，窗口的启动动画和关闭动画是彼此分离的，新窗口的启动不会导致老焦点窗口的消失。而在智能手机系统中，屏幕一般都会被应用窗口多独占，无论是android还是iPhone都是这种情况，因此，新窗口的启动动画同时会伴随这老窗口的关闭动画这就需要一种特别的动画逻辑。同时，在android系统中，每个应用窗口可以同时指定是否使用桌面背景作为窗口背景，而在窗口动画的过程中却要保持桌面背景的静态性，这就有增加了动画逻辑的复杂度。除了普通窗口的启动、关闭动画之外，android中增加了任务窗口动画逻辑，即在不同任务之间切换窗口时所使用的动画，这与相同任务之间窗口切换时的动画效果一般不同，不过动画的机制本身是相同的。</p>
-</li>
-</ul>
-<h4 id="几个操作的概念"><a href="#几个操作的概念" class="headerlink" title="几个操作的概念"></a>几个操作的概念</h4><p>在分析WMS的内部逻辑中，会进行三种常见操作，具体的操作可能会对应不同的函数名称，但是，这些操作的语义是相同的。三种常见的操作为assign layer、perforn layout以及place surface。</p>
-<ul>
-<li>assign laye的语义是，为窗口分配层值。在WMS中，每个窗口都使用WindowState类来描述，而窗口要在界面上显示时，需要指定窗口的层值。从用户的视角看，层值越大，其窗口越靠近用户，窗口之间的层叠正是按照层值进行的。</li>
-<li>perforn layout的语义是，计算窗口的大小。每个窗口对象都必须有一个大小，即窗口大小，perforn layout将根据状态栏大小、输入法窗口的状态、窗口动画状态计算该窗口的大小。</li>
-<li>place surface的语义是，调整Surface对象的属性，并重新将其显示在屏幕上。由于assign layer和perforn layout的执行结果影响的仅仅是WindowState中的参数，而能够显示到屏幕上的窗口都包含一个Surface对象，因此只有将以上执行结果中的窗口层值、大小设置到Surface对象中，屏幕上才能看出该窗口的变化。place surface的过程就是将这些值赋值给Surface对象，并告诉Surface Flinger服务重新显示这些Surface对象。</li>
-</ul>
-<h4 id="WMS接口结构"><a href="#WMS接口结构" class="headerlink" title="WMS接口结构"></a>WMS接口结构</h4><p>WMS接口结构是指WMS功能模块与其他功能模块之间的交互接口，其中主要包括与AMS模块即应用程序客户端的接口。</p>
-<p><img src="http://oxsxuoiqx.bkt.clouddn.com/WMS%E5%9C%A8%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E6%8E%A5%E5%8F%A3%E7%BB%93%E6%9E%84.png" alt="WMS在系统中的接口结构"></p>
-<p>该结构中的主要交互过程如下。</p>
-<ul>
-<li>应用程序在Activity中添加、删除窗口。具体实现就是通过调用WindowManager类的addView()和removeView()函数完成，这会转而调用ViewRoot类的相关方法，然后通过IPC调用到WMS中的相关方法完成添加、删除过程。</li>
-<li>当AMS通知ActivityThread销毁某个Activity时，ActivityThread会直接调用WindowManager中的removeView()方法删除窗口。</li>
-<li>AMS中直接调用WMS，这种调用一般都不是请求WMS创建或者删除窗口，而是告诉WMS一些其他消息。比如某个新的Activity就要启动了，从而WMS会保存一个该Activity记录的引用。而在WMS内部，则全权接管了输入消息的处理和屏幕的绘制。其中输入消息的处理是借助于InputManager类完成的，而绘制屏幕则是借助于SurfaceFlinger模块完成的，SurfaceFlinger是Linux的一个驱动，它内部会使用芯片的图形加速引擎完成对界面的绘制。</li>
-</ul>
-<h4 id="WMS主要内部类"><a href="#WMS主要内部类" class="headerlink" title="WMS主要内部类"></a>WMS主要内部类</h4><p>在WMS内部定义了很多内联类，了解这些内部类有助于理解WMS源码的工作逻辑。</p>
-<ul>
-<li><p>表示窗口的数据类</p>
-<p>由于WMS是用来管理窗口的，因此，需要定义一个专门的类用来表示窗口，WMS中表示窗口的类是WindowState。从设计原理的角度来讲，似乎使用WindowState类来表示一个窗口就可以了，然而从程序实现的角度来讲，出于编程的便利性及程序逻辑的清晰性，WMS类内部还定义了两个额外的用来表示窗口的类，分别是WindowToken和AppWindowToken。</p>
-<p>首先，每个窗口都会对应一个WindowState对象。因为窗口的本质就是由WindowState类描述的数据对象，WindowState类中记录作为一个窗口应该有的全部属性，比如窗口的大小、在屏幕上的层值，以及窗口动画过程的各种状态信息。</p>
-<p>WindowToken描述的是窗口对应的token的相关属性，每个窗口都会对应一个WindowState对象，但是一个窗口的所有子窗口将对应同一个WindowToken对象，即多对一关系。</p>
-<p>如果窗口是Activity创建的，即该窗口对应一个Activity，那么该窗口同时对应一个AppWindowToken对象。</p>
-</li>
-<li><p>InputMonitor类</p>
-<p>InputMonitor在WMS中的作用如下：</p>
-<p>​</p>
-</li>
-</ul>
-
           
+
+本版本仅适用于Win环境本文关键字： Hexo绿色版，Hexo便携版，Hexo配置，Hexo，U盘
+
+Hexo是一个快速、简洁且高效的博客框架，支持 GitHub Flavored Markdown 的所有功能；具有超快生成速度，让上百个页面在几秒内瞬间完成渲染；还拥有各式各样的插件等等。
+但是
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/10/06/hello-world/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -449,7 +393,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/5/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><span class="page-number current">6</span><a class="page-number" href="/page/7/">7</a><span class="space">&hellip;</span><a class="page-number" href="/page/16/">16</a><a class="extend next" rel="next" href="/page/7/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/5/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><span class="page-number current">6</span>
   </nav>
 
 
@@ -499,7 +443,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-count">51</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -512,7 +456,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-count">8</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -523,6 +467,14 @@
           
 
           <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/sufushi" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
             
           </div>
 
@@ -551,7 +503,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2017</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
@@ -720,8 +672,33 @@
   
 
   
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
 
   
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
 
   
 
