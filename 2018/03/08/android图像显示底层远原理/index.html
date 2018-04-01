@@ -82,7 +82,7 @@
 <meta name="description" content="概要android应用程序显示的过程：android应用程序调用SurfaceFlinger服务把经过测量、布局和绘制后的Surface渲染到显示屏幕上。
 
 SurfaceFlinger：android系统服务，负责管理android系统的帧缓冲区，即显示屏幕。
-Surface：android应用的每个串口对应一个画布（Canvas），即Surface，可以理解为android应用程序的一个窗口。">
+Surface：android应用的每个窗口对应一个画布（Canvas），即Surface，可以理解为android应用程序的一个窗口。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="android图像显示底层远原理">
 <meta property="og:url" content="sufushi.github.io/2018/03/08/android图像显示底层远原理/index.html">
@@ -90,7 +90,7 @@ Surface：android应用的每个串口对应一个画布（Canvas），即Surfac
 <meta property="og:description" content="概要android应用程序显示的过程：android应用程序调用SurfaceFlinger服务把经过测量、布局和绘制后的Surface渲染到显示屏幕上。
 
 SurfaceFlinger：android系统服务，负责管理android系统的帧缓冲区，即显示屏幕。
-Surface：android应用的每个串口对应一个画布（Canvas），即Surface，可以理解为android应用程序的一个窗口。">
+Surface：android应用的每个窗口对应一个画布（Canvas），即Surface，可以理解为android应用程序的一个窗口。">
 <meta property="og:image" content="http://djt.qq.com/upload/public/common/2013/12/images/13162130161.jpg?nothumb=false">
 <meta property="og:image" content="http://img.blog.csdn.net/20170113141354367">
 <meta property="og:image" content="http://djt.qq.com/upload/public/common/2013/12/images/13162327200.jpg?nothumb=false">
@@ -99,13 +99,13 @@ Surface：android应用的每个串口对应一个画布（Canvas），即Surfac
 <meta property="og:image" content="http://djt.qq.com/upload/public/common/2013/12/images/13162610595.jpg?nothumb=false">
 <meta property="og:image" content="http://djt.qq.com/upload/public/common/2013/12/images/13162647832.jpg?nothumb=false">
 <meta property="og:image" content="http://djt.qq.com/upload/public/common/2013/12/images/13162708124.jpg?nothumb=false">
-<meta property="og:updated_time" content="2018-03-08T05:53:33.909Z">
+<meta property="og:updated_time" content="2018-03-29T08:19:27.240Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="android图像显示底层远原理">
 <meta name="twitter:description" content="概要android应用程序显示的过程：android应用程序调用SurfaceFlinger服务把经过测量、布局和绘制后的Surface渲染到显示屏幕上。
 
 SurfaceFlinger：android系统服务，负责管理android系统的帧缓冲区，即显示屏幕。
-Surface：android应用的每个串口对应一个画布（Canvas），即Surface，可以理解为android应用程序的一个窗口。">
+Surface：android应用的每个窗口对应一个画布（Canvas），即Surface，可以理解为android应用程序的一个窗口。">
 <meta name="twitter:image" content="http://djt.qq.com/upload/public/common/2013/12/images/13162130161.jpg?nothumb=false">
 
 
@@ -359,7 +359,7 @@ Surface：android应用的每个串口对应一个画布（Canvas），即Surfac
         <h4 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h4><p>android应用程序显示的过程：android应用程序调用SurfaceFlinger服务把经过测量、布局和绘制后的Surface渲染到显示屏幕上。</p>
 <blockquote>
 <p>SurfaceFlinger：android系统服务，负责管理android系统的帧缓冲区，即显示屏幕。</p>
-<p>Surface：android应用的每个串口对应一个画布（Canvas），即Surface，可以理解为android应用程序的一个窗口。</p>
+<p>Surface：android应用的每个窗口对应一个画布（Canvas），即Surface，可以理解为android应用程序的一个窗口。</p>
 </blockquote>
 <p>android应用程序的显示过程包含了两个部分（应用侧绘制、系统侧渲染）、两个机制（进程间通讯机制、显示刷新机制）。</p>
 <h4 id="应用侧绘制"><a href="#应用侧绘制" class="headerlink" title="应用侧绘制"></a>应用侧绘制</h4><p>一个android应用程序窗口里面包含了很多UI元素，这些元素是以树形结构来组织的，即它们存在着父子关系，其中，子UI元素位于父UI元素里面，如下图：</p>
@@ -553,7 +553,7 @@ Surface：android应用的每个串口对应一个画布（Canvas），即Surfac
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">52</span>
+                  <span class="site-state-item-count">53</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
