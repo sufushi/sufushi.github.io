@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Java," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言TCP / IP模型中有5层结构：应用层、传输层、网络层、数据链路层以及物理层。其中IP协议是位于网络层的，TCP协议是位于传输层的，通过IP协议可以使两台计算机使用同一种语言，从而允许Internet上连接不同类型的计算机和不同的操作系统的网络。IP协议只能保证计算机能够接收和发送分组数据，当计算机要和远程的计算机建立连接时，TCP协议会让它们建立连接：用于发送和接收数据的虚拟电路。
+在Ja">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Socket实现原理">
+<meta property="og:url" content="sufushi.github.io/2018/04/08/Socket实现原理/index.html">
+<meta property="og:site_name" content="苏富仕的博客">
+<meta property="og:description" content="前言TCP / IP模型中有5层结构：应用层、传输层、网络层、数据链路层以及物理层。其中IP协议是位于网络层的，TCP协议是位于传输层的，通过IP协议可以使两台计算机使用同一种语言，从而允许Internet上连接不同类型的计算机和不同的操作系统的网络。IP协议只能保证计算机能够接收和发送分组数据，当计算机要和远程的计算机建立连接时，TCP协议会让它们建立连接：用于发送和接收数据的虚拟电路。
+在Ja">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/socket.png">
+<meta property="og:image" content="http://img.blog.csdn.net/20131113160327656">
+<meta property="og:image" content="http://hi.csdn.net/attachment/201005/29/0_1275134861WUMW.gif">
+<meta property="og:image" content="http://hi.csdn.net/attachment/201005/29/0_1275135573wwwr.gif">
+<meta property="og:updated_time" content="2018-04-09T13:54:23.558Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Socket实现原理">
+<meta name="twitter:description" content="前言TCP / IP模型中有5层结构：应用层、传输层、网络层、数据链路层以及物理层。其中IP协议是位于网络层的，TCP协议是位于传输层的，通过IP协议可以使两台计算机使用同一种语言，从而允许Internet上连接不同类型的计算机和不同的操作系统的网络。IP协议只能保证计算机能够接收和发送分组数据，当计算机要和远程的计算机建立连接时，TCP协议会让它们建立连接：用于发送和接收数据的虚拟电路。
+在Ja">
+<meta name="twitter:image" content="http://oxsxuoiqx.bkt.clouddn.com/socket.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="sufushi.github.io/2018/04/08/Socket实现原理/"/>
+
+
+
+
+
+  <title>Socket实现原理 | 苏富仕的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">苏富仕的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">-4</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="sufushi.github.io/2018/04/08/Socket实现原理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sufushi">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/icon.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="苏富仕的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Socket实现原理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-08T20:07:04+08:00">
+                2018-04-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>TCP / IP模型中有5层结构：应用层、传输层、网络层、数据链路层以及物理层。其中IP协议是位于网络层的，TCP协议是位于传输层的，通过IP协议可以使两台计算机使用同一种语言，从而允许Internet上连接不同类型的计算机和不同的操作系统的网络。IP协议只能保证计算机能够接收和发送分组数据，当计算机要和远程的计算机建立连接时，TCP协议会让它们建立连接：用于发送和接收数据的虚拟电路。</p>
+<p>在Java中，我们使用Socket、ServerSocket类创建一个套接字连接，从套接字得到的结果就是一个InputStream以及OutputStream对象，以便将连接作为一个IO流对象对待。通过IO流可以从流中读取数据或者写数据到流中。</p>
+<p>套接字是一种软件形式的抽象，用于表达两台机器间一个连接的“终端”。针对一个特定的连接，每台机器上都有一个“套接字”，可以想象它们之间有一条虚拟的“线缆”。Java有两个基于数据流的套接字类：ServerSocket，服务器用它监听进入的连接，Socket，客户端用它初始一次连接。监听套接字只能接收新的连接请求，不能接收实际的数据包，即ServerSocket不能接收实际的数据包。</p>
+<p>套接字是基于TCP / IP实现的，它是用来提供一个访问TCP的服务接口，即Socket是TCP的应用编程接口API，通过它应用层就可以访问TCP提供的服务。</p>
+<h4 id="Socket简介"><a href="#Socket简介" class="headerlink" title="Socket简介"></a>Socket简介</h4><p>Socket字面意思就是套接字，包含了源IP地址、源端口、目的IP地址和目的端口。</p>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/socket.png" alt=""></p>
+<p>Socket是应用层与TCP / IP协议族通信的中间软件抽象层，它是一组接口，在设计模式中，Socket其实就是一个门面模式，它把复杂的TCP / IP协议族隐藏在Socket接口后面，对用户来说，一组简单的接口就是全部，让Socket去组织数据，以符合指定的协议，一般由操作系统或者JVM自己实现。java.net中的Socket其实就是对底层数据的抽象调用，运行在同一主机上的其他应用程序可能会通过底层套接字抽象来使用网络，因此会与java Socket实例竞争资源，如端口。</p>
+<h4 id="Socket底层数据结构"><a href="#Socket底层数据结构" class="headerlink" title="Socket底层数据结构"></a>Socket底层数据结构</h4><p>对于套接字结构，是指底层实现（包括JVM和TCP / IP，但通常是后者）的数据结构集合，包含了特定Socket所关联的信息。套接字结构包含：</p>
+<ul>
+<li>该套接字所关联的本地和远程互联网地址和端口</li>
+<li>一个FIFO队列用于存放接收到的等待分配的数据（RecvQ），以及一个用于存放等待传输数据的队列（SendQ）</li>
+<li>打开和关闭TCP握手相关的额外协议状态信息</li>
+</ul>
+<p><img src="http://img.blog.csdn.net/20131113160327656" alt=""></p>
+<p>由于TCP提供了一种可信赖的字节流服务，任何写入Socket和OutputStream的数据副本都没有保留，直到连接的另一端将这些数据成功接收，向输出流写数据并不意味着数据实际上已经被发送—，它们只是被复制到本地缓冲区，就算在Socket的OutputStream上进行flush操作，也不能保证数据能够立即发送到信道。此外，字节流服务的自身属性决定了其无法保留输入流中消息的边界消息。</p>
+<h4 id="Socket数据传输的底层实现"><a href="#Socket数据传输的底层实现" class="headerlink" title="Socket数据传输的底层实现"></a>Socket数据传输的底层实现</h4><p>在使用TCP套接字时，不能假设在连接的一端将数据写入输出流和在另一端从输入流读出数据之间有任何的一致性。尤其是在发送端由单个输出流write方法传输的数据，可能会通过另一端的多个输入流的read方法获取，而一个read方法可能会返回多个write方法传输的数据。</p>
+<p>一般来说，可以认为TCP连接上发送的所有字节序列在某一瞬间被分成了3个FIFO队列：</p>
+<ul>
+<li>SendQ：在发送端底层实现中缓存的字节，这些字节已经写入输出流，但还没在接收端成功接收，它占用大约37KB内存</li>
+<li>RecvQ：在接收端底层实现中缓存的字节，这些字节等待分配到接收程序，即从输入流中读取，它占用大约25KB内存</li>
+<li>Delivered：接收者从输入流已经读取到的字节</li>
+</ul>
+<p>当我们调用OutputStream的write方法时，将向SendQ追加字节。</p>
+<p>TCP协议负责将字节按顺序从SendQ移动到RecvQ，这个转移过程无法由用户程序控制或直接观察到，并且在块中发生，这些块的大小在一定程度上独立于传递给write方法的缓冲区大小。接收程序从Socket的InputStream读取数据时，字节就从RecvQ移动到Delivered中，而转移的块的大小依赖于RecvQ中的数据量和传递给read方法的缓冲区的大小。</p>
+<h4 id="Socket读写缓冲区"><a href="#Socket读写缓冲区" class="headerlink" title="Socket读写缓冲区"></a>Socket读写缓冲区</h4><p>一旦创建了一个套接字实例，操作系统就会为其分配缓冲区以存放接收和要发送的数据。</p>
+<p><img src="http://hi.csdn.net/attachment/201005/29/0_1275134861WUMW.gif" alt=""></p>
+<p>Java可以设置读写缓冲区的大小：</p>
+<ul>
+<li>setReceiveBufferSize（int size）</li>
+<li>setSendBufferSize（int size）</li>
+</ul>
+<p>向输出流写数据并不意味着数据实际上已经被发送，它们只是被复制到了发送缓冲队列SendQ，就是在Socket的OutputStream上调用flush方法，也不能保证数据能够立即发送到网络。真正的数据发送是由操作系统的TCP协议栈模块从缓冲区中取数据发送到网络来完成的。当有数据从网络来到时，TCP协议栈模块接收数据并放入缓冲区队列RecvQ，输入流InputStream通过read方法从RecvQ中取出数据。</p>
+<h4 id="Socket超时"><a href="#Socket超时" class="headerlink" title="Socket超时"></a>Socket超时</h4><p>1、Scoke天连接建立超时</p>
+<p>Socket连接建立是基于TCP的连接建立过程。TCP的连接需要通过3次握手报文来完成，开始建立TCP连接时需要发送同步SYN报文，然后等待确认报文SYN + ACK，最后再发送确认报文ACK。TCP连接的关闭通过4次挥手来完成，主动关闭TCP连接的一方发送FIN报文，等待对方的确认报文，被动关闭的一方也发送FIN报文，然后等待确认报文。</p>
+<p><img src="http://hi.csdn.net/attachment/201005/29/0_1275135573wwwr.gif" alt=""></p>
+<p>正在等待TCP连接请求的一端有一个固定长度的连接队列，该队列中的连接已经被TCP接受（即三次握手已经完成），但还没有被应用层所接受。TCP接受一个连接是将其放入这个连接队列，而应用层接受连接是将其从该队列中移出。应用层可以通过设置backlog变量来指明该连接队列的最大长度，即已被TCP接受而等待应用层接受的最大连接数。</p>
+<p>当一个连接请求SYN到达时，TCP确定是否接受这个连接。如果队列中还有空间，TCP模块将对SYN进行确认并完成连接的建立，但应用层只有在三次握手中的第三个报文收到后才会知道这个新连接，如果队列没有空间，TCP将不理会收到的SYN。如果应用层不能及时接受已被TCP接受的连接，这些连接可能会占满整个连接队列，新的连接请求可能不会响应而会超时。如果一个连接请求SYN发送后，一段时间后没有收到确认SYN + ACK，TCP会重传这个连接请求SYN两次，每次重传的时间间隔加倍，在规定的时间内仍然没有收到SYN + ACK，TCP将放弃这个连接请求，连接请求就超时了。</p>
+<p>Java Socket连接建立超时和TCP是相同的，如果TCP建立连接时三次握手超时，那么导致Socket连接建立也就超时了，可以设置Socket连接建立的超时时间：</p>
+<p>connect（SocketAddress endpoint，int timeout）</p>
+<p>如果在timeout内，连接没有建立成功，TimeoutExpection异常被抛出，如果timeout的值小于三次握手的时间，那么Socket连接永远不会建立。</p>
+<p>不同应用层有不同的连接建立过程，Socket的连接建立和TCP一样，仅仅需要三次握手就完成连接，但有些应用程序需要交互很多信息后才能成功建立连接，比如Telnet协议，在TCP三次握手完成后，需要进行选项协商之后，Telnet连接才建立完成。</p>
+<p>2、Socket读超时</p>
+<p>如果输入缓冲队列RecvQ中没有数据，read操作会一直阻塞而挂起线程，直到有新的数据到来或者有异常产生，调用setSoTimeout（int timeout）可以设置超时时间，如果到了超时时间仍没有数据，read会抛出一个SocketTimeoutExpection，程序需要捕获这个异常，但是当前的Socket连接仍然是有效的。</p>
+<p>如果对方进程奔溃、对方机器突然重启、网络断开，本端的read会一直阻塞下去，这是设置超时时间是非常重要的，否则调用read的线程会一直挂起。</p>
+<p>TCP模块把接受到的数据放入RecvQ中，直到应用层调用输入流的read方法来读取。如果RecvQ队列被填满了，这时TCP会根据滑动窗口机制通知对方不要继续发送数据，本端停止接收从对端发送来的数据，直到接受者应用程序调用输入流的read方法后腾出空间。</p>
+<p>3、Socket写超时</p>
+<p>Socket的写超时是基于TCP的超时重传。超时重传是TCP保证数据可靠性传输的一个重要机制，其原理是在发送一个数据报文后就开启一个计时器，在一定时间内如果没有得到发送报文的确认ACK，那么就重新发送报文。如果重新发送多次之后，仍没有确认报文，就发送一个复位报文RST，然后关闭TCP连接。首次数据报文发送与复位报文传输之间的时间差大约为9分钟，也就是说如果9分钟内没有得到确认报文，就关闭连接，但是这个值是根据不同的TCP协议栈实现而不同。</p>
+<p>如果发送端调用write持续地写出数据，直到SendQ队列被填满。如果在SendQ队列已满时调用write方法，则write将被阻塞，直到SendQ有新的空闲空间为止，也就是说直到一些字节传输到了接受者套接字的RecvQ中，如果此时RecvQ队列也已经被填满，所有操作都将被停止，直到接收端调用read方法将一些字节传输到应用程序。</p>
+<p>Socket写超时是基于TCP协议栈的超时重传机制，一般不需要设置write的超时时间，也没有提供这种方法。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Java/" rel="tag"># Java</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/04/01/ContentProvider底层原理/" rel="next" title="ContentProvider底层原理">
+                <i class="fa fa-chevron-left"></i> ContentProvider底层原理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/icon.jpg"
+                alt="sufushi" />
+            
+              <p class="site-author-name" itemprop="name">sufushi</p>
+              <p class="site-description motion-element" itemprop="description">这是苏富仕的博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">54</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/sufushi" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Socket简介"><span class="nav-number">2.</span> <span class="nav-text">Socket简介</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Socket底层数据结构"><span class="nav-number">3.</span> <span class="nav-text">Socket底层数据结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Socket数据传输的底层实现"><span class="nav-number">4.</span> <span class="nav-text">Socket数据传输的底层实现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Socket读写缓冲区"><span class="nav-number">5.</span> <span class="nav-text">Socket读写缓冲区</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Socket超时"><span class="nav-number">6.</span> <span class="nav-text">Socket超时</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sufushi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+  <script type="text/javascript" src="/js/src/js.cookie.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/scroll-cookie.js?v=5.1.3"></script>
+
+
+  
+
+</body>
+</html>

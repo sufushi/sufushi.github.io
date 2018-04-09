@@ -89,8 +89,8 @@ Content Prov">
 Content Prov">
 <meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1460468-b6b022d11c5e8a0a.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
 <meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/%E5%9F%BA%E4%BA%8Eandroid%E7%9A%84%E8%BD%AF%E4%BB%B6%E6%9E%B6%E6%9E%84%E5%B9%B3%E5%8F%B0.png">
-<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/ContentProvider%E7%BB%84%E4%BB%B6%E7%9A%84%E6%95%B0%E6%8D%AE%E5%85%B1%E4%BA%AB%E6%A8%A1%E5%9E%8B.png">
-<meta property="og:updated_time" content="2018-04-01T12:22:17.375Z">
+<meta property="og:image" content="http://oxsxuoiqx.bkt.clouddn.com/Content%20Provider%E7%BB%84%E4%BB%B6%E6%95%B0%E6%8D%AE%E5%85%B1%E4%BA%AB%E6%A8%A1%E5%9E%8B.png">
+<meta property="og:updated_time" content="2018-04-04T06:53:59.579Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ContentProvider底层原理">
 <meta name="twitter:description" content="前言在android系统中，每一个应用程序在安装时，都会分配一个不同的Linux用户ID，这样，android系统就可以基于Linux用户ID来保护每一个应用程序的数据不会被其他应用程序破坏，即每一个应用程序只可以访问自己创建的数据。然而，有时候我们需要在不同的应用进程之间进行数据共享，这时候就需要使用Content Provider组件在不同的应用程序之间进行数据共享。
@@ -356,7 +356,7 @@ Content Prov">
 <p>因为Content Provider组件是运行在一个独立的应用程序进程中的，即它本身也是一个android应用程序，因此，业务层的android应用程序是肯定不可以直接访问它的数据的。所以，Content Provider结合Binder进程间通信机制以及匿名共享内存机制，就可以高效地将它里面的数据传递给业务层中的android应用程序访问了。</p>
 <h4 id="Content-Provider组件的启动过程"><a href="#Content-Provider组件的启动过程" class="headerlink" title="Content Provider组件的启动过程"></a>Content Provider组件的启动过程</h4><p>Activity组件第一次访问Provider组件的过程如下所示：</p>
 <ul>
-<li>Activity组件通过Content URIl来访问Provider组件</li>
+<li>Activity组件通过Content URl来访问Provider组件</li>
 <li>Activity组件所运行在的应用程序进程发现它里面不存在一个用来访问Provider组件的代理对象，于是，它会通过Content URI来请求AMS返回一个用来访问Provider组件的代理对象</li>
 <li>AMS发现Provider组件还没有启动起来，于是，它就会创建一个新的应用程序进程，然后在这个新创建的应用程序进程中启动Provider组件</li>
 <li>Provider组件启动起来之后，就会将自己发布到AMS中，以便AMS可以将它的一个的代理对象返回给Activity组件使用</li>
@@ -371,7 +371,7 @@ Content Prov">
 <p>由于SQLiteCursor对象并不是一个Binder本地对象，因此，Provider组件就不能直接将它返回给Activity组件使用。Provider组件首先会创建一个CursorToBulkCursorAdaptor对象，用来适配前面所创建的一个SQLiteCursor对象，即将这个SQLiteCursor对象保存在它的成员变量mCursor中。CursorToBulkCursorAdaptor类继承了BulkCursorNative类，而BulkCursorNative类实现了IBulkCursor接口，并且继承了IBinder类，因此，它可以用来描述一个实现了IBulkCursor接口的Binder本地对象。Provider组件接着就会将这个CursorToBulkCursorAdaptor对象返回给Activity组件。</p>
 <p>Activity组件在请求Provider组件返回其内部的数据之前，除了会创建一个CursorWindow对象之外，还会创建一个BulkCursorToCursorAdaptor对象，并且前面所创建的Cursor Window对象就是保存在它的父类AbstractWindowedCursor的成员变量mWindow中的。Activity组件接收到Provider组件返回来的CursorToBulkCursorAdaptor对象之后，实际上获得的是一个CursorToBulkCursorAdaptor代理对象，接着就会将它保存在之前所创建的一个BulkCursorToCursorAdaptor对象的成员变量mBulkCursor中。这时候Activity组件就可以通过这个BulkCursorToCursorAdaptor对象来读取Provider组件返回的数据了。</p>
 <p>至此，我们可以得到Content Provider组件的数据共享模型，如下所示。</p>
-<p><img src="http://oxsxuoiqx.bkt.clouddn.com/ContentProvider%E7%BB%84%E4%BB%B6%E7%9A%84%E6%95%B0%E6%8D%AE%E5%85%B1%E4%BA%AB%E6%A8%A1%E5%9E%8B.png" alt=""></p>
+<p><img src="http://oxsxuoiqx.bkt.clouddn.com/Content%20Provider%E7%BB%84%E4%BB%B6%E6%95%B0%E6%8D%AE%E5%85%B1%E4%BA%AB%E6%A8%A1%E5%9E%8B.png" alt=""></p>
 <p>从Content Provider组件的数据共享模型中，可以看出：</p>
 <ul>
 <li>Activity组件中的BulkCursorToCursorAdaptor对象的成员变量mBulkCursor引用了Provider组件的CursorToBulkCursorAdaptor对象</li>
@@ -381,13 +381,13 @@ Content Prov">
 <h4 id="Content-Provider组件的数据更新通知机制"><a href="#Content-Provider组件的数据更新通知机制" class="headerlink" title="Content Provider组件的数据更新通知机制"></a>Content Provider组件的数据更新通知机制</h4><p>Content Provider组件的数据更新通知机制类似于android系统的广播机制，它们都是一种消息发布和订阅的事件驱动模型。在Content Provider组件的数据更新通知机制中，内容观察者（Content Observer）负责接收数据更新通知，而Content Provider组件负责发送数据更新通知。</p>
 <p>内容观察者在接收数据更新通知之前，必须要先注册到ContentService中，并且告诉ContentService它要接收什么样的数据更新通知，这是通过一个URI来描述的。当Content Provider组件中的数据发生更新时，Content Provider组件就会将用来描述这个数据的一个URI发送给ContentService，以便ContentService可以找到与这个URI对应的内容观察者，最后向它们发送一个数据更新通知。</p>
 <h4 id="Content-Provider的同步"><a href="#Content-Provider的同步" class="headerlink" title="Content Provider的同步"></a>Content Provider的同步</h4><p>多进程对于Content Provider的访问请求最终都会按照队列进入Content Provider进程，而在单进程中，Content Provider对于数据的访问很容易做到多线程互斥，一个synchronized关键字就能搞定。</p>
-<p>如果Content Provider的底层实现数据是数据库，可以不用考虑同步问题，但是如果底层是内存数据，则必须    做同步处理。</p>
+<p>如果Content Provider的底层实现数据是数据库，可以不用考虑同步问题，但是如果底层是内存数据，则必须做同步处理。</p>
 <h4 id="android-multiprocess在Content-Provider中的作用"><a href="#android-multiprocess在Content-Provider中的作用" class="headerlink" title="android:multiprocess在Content Provider中的作用"></a>android:multiprocess在Content Provider中的作用</h4><p>默认情况下是不指定android:process跟multiprocess的，它们的值默认为false，会随着应用启动的时候加载，如果对provider指定android:process和android:multiprocess，表现就会不一致，如果设置android:process，那Content Provider就不会随着应用启动，如果设置了android:multiprocess，则可能存在多个Content Provider实例。</p>
 <p>android:multiprocess的作用是：是否允许在调用者的进程里实例化provider，如果android:multiprocess=false，则系统中只会存在一个provider实例，否则，可以存在多个，多个的话，可能会提高性能，因为它避免了跨进程通信，毕竟，对象就在自己的进程空间，可以直接访问，但是，这会增加系统负担，另外，对于单进程能够保证的互斥问题，也会无效，如果APP需要数据更新，还是保持不开启的好。</p>
 <h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><ul>
 <li>Content Provider只是android为了跨进程共享数据的一种机制，在操作数据上只是一种抽象，具体要自己实现</li>
 <li>Content Provider主要以表格的形式来组织数据，并且可以包含多个表，和数据库很相似</li>
-<li>Content Provider的底层实现是Binder，所以Content Provider的6个方法都是运行在Content Provider所在应用的进程中，其中，除了onCreate由系统回调并运行在主线程中，其他5个方法均由外界回调并运行在Binder线程池里，外界没调用一次Content Provider的方法都会独自开启一个线程</li>
+<li>Content Provider的底层实现是Binder，所以Content Provider的6个方法都是运行在Content Provider所在应用的进程中，其中，除了onCreate由系统回调并运行在主线程中，其他5个方法均由外界回调并运行在Binder线程池里，外界每调用一次Content Provider的方法都会独自开启一个线程</li>
 <li>Content Provider只能保证进程间的互斥，无法保证进程内，需要自己实现</li>
 <li>在manifest文件里注册提供器时，使用属性android:authorities=”包名.provider”来唯一指定提供器，name属性用来指定java文件，一般还使用permission属性来指定访问权限，其中可以细分为readPermission和writePermission</li>
 </ul>
@@ -430,6 +430,10 @@ Content Prov">
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/04/08/Socket实现原理/" rel="prev" title="Socket实现原理">
+                Socket实现原理 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -510,7 +514,7 @@ Content Prov">
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">53</span>
+                  <span class="site-state-item-count">54</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
